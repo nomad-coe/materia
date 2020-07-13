@@ -7,12 +7,13 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Structure Viewer &mdash; matter 0.0.1 documentation</title>
+  <title>Structure Viewer &mdash; materia 0.0.1 documentation</title>
   
 
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/style.css" type="text/css" />
   <link rel="stylesheet" href="../_static/css/style.css" type="text/css" />
 
   
@@ -52,7 +53,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> matter
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> materia
           
 
           
@@ -90,7 +91,13 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="viewers.html">Viewers</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Structure Viewer</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Structure Viewer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api">API</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="brillouinzoneviewer.html">Brillouin Zone Viewer</a></li>
 </ul>
 </li>
@@ -109,7 +116,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">matter</a>
+          <a href="../index.html">materia</a>
         
       </nav>
 
@@ -163,7 +170,79 @@
             
   <div class="section" id="structure-viewer">
 <h1>Structure Viewer<a class="headerlink" href="#structure-viewer" title="Permalink to this headline">¶</a></h1>
+<p>Try out the interactive visualizer below. Controls are as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Rotate: Drag with left mouse button held down</p></li>
+<li><p>Pan: Drag with right mouse button held down</p></li>
+<li><p>Zoom: Mousewheel</p></li>
+</ul>
+</div></blockquote>
+<div>
+    <div id="canvas" style="width: 100%; height: 25rem"></div>
+    <script src="../_static/js/three.min.js" defer></script>
+    <script src="../_static/js/materia.min.js" defer></script>
+    <script src="../_static/js/structureviewer.js" defer></script>
+</div><div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>This piece of Javascript code shows an example of loading the viewer into a an
+HTML element that has been given the id <code class="code docutils literal notranslate"><span class="pre">canvas</span></code>. This example assumes
+that the global variable installation has been used, but it can be very simply
+changed to also work with the module installation by adding the proper imports
+and changing the <code class="code docutils literal notranslate"><span class="pre">StructureViewer</span></code> constructor call.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Find the HTML element in which the visualizer will be embedded into. It</span>
+<span class="c1">// determines the visualization canvas size.</span>
+<span class="kd">let</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;canvas&quot;</span><span class="p">);</span>
+
+<span class="c1">// Viewer options</span>
+<span class="kd">let</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+<span class="nx">structure</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">showParam</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nx">showCell</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nx">showBonds</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="nx">viewCenter</span><span class="o">:</span> <span class="s2">&quot;COC&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">// Initialize viewer.</span>
+<span class="kd">let</span> <span class="nx">viewer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">materia</span><span class="p">.</span><span class="nx">StructureViewer</span><span class="p">(</span><span class="nx">canvas</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+
+<span class="c1">// Define structure and load into viewer</span>
+<span class="kd">let</span> <span class="nx">nacl</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">atomicNumbers</span><span class="o">:</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">],</span>
+    <span class="nx">cell</span><span class="o">:</span> <span class="p">[</span>
+        <span class="p">[</span><span class="mf">5.6402</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">5.6402</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">5.6402</span><span class="p">]</span>
+    <span class="p">],</span>
+    <span class="nx">scaledPositions</span><span class="o">:</span> <span class="p">[</span>
+        <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+        <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
+    <span class="p">],</span>
+    <span class="nx">pbc</span><span class="o">:</span> <span class="p">[</span><span class="kc">true</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="kc">true</span><span class="p">],</span>
+<span class="p">};</span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">nacl</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>TODO</p>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<p>TODO</p>
+</div>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<p>TODO</p>
+</div>
 </div>
 
 
@@ -219,7 +298,7 @@
       <dl>
         <dt>Versions</dt>
         
-          <dd><a href="https://lauri-codes.github.io/matter">0.0.1 (latest stable)</a></dd>
+          <dd><a href="https://lauri-codes.github.io/materia">0.0.1 (latest stable)</a></dd>
         
       </dl>
     </div>

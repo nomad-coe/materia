@@ -7,12 +7,13 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; matter 0.0.1 documentation</title>
+  <title>Installation &mdash; materia 0.0.1 documentation</title>
   
 
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
 
   
@@ -38,7 +39,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Viewers" href="viewers/viewers.html" />
-    <link rel="prev" title="matter" href="index.html" /> 
+    <link rel="prev" title="materia" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -52,7 +53,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> matter
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> materia
           
 
           
@@ -109,7 +110,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">matter</a>
+          <a href="index.html">materia</a>
         
       </nav>
 
@@ -176,31 +177,31 @@ the following script tag:</p>
 </pre></div>
 </div>
 <p>After this script (order is important, also see the <a class="reference external" href="https://www.w3schools.com/tags/att_script_defer.asp">defer</a> attribute for script
-elements), you will want to include the minified library for <code class="code docutils literal notranslate"><span class="pre">matter</span></code>.
-You can <a class="reference external" href="https://raw.githubusercontent.com/lauri-codes/matter/master/dist/matter.min.js">get the newest version from the GitHub repository</a>
-or <a class="reference external" href="https://www.npmjs.com/package/&#64;lauri-codes/matter">install and use a specific version from npm</a>. Then place the minified
-file (<code class="code docutils literal notranslate"><span class="pre">matter.min.js</span></code>) in your server and include it as a script element:</p>
-<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;/path/in/your/server/matter.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+elements), you will want to include the minified library for <code class="code docutils literal notranslate"><span class="pre">materia</span></code>.
+You can <a class="reference external" href="https://raw.githubusercontent.com/lauri-codes/materia/master/dist/materia.min.js">get the newest version from the GitHub repository</a>
+or <a class="reference external" href="https://www.npmjs.com/package/&#64;lauri-codes/materia">install and use a specific version from npm</a>. Then place the minified
+file (<code class="code docutils literal notranslate"><span class="pre">materia.min.js</span></code>) in your server and include it as a script element:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;/path/in/your/server/materia.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </pre></div>
 </div>
 <p>All functionality will then be available under the
-<code class="code docutils literal notranslate"><span class="pre">matter</span></code> variable, e.g.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">structureViewer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">matter</span><span class="p">.</span><span class="nx">StructureViewer</span><span class="p">();</span>
+<code class="code docutils literal notranslate"><span class="pre">materia</span></code> variable, e.g.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kd">let</span> <span class="nx">structureViewer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">materia</span><span class="p">.</span><span class="nx">StructureViewer</span><span class="p">();</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="as-a-module">
 <h2>As a module<a class="headerlink" href="#as-a-module" title="Permalink to this headline">¶</a></h2>
-<p>The library is distributed as an <a class="reference external" href="https://www.npmjs.com/package/&#64;lauri-codes/matter">npm
+<p>The library is distributed as an <a class="reference external" href="https://www.npmjs.com/package/&#64;lauri-codes/materia">npm
 package</a> and can be
 installed with:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>npm install @lauri-codes/matter
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>npm install @lauri-codes/materia
 </pre></div>
 </div>
 <p>This command will also install the <a class="reference external" href="https://threejs.org/">three.js</a> library
 as a dependency. With this package you have direct access to individual modules
 that can also be tree-shaked in your own build. For example:</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kr">import</span> <span class="p">{</span> <span class="nx">StructureViewer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s2">&quot;@lauri-codes/matter&quot;</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="kr">import</span> <span class="p">{</span> <span class="nx">StructureViewer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s2">&quot;@lauri-codes/materia&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -217,7 +218,7 @@ that can also be tree-shaked in your own build. For example:</p>
         <a href="viewers/viewers.html" class="btn btn-neutral float-right" title="Viewers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral float-left" title="matter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="materia" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -259,7 +260,7 @@ that can also be tree-shaked in your own build. For example:</p>
       <dl>
         <dt>Versions</dt>
         
-          <dd><a href="https://lauri-codes.github.io/matter">0.0.1 (latest stable)</a></dd>
+          <dd><a href="https://lauri-codes.github.io/materia">0.0.1 (latest stable)</a></dd>
         
       </dl>
     </div>

@@ -294,8 +294,6 @@ export default class StructureViewer extends Viewer {
             },
             structure: {
                 showParam: true,
-                createLegend: true,
-                showLegend: true,
                 showBonds: true,
                 showCell: true,
                 // How to handle periodicity of the structure. Available options are:
@@ -489,10 +487,6 @@ export default class StructureViewer extends Viewer {
         this.translate(this.options.structure.translation);
         // Zoom according to given option
         this.setZoom(this.options.controls.zoomLevel);
-        // Setup element legend and settings
-        if (this.options.structure.createLegend) {
-            this.createElementLegend();
-        }
         return true;
     }
     /**
@@ -545,13 +539,6 @@ export default class StructureViewer extends Viewer {
      * This function will setup the element legend div.
      */
     setupStatic() {
-        if (this.options.structure.createLegend) {
-            // Setup div containing the element labels
-            var legendDiv = document.createElement('div');
-            legendDiv.id = 'elementlegend';
-            this.elementLegend = legendDiv;
-            this.rootElement.appendChild(legendDiv);
-        }
     }
     setupLights() {
         this.lights = [];
@@ -659,53 +646,6 @@ export default class StructureViewer extends Viewer {
         // For some reason double rendering is required... Maybe delay()?
         this.render();
         this.render();
-    }
-    /**
-     *
-     */
-    createElementLegend() {
-        // Empty the old legend
-        while (this.elementLegend.firstChild) {
-            this.elementLegend.removeChild(this.elementLegend.firstChild);
-        }
-        // Create a list of elements
-        let elementArray = [];
-        for (let property in this.elements) {
-            if (this.elements.hasOwnProperty(property)) {
-                elementArray.push([property, this.elements[property][0], this.elements[property][1]]);
-            }
-        }
-        // Sort by name
-        elementArray.sort(function (a, b) {
-            let keyA = a[0];
-            let keyB = b[0];
-            if (keyA < keyB)
-                return -1;
-            if (keyA > keyB)
-                return 1;
-            return 0;
-        });
-        for (let iElem = 0; iElem < elementArray.length; ++iElem) {
-            let elementName = elementArray[iElem][0];
-            let elementColor = elementArray[iElem][1].toString(16);
-            let nZeros = 6 - elementColor.length;
-            let prefix = "#" + Array(nZeros + 1).join("0");
-            elementColor = prefix + elementColor;
-            let elementRadius = 50 * elementArray[iElem][2];
-            // Containing sphere
-            let elemDiv = document.createElement('div');
-            elemDiv.className = "elementlabel";
-            elemDiv.style.backgroundColor = elementColor;
-            elemDiv.style.height = elementRadius + "px";
-            elemDiv.style.width = elementRadius + "px";
-            elemDiv.style.textAlign = "center";
-            elemDiv.style.verticalAlign = "middle";
-            elemDiv.style.lineHeight = elementRadius + "px";
-            elemDiv.style.borderRadius = elementRadius / 2 + "px";
-            elemDiv.textContent = elementName;
-            // Label inside
-            this.elementLegend.appendChild(elemDiv);
-        }
     }
     /**
      * Create the visuals to show the lattice parameter labels.

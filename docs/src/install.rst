@@ -19,33 +19,33 @@ the following script tag:
 
 After this script (order is important, also see the `defer
 <https://www.w3schools.com/tags/att_script_defer.asp>`_ attribute for script
-elements), you will want to include the minified library for :code:`matter`.
+elements), you will want to include the minified library for :code:`materia`.
 You can `get the newest version from the GitHub repository
-<https://raw.githubusercontent.com/lauri-codes/matter/master/dist/matter.min.js>`_
+<https://raw.githubusercontent.com/lauri-codes/materia/master/dist/materia.min.js>`_
 or `install and use a specific version from npm
-<https://www.npmjs.com/package/@lauri-codes/matter>`_. Then place the minified
-file (:code:`matter.min.js`) in your server and include it as a script element:
+<https://www.npmjs.com/package/@lauri-codes/materia>`_. Then place the minified
+file (:code:`materia.min.js`) in your server and include it as a script element:
 
 .. code-block:: html
 
-    <script src="/path/in/your/server/matter.min.js"></script>
+    <script src="/path/in/your/server/materia.min.js"></script>
 
 All functionality will then be available under the
-:code:`matter` variable, e.g.
+:code:`materia` variable, e.g.
 
 .. code-block:: javascript
 
-    let structureViewer = new matter.StructureViewer();
+    let structureViewer = new materia.StructureViewer();
 
 As a module
 -----------
 The library is distributed as an `npm
-package <https://www.npmjs.com/package/@lauri-codes/matter>`_ and can be
+package <https://www.npmjs.com/package/@lauri-codes/materia>`_ and can be
 installed with:
 
 .. code-block:: sh
 
-    npm install @lauri-codes/matter
+    npm install @lauri-codes/materia
 
 This command will also install the `three.js <https://threejs.org/>`_ library
 as a dependency. With this package you have direct access to individual modules
@@ -53,4 +53,4 @@ that can also be tree-shaked in your own build. For example:
 
 .. code-block:: javascript
 
-    import { StructureViewer } from "@lauri-codes/matter"
+    import { StructureViewer } from "@lauri-codes/materia"

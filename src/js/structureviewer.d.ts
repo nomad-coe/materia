@@ -100,10 +100,6 @@ export default class StructureViewer extends Viewer {
      */
     toggleShadows(value: boolean): void;
     /**
-     *
-     */
-    createElementLegend(): void;
-    /**
      * Create the visuals to show the lattice parameter labels.
      */
     createLatticeParameters(basis: any, periodicity: any, periodicIndices: any): void;
