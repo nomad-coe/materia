@@ -6,4 +6,4 @@ installation guide for further details.
 
 # Homepage
 For more details and tutorials, visit the homepage at:
-[https://lauri-codes.github.io/matter/](https://lauri-codes.github.io/materia/)
+[https://lauri-codes.github.io/materia/](https://lauri-codes.github.io/materia/)
