@@ -1,0 +1,33 @@
+{
+  "name": "@lauri-codes/materia",
+  "version": "0.0.1",
+  "description": "Materia is a Javascript library for creating browser-based 3D visualizations of atomistic structures and other material properties.",
+  "author": "Lauri Himanen",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lauri-codes/materia"
+  },
+  "main": "src/js/materia.js",
+  "scripts": {
+    "dev-bz": "gulp & npx browser-sync start --config 'bs-config.js' --startPath examples/brillouin_zone/brillouin_zone.html",
+    "dev-structure": "gulp & npx browser-sync start --config 'bs-config.js' --startPath examples/structure/structure.html",
+    "start": "npm run dev-structure",
+    "build": "gulp"
+  },
+  "dependencies": {
+    "three": "^0.105.0"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.26.7",
+    "gulp": "^4.0.2",
+    "gulp-typescript": "^3.1.3",
+    "typescript": "^2.0.10",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10"
+  },
+  "files": [
+    "src/js/**/*",
+    "dist/**/*"
+  ]
+}
