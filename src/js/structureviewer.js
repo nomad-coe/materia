@@ -4,7 +4,7 @@ import * as THREE from 'three';
  * Class for visualizing a 3D crystal structure. Uses three.js to do the
  * visualization with WegGL or alternatively in html5 canvas.
  */
-export default class StructureViewer extends Viewer {
+export class StructureViewer extends Viewer {
     constructor() {
         super(...arguments);
         this.updateBonds = false;
@@ -285,10 +285,36 @@ export default class StructureViewer extends Viewer {
         this.scenes.push(this.sceneInfo);
     }
     /**
-     * Used to setup the visualization according to the given options.
+     * Used to setup the visualization options.
+     *
+     * @param {boolean} options A Javascript object containing the options. See
+     *   below for the subparameters.
+     * @param {boolean} options.structure.showParam Show lattice parameters
+     * @param {boolean} options.structure.showBonds Show bonds
+     * @param {boolean} options.structure.showCell Show cell wireframe
+     * @param {(string|number[])} options.structure.periodicity How periodicity
+     *   is handled in the visualization. Available options are:
+     *    - "none": Visualized as is.
+     *    - "wrap": Positions wrapped within unit cell.
+     *    - "boundary": Positions that are on the cell boundaries are repeated.
+     *    - [a, b, c]: Positions are repeated along each lattice vector the
+     *      given amount of times.
+     * @param {number} options.structure.radiusScale Scaling factor for the
+     *   atomic radii.
+     * @param {number} options.structure.bondScale Scaling factor for
+     *   automatically detecting the bonds.
+     * @param {number[]} options.structure.translation A fixed cartesian
+     *   translation to be applied for the atoms.
+     * @param {string} options.structure.viewCenter Determines how the view is
+     *   initially centered. Available options are:
+     *    - "COC": Center of cell.
+     *    - "COP": Center of atom positions.
+     * @param {boolean} options.structure.showShadows Whether shows are cast by
+     *   atoms onto others. Note that enabling this increases the computational
+     *   cost for doing the visualization.
      */
-    handleSettings(opt) {
-        let options = {
+    setOptions(options) {
+        let defaultOptions = {
             view: {
                 fitMargin: 0.5,
             },
@@ -296,11 +322,6 @@ export default class StructureViewer extends Viewer {
                 showParam: true,
                 showBonds: true,
                 showCell: true,
-                // How to handle periodicity of the structure. Available options are:
-                // "none": Visualized as is
-                // "wrap": Positions wrapped within unit cell
-                // "boundary": Positions that are on the cell boundaries are repeated.
-                // [a, b, c]: Positions are repeated along each unit cell direction the given amount of times
                 periodicity: "none",
                 radiusScale: 1,
                 bondScale: 1,
@@ -309,34 +330,60 @@ export default class StructureViewer extends Viewer {
                 showShadows: false,
             },
         };
-        this.fillOptions(opt, options);
+        // Fill with custom options
+        this.fillOptions(options, defaultOptions);
         // Handle base class settings
-        super.handleSettings(options);
+        super.setOptions(defaultOptions);
     }
     /**
-     * Setup the structure visualization based on the given data.
-     *
-     * @param {Object} data -  The structure data. Contains the following
-     * attributes:
-     *
-     *     - cell
-     *     - scaledPositions
-     *     - atomicNumbers
-     *     - primitiveCell (optional)
-     *     - pbc (optional)
-     *     - unit (optional): An unit cell from which a larger piece is
-     *          composed of
+     * Returns the currently set options.
+     * @returns {Object} The current options.
      */
-    setupVisualization(data) {
+    getOptions() {
+        return this.options;
+    }
+    /**
+     * Visualizes the given atomic structure.
+     *
+     * @param {boolean} structure A Javascript object containing the structure. See
+     *   below for the subparameters.
+     * @param {number[][]} structure.positions Cartesian positions. Set either
+     *   this or scaledPositions.
+     * @param {number[][]} structure.scaledPositions Positions given in the
+     *   basis of the lattice vectors. Set either this or positions.
+     * @param {number[]} structure.atomicNumbers Atomic numbers of the atoms.
+     *   Set either this or chemicalSymbols.
+     * @param {string[]} structure.chemicalSymbols Chemical symbols of the
+     *   atoms. Set either this or atomicNumbers.
+     * @param {number[]} structure.cell The lattice vectors of the unit cell as
+     *   rows of a 3x3 array.
+     * @param {string[]} structure.primitiveCell The lattice vectors of the
+     *   primitive unit cell as rows of a 3x3 array. This is optional and will be
+     *   displayed as an additional wireframe in addition to the unit cell.
+     * @param {boolean[]} structure.pbc The periodic boundary conditions for
+     *   the structure as a list of three boolean values for each lattice
+     *   vector direction.
+     * @param {number[][]} structure.bonds Optional manually set bonds. Use of
+     *   list of atomic index pairs, each pair specifying a bond between atoms.
+     */
+    load(structure) {
+        // Clear all the old data
+        this.clear();
+        this.setup();
+        // Reconstruct the visualization
+        this.setupScenes();
+        this.setupLights();
+        this.setupCamera();
+        this.setupControls();
         // Check that the received data is OK.
-        let primitiveCell = data["primitiveCell"];
-        let cell = data["cell"];
-        let scaledPositions = data["scaledPositions"];
-        let positions = data["positions"];
-        let atomicNumbers = data["atomicNumbers"];
-        let chemicalSymbols = data["chemicalSymbols"];
-        let periodicity = data["pbc"];
-        let bonds = data["bonds"];
+        let positions = structure["positions"];
+        let scaledPositions = structure["scaledPositions"];
+        let atomicNumbers = structure["atomicNumbers"];
+        let chemicalSymbols = structure["chemicalSymbols"];
+        let cell = structure["cell"];
+        let primitiveCell = structure["primitiveCell"];
+        let periodicity = structure["pbc"];
+        let bonds = structure["bonds"];
         if (!scaledPositions && !positions) {
             console.log("No atom positions given to the structure viewer");
             return false;
@@ -487,6 +534,10 @@ export default class StructureViewer extends Viewer {
         this.translate(this.options.structure.translation);
         // Zoom according to given option
         this.setZoom(this.options.controls.zoomLevel);
+        if (this.options.view.autoFit) {
+            this.fitToCanvas();
+        }
+        this.render();
         return true;
     }
     /**

@@ -14,31 +14,27 @@ export declare abstract class Viewer {
     rootElement: any;
     options: any;
     /**
-     * @param {html element} hostElement is the html element where the
+     * @param {Object} hostElement is the html element where the
      *     visualization canvas will be appended.
-     * @param {options} An object that can hold custom settings for the viewer.
+     * @param {Object} options An object that can hold custom settings for the viewer.
      */
     constructor(hostElement: any, options?: {});
-    handleSettings(opt: Object): void;
+    setOptions(options: Object): void;
     /**
      * Used to recursively fill the target options with options stored in the
      * source object.
      */
     fillOptions(source: object, target: object): void;
     /**
-     * This function will clear the old view and visualize the new Brilloun
-     * zone based on the given data.
-     *
-     * @param {object} data object holding the visualized data.
+     * This function will set up all the basics for visualization: scenes,
+     * lights, camera and controls.
      */
-    load(data: any): boolean;
+    setup(): void;
     /**
      * Loads visuzalization data from a JSON url.
      *
      * @param {string} url Path to the json resource.
      */
-    loadJSON(url: any): void;
-    abstract setupVisualization(data: any): boolean;
     /**
      * This function can be used to setup any static assets in the
      * constructore, like dat.gui settings window.

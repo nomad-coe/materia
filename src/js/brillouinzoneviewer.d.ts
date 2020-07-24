@@ -1,5 +1,5 @@
 import { Viewer } from "./viewer";
-export default class BrillouinZoneViewer extends Viewer {
+export declare class BrillouinZoneViewer extends Viewer {
     private info;
     private zone;
     private sceneZone;
@@ -17,7 +17,7 @@ export default class BrillouinZoneViewer extends Viewer {
     /**
      * Used to setup the visualization according to the given options.
      */
-    handleSettings(opt: Object): void;
+    setOptions(opt: Object): void;
     setupInitialView(): void;
     createBrillouinZone(vertices: number[][], faces: number[][], basis: number[][], segments: number[][][], labels: string[][]): void;
 }

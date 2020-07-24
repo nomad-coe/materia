@@ -57,17 +57,20 @@ var bulk = {
     ],
     "pbc": [true, true, true],
 };
-var molecule = {
-    "atomicNumbers": [8, 1],
-    "cell": [
-        [1, 0.0, 0.0],
-        [0.0, 1, 0.0],
-        [0.0, 0.0, 1]
-    ],
-    "positions": [
-        [0.0, 0.5, 0.0],
-        [0.0, 1.5, 0.0],
-    ],
-    "pbc": [false, false, false]
-};
 viewer.load(bulk);
+
+// Load finite molecule with cartesian positions and cell
+//var molecule = {
+    //"atomicNumbers": [8, 1],
+    //"cell": [
+        //[1, 0.0, 0.0],
+        //[0.0, 1, 0.0],
+        //[0.0, 0.0, 1]
+    //],
+    //"positions": [
+        //[0.0, 0.5, 0.0],
+        //[0.0, 1.5, 0.0],
+    //],
+    //"pbc": [false, false, false]
+//};
+//viewer.load(molecule);

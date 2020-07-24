@@ -3,7 +3,7 @@ import * as THREE from 'three';
 /*
  * A 3D visualizer for the Brillouin Zone and the k-point path within it.
  */
-export default class BrillouinZoneViewer extends Viewer {
+export class BrillouinZoneViewer extends Viewer {
     /*
      * Overrides the implementation from the base class, as we need two scenes:
      * one for the BZ mesh and another for the information that is laid on top.
@@ -54,7 +54,7 @@ export default class BrillouinZoneViewer extends Viewer {
     /**
      * Used to setup the visualization according to the given options.
      */
-    handleSettings(opt) {
+    setOptions(opt) {
         // The default settings object
         let options = {
             controls: {
@@ -72,7 +72,7 @@ export default class BrillouinZoneViewer extends Viewer {
         };
         this.fillOptions(opt, options);
         // Handle base class settings
-        super.handleSettings(options);
+        super.setOptions(options);
     }
     setupInitialView() {
         //Rotate the scene so that the first basis vector is pointing up.

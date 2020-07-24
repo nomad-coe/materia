@@ -4,7 +4,7 @@ import * as THREE from 'three';
  * Class for visualizing a 3D crystal structure. Uses three.js to do the
  * visualization with WegGL or alternatively in html5 canvas.
  */
-export default class StructureViewer extends Viewer {
+export declare class StructureViewer extends Viewer {
     root: THREE.Object3D;
     atoms: THREE.Object3D;
     convCell: THREE.Object3D;
@@ -32,24 +32,65 @@ export default class StructureViewer extends Viewer {
     wrapTolerance: number;
     setupScenes(): void;
     /**
-     * Used to setup the visualization according to the given options.
+     * Used to setup the visualization options.
+     *
+     * @param {boolean} options A Javascript object containing the options. See
+     *   below for the subparameters.
+     * @param {boolean} options.structure.showParam Show lattice parameters
+     * @param {boolean} options.structure.showBonds Show bonds
+     * @param {boolean} options.structure.showCell Show cell wireframe
+     * @param {(string|number[])} options.structure.periodicity How periodicity
+     *   is handled in the visualization. Available options are:
+     *    - "none": Visualized as is.
+     *    - "wrap": Positions wrapped within unit cell.
+     *    - "boundary": Positions that are on the cell boundaries are repeated.
+     *    - [a, b, c]: Positions are repeated along each lattice vector the
+     *      given amount of times.
+     * @param {number} options.structure.radiusScale Scaling factor for the
+     *   atomic radii.
+     * @param {number} options.structure.bondScale Scaling factor for
+     *   automatically detecting the bonds.
+     * @param {number[]} options.structure.translation A fixed cartesian
+     *   translation to be applied for the atoms.
+     * @param {string} options.structure.viewCenter Determines how the view is
+     *   initially centered. Available options are:
+     *    - "COC": Center of cell.
+     *    - "COP": Center of atom positions.
+     * @param {boolean} options.structure.showShadows Whether shows are cast by
+     *   atoms onto others. Note that enabling this increases the computational
+     *   cost for doing the visualization.
      */
-    handleSettings(opt: Object): void;
+    setOptions(options: Object): void;
     /**
-     * Setup the structure visualization based on the given data.
-     *
-     * @param {Object} data -  The structure data. Contains the following
-     * attributes:
-     *
-     *     - cell
-     *     - scaledPositions
-     *     - atomicNumbers
-     *     - primitiveCell (optional)
-     *     - pbc (optional)
-     *     - unit (optional): An unit cell from which a larger piece is
-     *          composed of
+     * Returns the currently set options.
+     * @returns {Object} The current options.
      */
-    setupVisualization(data: any): boolean;
+    getOptions(): any;
+    /**
+     * Visualizes the given atomic structure.
+     *
+     * @param {boolean} structure A Javascript object containing the structure. See
+     *   below for the subparameters.
+     * @param {number[][]} structure.positions Cartesian positions. Set either
+     *   this or scaledPositions.
+     * @param {number[][]} structure.scaledPositions Positions given in the
+     *   basis of the lattice vectors. Set either this or positions.
+     * @param {number[]} structure.atomicNumbers Atomic numbers of the atoms.
+     *   Set either this or chemicalSymbols.
+     * @param {string[]} structure.chemicalSymbols Chemical symbols of the
+     *   atoms. Set either this or atomicNumbers.
+     * @param {number[]} structure.cell The lattice vectors of the unit cell as
+     *   rows of a 3x3 array.
+     * @param {string[]} structure.primitiveCell The lattice vectors of the
+     *   primitive unit cell as rows of a 3x3 array. This is optional and will be
+     *   displayed as an additional wireframe in addition to the unit cell.
+     * @param {boolean[]} structure.pbc The periodic boundary conditions for
+     *   the structure as a list of three boolean values for each lattice
+     *   vector direction.
+     * @param {number[][]} structure.bonds Optional manually set bonds. Use of
+     *   list of atomic index pairs, each pair specifying a bond between atoms.
+     */
+    load(structure: any): boolean;
     /**
      *
      */

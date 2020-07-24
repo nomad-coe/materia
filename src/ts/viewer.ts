@@ -17,12 +17,12 @@ export abstract class Viewer {
     options:any = {};                     // Options for the viewer. Can be e.g. used to control which settings are enabled
 
     /**
-     * @param {html element} hostElement is the html element where the
+     * @param {Object} hostElement is the html element where the
      *     visualization canvas will be appended.
-     * @param {options} An object that can hold custom settings for the viewer.
+     * @param {Object} options An object that can hold custom settings for the viewer.
      */
     constructor(public hostElement, options={}) {
-        this.handleSettings(options);
+        this.setOptions(options);
         this.setupRootElement();
         this.setupRenderer();
         this.setupScenes();
@@ -35,9 +35,9 @@ export abstract class Viewer {
         }
     }
 
-    handleSettings(opt:Object) {
+    setOptions(options:Object) {
         // The default settings object
-        let options =  {
+        let defaultOptions =  {
             controls: {
                 enableZoom: true,
                 enableRotate: true,
@@ -61,8 +61,8 @@ export abstract class Viewer {
         }
 
         // Save custom settings
-        this.fillOptions(opt, options);
-        this.options = options;
+        this.fillOptions(options, defaultOptions);
+        this.options = defaultOptions;
     }
 
     /**
@@ -92,27 +92,15 @@ export abstract class Viewer {
     }
 
     /**
-     * This function will clear the old view and visualize the new Brilloun
-     * zone based on the given data.
-     *
-     * @param {object} data object holding the visualized data.
+     * This function will set up all the basics for visualization: scenes,
+     * lights, camera and controls.
      */
-    load(data) {
-        // Clear all the old data
-        this.clear();
-
+    setup() {
         // Reconstruct the visualization
         this.setupScenes();
         this.setupLights();
         this.setupCamera();
         this.setupControls();
-
-        let valid:boolean = this.setupVisualization(data);
-        if (this.options.view.autoFit) {
-            this.fitToCanvas();
-        }
-        this.render();
-        return valid;
     }
 
     /**
@@ -120,24 +108,16 @@ export abstract class Viewer {
      *
      * @param {string} url Path to the json resource.
      */
-    loadJSON(url) {
+    //loadJSON(url) {
 
-        // Open file
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = () => {
-            this.load(JSON.parse(xhr.responseText))
-        };
-        xhr.open("GET", url, true);
-        xhr.send();
-    }
-
-    /*
-     * This function should use the given data to setup the visualization.
-     *
-     * Should return a boolean value indicating if the visualization was
-     * successful.
-     */
-    abstract setupVisualization(data): boolean;
+        //// Open file
+        //var xhr = new XMLHttpRequest();
+        //xhr.onreadystatechange = () => {
+            //this.load(JSON.parse(xhr.responseText))
+        //};
+        //xhr.open("GET", url, true);
+        //xhr.send();
+    //}
 
     /**
      * This function can be used to setup any static assets in the

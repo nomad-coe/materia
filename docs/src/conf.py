@@ -59,7 +59,12 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinxcontrib.bibtex',
+    'sphinx_js',
 ]
+
+# JSDoc extension
+js_source_path = '../../src/js/'
+primary_domain = 'js'
 
 # Makes sure that __init__ is documented
 autoclass_content = 'both'

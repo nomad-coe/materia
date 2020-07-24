@@ -1,5 +1,5 @@
-import StructureViewer from './structureviewer';
-import BrillouinZoneViewer from './brillouinzoneviewer';
+import { StructureViewer } from './structureviewer';
+import { BrillouinZoneViewer } from './brillouinzoneviewer';
 
 export {
     StructureViewer,

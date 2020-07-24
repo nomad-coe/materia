@@ -16,8 +16,8 @@ Try out the interactive visualizer below. Controls are as follows:
         <script src="../_static/js/structureviewer.js" defer></script>
     </div>
 
-Usage
------
+Example
+-------
 This piece of Javascript code shows an example of loading the viewer into a an
 HTML element that has been given the id :code:`canvas`. This example assumes
 that the global variable installation has been used, but it can be very simply
@@ -32,12 +32,12 @@ and changing the :code:`StructureViewer` constructor call.
 
     // Viewer options
     let options = {
-    structure: {
-        showParam: true,
-        showCell: true,
-        showBonds: true,
-        viewCenter: "COC",
-    }
+        structure: {
+            showParam: true,
+            showCell: true,
+            showBonds: true,
+            viewCenter: "COC",
+        }
     };
 
     // Initialize viewer.
@@ -65,14 +65,27 @@ and changing the :code:`StructureViewer` constructor call.
     };
     viewer.load(nacl);
 
-Structure
----------
-TODO
+Loading a structure
+-------------------
+You can load a new atomic structure to the viewer by calling the
+:func:`StructureViewer.load` method. Check the API for the supported
+parameters.
 
-Options
+Setting the options
+-------------------
+The options that are given in the constructor are passed to the
+:func:`StructureViewer.setOptions` method. Check the API for the supported
+parameters.
+
+Theming
 -------
-TODO
+The visualizer suports several theming options that can be used to change the
+appearance to better fit your needs. The theme is provided directly in the
+options under the theme subsetting.
 
 API
 ---
-TODO
+.. js:autofunction:: StructureViewer#setOptions
+.. js:autofunction:: StructureViewer#setTheme
+.. js:autofunction:: StructureViewer#load
+
