@@ -160,15 +160,15 @@ export class StructureViewer extends Viewer {
      * @param {string|number[]} options.atoms.radii The radii to use for atoms.
      * Defaults to covalent radii. Available options are:
      * 
-     *   * "covalent": Covalent radii from DOI:10.1039/B801115J.
-     *   * Custom list of atomic radii. Provide an array of floating point
+     *   - "covalent": Covalent radii from DOI:10.1039/B801115J.
+     *   - Custom list of atomic radii. Provide an array of floating point
      *     numbers where the index corresponds to an atomic number.
      * 
      * @param {string|string[]} options.atoms.colors The colors to use
      * for atoms. Available options are:
      * 
-     *   * "Jmol" (default): Jmol colors.
-     *   * Custom list of colors. Provide an array of hexadesimal colorss where
+     *   - "Jmol" (default): Jmol colors.
+     *   - Custom list of colors. Provide an array of hexadesimal colorss where
      *     the index corresponds to an atomic number.
      * 
      * @param {number} options.atoms.scale Scaling factor for the atomic radii.
@@ -180,7 +180,7 @@ export class StructureViewer extends Viewer {
      * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
      * by atoms onto others. Note that enabling this increases the
      * computational cost for doing the visualization.
-     * @param {boolean} render Whether to perform a render after settig the
+     * @param {boolean} render Whether to perform a render after setting the
      * options. Defaults to true. You should only disable this setting if you
      * plan to do a render manually afterwards.
      */
