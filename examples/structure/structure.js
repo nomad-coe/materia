@@ -4,61 +4,71 @@ let targetElem = document.getElementById("visualizationCanvas");
 // Viewer options
 let options = {
   view: {
-      fitMargin: 0.5,
+    fitMargin: 0.5,
   },
   layout: {
-      periodicity: "boundary",
-      translation: [0, 0, 0],
-      viewCenter: "COP",
+    periodicity: "boundary",
+    translation: [0, 0, 0],
+    viewCenter: "COP",
+    viewRotation: {
+      align: {
+          top: "c",
+          right: "b",
+      },
+      rotations: [
+          [0, 1, 0, 60],
+          [1, 0, 0, 30],
+      ],
+    }
   },
   outline: {
-      enabled: true,
-      color: "#000000",
-      size: 0.025,
+    enabled: true,
+    color: "#000000",
+    size: 0.025,
   },
   cell: {
-      enabled: true,
+    enabled: true,
   },
   latticeConstants: {
-      enabled: true,
-      font: "Arial",
-      size: 0.8,
-      a: {
-          color: "#C52929",
-      },
-      b: {
-          color: "#47A823",
-      },
-      c: {
-          color: "#3B5796",
-      },
-      alpha: {
-          color: "#ffffff",
-      },
-      beta: {
-          color: "#ffffff",
-      },
-      gamma: {
-          color: "#ffffff",
-      },
+    enabled: true,
+    font: "Arial",
+    size: 0.8,
+    a: {
+        color: "#C52929",
+    },
+    b: {
+        color: "#47A823",
+    },
+    c: {
+        color: "#3B5796",
+    },
+    alpha: {
+        color: "#ffffff",
+    },
+    beta: {
+        color: "#ffffff",
+    },
+    gamma: {
+        color: "#ffffff",
+    },
   },
   bonds: {
-      enabled: true,
-      material: {
-          shininess: 30,
-      },
-      radius: 0.08,
-      threshold: 1,
-      smoothness: 145,
+    enabled: true,
+    material: {
+        shininess: 30,
+    },
+    radius: 0.08,
+    threshold: 1,
+    smoothness: 145,
   }, 
   atoms: {
-      material: {
-          shininess: 30,
-      },
-      colors: "Jmol",
-      radii: "covalent",
-      scale: 1,
-      smoothness: 165,
+    material: {
+        shininess: 30,
+    },
+    colors: "Jmol",
+    radii: "covalent",
+    scale: 1,
+    smoothness: 165,
   }
 };
 
@@ -91,7 +101,6 @@ var bulk = {
     "pbc": [true, true, true],
 };
 viewer.load(bulk);
-//viewer.alignView();
 
 // Load finite molecule with cartesian positions and cell
 //var molecule = {

@@ -66,6 +66,25 @@ export class StructureViewer extends Viewer {
      *   initially centered. Available options are:
      *    - "COC": Center of cell.
      *    - "COP": Center of atom positions.
+     * @param {string} options.layout.viewRotation.align.top Optional alignment
+     * indicating which lattice basis vector should point upwards. Possible
+     * values are: "a", "b", "c", "-a", "-b", "-c".
+     * @param {string} options.layout.viewRotation.align.right Optional alignment
+     * indicating which lattice basis vector should point to the right (more
+     * precisely: the cross-product of options.layout.viewRotation.align.top
+     * and options.layout.viewRotation.align.right will point away from the
+     * screen.). Possible values are: "a", "b", "c", "-a", "-b", "-c".
+     * @param {number[][]} options.layout.viewRotation.align.rotations Optional
+     * rotations that are applied after the alignment has been done (see
+     * options.layout.viewRotation.align). The rotations are given as a list of
+     * 4-element arrays containing the rotations axis and rotation angle in
+     * degrees. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with
+     * respect to the x-coordinate. If multiple rotations are specified, they
+     * will be applied in the given order. Notice that these rotations are
+     * applied with respect to a global coordinate system, not the coordinate
+     * system of the structure. In this global coordinate system [1, 0, 0]
+     * points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away
+     * from the screen.
      * 
      * @param {boolean} options.latticeConstants.enabled Show lattice parameters
      * @param {string} options.latticeConstants.font Font size for lattice
@@ -172,6 +191,8 @@ export class StructureViewer extends Viewer {
                 viewCenter: "COP",
                 viewRotation: [],
                 wrapTolerance: 0.05,
+                align: {},
+                rotations: [],
             },
             outline: {
                 enabled: true,
@@ -538,10 +559,15 @@ export class StructureViewer extends Viewer {
         // Zoom according to given option
         this.setZoom(this.options.controls.zoomLevel);
 
+        // Set view alignment and rotation
+        this.alignView(this.options.layout.viewRotation.align.top, this.options.layout.viewRotation.align.right);
+        this.rotateView(this.options.layout.viewRotation.rotations);
+
         if (this.options.view.autoFit) {
             this.fitToCanvas();
         }
         this.toggleShadows(this.options.renderer.shadows.enabled);
+
         this.render();
         return true;
     }
@@ -1131,207 +1157,90 @@ export class StructureViewer extends Viewer {
         return cell;
     }
 
-    /**
-     * Setups the initial view so that the scene is centered and rotated
-     * slightly to emphasize 3D nature.
-     */
-    setupInitialView1D(periodicity:boolean[]) {
-
-        // Rotate so that the chosen axis points to top
-        this.root.updateMatrixWorld();  // The positions are not otherwise updated properly
-
-        let startAxis;
-        for (let iAxis=0; iAxis < periodicity.length; ++iAxis) {
-            let periodic = periodicity[iAxis];
-            if (periodic) {
-                startAxis = this.basisVectors[iAxis];
-            }
-        }
-        let finalAxis = new THREE.Vector3(1, 0, 0);
-        let segmentQ = new THREE.Quaternion().setFromUnitVectors(
-            finalAxis,
-            startAxis.clone().normalize()
-        );
-        segmentQ.conjugate()
-        this.root.quaternion.premultiply(segmentQ);
-        this.sceneInfo.quaternion.premultiply(segmentQ);
-
-        // Get the camera up and right directions in world space
-        let cameraUp = new THREE.Vector3( 0, 1, 0 );
-        let cameraRight = new THREE.Vector3( 1, 0, 0);
-        cameraRight.applyQuaternion( this.camera.quaternion );
-        cameraUp.applyQuaternion( this.camera.quaternion );
-
-        // Rotate around the camera up-axis
-        let upAngle = Math.PI/4;
-        this.rotateAroundWorldAxis(this.root, cameraUp, upAngle);
-        this.rotateAroundWorldAxis(this.sceneInfo, cameraUp, upAngle);
-
-        // Rotate around the camera right-axis
-        let rightAngle = Math.PI/9;
-        this.rotateAroundWorldAxis(this.root, cameraRight, rightAngle);
-        this.rotateAroundWorldAxis(this.sceneInfo, cameraRight, rightAngle);
-    }
-
-    /**
-     * Setups the initial view so that the scene is centered and rotated
-     * slightly to emphasize 3D nature.
-     */
-    setupInitialView2D(periodicity:boolean[], periodicIndices) {
-
-        let a = this.basisVectors[periodicIndices[0]].clone();
-        let c = new THREE.Vector3(1, 1, 1);
-        for (let i=0; i < periodicIndices.length; ++i) {
-            let periodic = periodicIndices[i];
-            c.setComponent(periodic, 0);
-        }
-
-        // Rotate so that the chosen axis points to top
-        this.root.updateMatrixWorld();  // The positions are not otherwise updated properly
-
-        let finalAxis = new THREE.Vector3(0, 0, 1);
-        let segmentQ = new THREE.Quaternion().setFromUnitVectors(
-            c.clone().normalize(),
-            finalAxis
-        );
-        this.root.quaternion.premultiply(segmentQ);
-        this.sceneInfo.quaternion.premultiply(segmentQ);
-        a = a.clone().applyQuaternion(segmentQ);
-        c = c.clone().applyQuaternion(segmentQ);
-
-        // Rotate so that a points to the right
-        finalAxis = new THREE.Vector3(1, 0, 0);
-        segmentQ = new THREE.Quaternion().setFromUnitVectors(
-            a.clone().normalize(),
-            finalAxis
-        );
-        this.root.quaternion.premultiply(segmentQ);
-        this.sceneInfo.quaternion.premultiply(segmentQ);
-
-        // The positions are not otherwise updated properly
-        this.root.updateMatrixWorld();
-        this.sceneInfo.updateMatrixWorld();
-
-        // Tilt the system slightly
-        let cameraRight = new THREE.Vector3(1, 0, 0);
-        cameraRight.applyQuaternion( this.camera.quaternion );
-        let rightAngle = -Math.PI/6;
-        this.rotateAroundWorldAxis(this.root, cameraRight, rightAngle);
-        this.rotateAroundWorldAxis(this.sceneInfo, cameraRight, rightAngle);
-    }
 
     /**
      * @param rotations The rotations as a list. Each rotation should be an
      * array containing four numbers: [x, y, z, angle]. The rotations are
      * applied in the given order.
      */
-    setViewRotation(rotation) {
-        for (let r of rotation) {
-            let basisC = new THREE.Vector3(rotation[0], rotation[1], rotation[2]);
-            basisC.normalize();
-            let angleC = -rotation[4]/180*Math.PI;
-            this.rotateAroundWorldAxis(this.root, basisC, angleC);
-            this.rotateAroundWorldAxis(this.sceneInfo, basisC, angleC);
+    rotateView(rotations) {
+        for (let r of rotations) {
+            let basis = new THREE.Vector3(r[0], r[1], r[2]);
+            basis.normalize();
+            let angle = r[3]/180*Math.PI;
+            console.log(r);
+            console.log(angle);
+            console.log(basis);
+            this.rotateAroundWorldAxis(this.root, basis, angle);
+            this.rotateAroundWorldAxis(this.sceneInfo, basis, angle);
         }
-    }
-
-    alignView(top=2, right=1, back=0) {
-        let a = this.basisVectors[back];
-        let b = this.basisVectors[right];
-        let c = this.basisVectors[top];
-
-        // Rotate so that the c-axis points to top
-        this.root.updateMatrixWorld();  // The positions are not otherwise updated properly
-
-        let finalCAxis = new THREE.Vector3(0, 1, 0);
-        let cQuaternion = new THREE.Quaternion().setFromUnitVectors(
-            c.clone().normalize(),
-            finalCAxis
-        );
-        this.root.quaternion.premultiply(cQuaternion);
-        this.sceneInfo.quaternion.premultiply(cQuaternion);
-        this.root.updateMatrixWorld();
-        this.sceneInfo.updateMatrixWorld();
-        b = b.clone().applyQuaternion(cQuaternion);
-        c = c.clone().applyQuaternion(cQuaternion);
-
-        // Rotate so that c x b points to the right
-        let currentAAxis = new THREE.Vector3().crossVectors(b, c);
-        let finalAAxis = new THREE.Vector3(0, 0, 1);
-        let aQuaternion = new THREE.Quaternion().setFromUnitVectors(
-            currentAAxis.clone().normalize(),
-            finalAAxis
-        );
-        this.root.quaternion.premultiply(aQuaternion);
-        this.sceneInfo.quaternion.premultiply(aQuaternion);
-        this.root.updateMatrixWorld();
-        this.sceneInfo.updateMatrixWorld();
-        b = b.clone().applyQuaternion(aQuaternion);
-        c = c.clone().applyQuaternion(aQuaternion);
-
-        let cameraVector = new THREE.Vector3( 0, 0, - 1 );
-        cameraVector.applyQuaternion( this.camera.quaternion );
         this.render();
     }
 
-    /**
-     * Setups the initial view so that the scene is centered and rotated
-     * slightly to emphasize 3D nature.
-     */
-    setupInitialView3D() {
+    alignView(top, right) {
+        if (top === undefined) {
+            return;
+        }
+        // Determine the top direction
+        let topVector;
+        if (top === "c") {
+            topVector = this.basisVectors[2];
+        } else if (top === "-c") {
+            topVector = this.basisVectors[2].negate();
+        } else if (top === "b") {
+            topVector = this.basisVectors[1];
+        } else if (top === "-b") {
+            topVector = this.basisVectors[1].negate();
+        } else if (top === "a") {
+            topVector = this.basisVectors[0];
+        } else if (top === "-a") {
+            topVector = this.basisVectors[0].negate();
+        }
 
-        let a = this.basisVectors[0];
-        let b = this.basisVectors[1];
-        let c = this.basisVectors[2];
+        // Determine the right direction
+        let rightVector;
+        if (right === "c") {
+            rightVector = this.basisVectors[2];
+        } else if (right === "-c") {
+            rightVector = this.basisVectors[2].negate();
+        } else if (right === "b") {
+            rightVector = this.basisVectors[1];
+        } else if (right === "-b") {
+            rightVector = this.basisVectors[1].negate();
+        } else if (right === "a") {
+            rightVector = this.basisVectors[0];
+        } else if (right === "-a") {
+            rightVector = this.basisVectors[0].negate();
+        }
 
-        // Rotate so that the c-axis points to top
+        // Rotate so that the top vector points to top
         this.root.updateMatrixWorld();  // The positions are not otherwise updated properly
-
         let finalCAxis = new THREE.Vector3(0, 1, 0);
         let cQuaternion = new THREE.Quaternion().setFromUnitVectors(
-            c.clone().normalize(),
+            topVector.clone().normalize(),
             finalCAxis
         );
         this.root.quaternion.premultiply(cQuaternion);
         this.sceneInfo.quaternion.premultiply(cQuaternion);
         this.root.updateMatrixWorld();
         this.sceneInfo.updateMatrixWorld();
-        b = b.clone().applyQuaternion(cQuaternion);
-        c = c.clone().applyQuaternion(cQuaternion);
 
-        // Rotate so that c x b points to the right
-        let currentAAxis = new THREE.Vector3().crossVectors(b, c);
-        let finalAAxis = new THREE.Vector3(0, 0, 1);
-        let aQuaternion = new THREE.Quaternion().setFromUnitVectors(
-            currentAAxis.clone().normalize(),
-            finalAAxis
-        );
-        this.root.quaternion.premultiply(aQuaternion);
-        this.sceneInfo.quaternion.premultiply(aQuaternion);
-        this.root.updateMatrixWorld();
-        this.sceneInfo.updateMatrixWorld();
-        b = b.clone().applyQuaternion(aQuaternion);
-        c = c.clone().applyQuaternion(aQuaternion);
-
-        let cameraVector = new THREE.Vector3( 0, 0, - 1 );
-        cameraVector.applyQuaternion( this.camera.quaternion );
-
-        // Rotate around the c-axis
-        let tiltAxis2 = new THREE.Vector3().crossVectors(cameraVector, b);
-        tiltAxis2.normalize();
-        let tiltAngle2 = -Math.PI/3;
-        //let tiltAngle2 = -Math.PI/6;
-        this.rotateAroundWorldAxis(this.root, tiltAxis2, tiltAngle2);
-        this.rotateAroundWorldAxis(this.sceneInfo, tiltAxis2, tiltAngle2);
-
-        // Rotate around the axis defined by the cross-product of the
-        // cameraVector and basis vector c
-        let tiltAxis = new THREE.Vector3().crossVectors(cameraVector, c);
-        tiltAxis.normalize();
-        let tiltAngle = Math.PI/6;
-        //let tiltAngle = Math.PI/12;
-        this.rotateAroundWorldAxis(this.root, tiltAxis, tiltAngle);
-        this.rotateAroundWorldAxis(this.sceneInfo, tiltAxis, tiltAngle);
+        // Rotate so that selected vector points to the right
+        if (right !== undefined) {
+            topVector = topVector.clone().applyQuaternion(cQuaternion);
+            rightVector = rightVector.clone().applyQuaternion(cQuaternion);
+            let currentAAxis = new THREE.Vector3().crossVectors(topVector, rightVector);
+            let finalAAxis = new THREE.Vector3(0, 0, -1);
+            let aQuaternion = new THREE.Quaternion().setFromUnitVectors(
+                currentAAxis.clone().normalize(),
+                finalAAxis
+            );
+            this.root.quaternion.premultiply(aQuaternion);
+            this.sceneInfo.quaternion.premultiply(aQuaternion);
+            this.root.updateMatrixWorld();
+            this.sceneInfo.updateMatrixWorld();
+        }
+        this.render();
     }
 
     /**
@@ -1699,6 +1608,20 @@ export class StructureViewer extends Viewer {
     }
 
     /**
+     * Used to get a number of repetitions that are needed for the given
+     * latticevector to reach the target size.
+     *
+     * @param latticeVector - The vector that is to be extended.
+     * @param targetSize - The targeted size.
+     */
+    getRepetitions(latticeVector, targetSize) {
+        let vectorLen = latticeVector.length();
+        let multiplier = Math.max(Math.floor(targetSize/vectorLen)-1, 1);
+
+        return multiplier;
+    }
+
+    /**
      * Setup the view for 0D systems (atoms, molecules).
      */
     setup0D(relPos, cartPos, labels) {
@@ -1707,7 +1630,6 @@ export class StructureViewer extends Viewer {
         this.createPrimitiveCell(pbc, this.options.cell.enabled);
         this.createAtoms(relPos, labels, pbc);
         this.createLatticeConstants(this.basisVectors, pbc, []);
-        this.setupInitialView3D();
     }
 
     /**
@@ -1733,22 +1655,6 @@ export class StructureViewer extends Viewer {
         this.createAtoms(relPos, labels, pbc);
 
         this.createLatticeConstants(this.basisVectors, pbc, periodicIndices);
-
-        this.setupInitialView1D(pbc);
-    }
-
-    /**
-     * Used to get a number of repetitions that are needed for the given
-     * latticevector to reach the target size.
-     *
-     * @param latticeVector - The vector that is to be extended.
-     * @param targetSize - The targeted size.
-     */
-    getRepetitions(latticeVector, targetSize) {
-        let vectorLen = latticeVector.length();
-        let multiplier = Math.max(Math.floor(targetSize/vectorLen)-1, 1);
-
-        return multiplier;
     }
 
     /**
@@ -1780,7 +1686,6 @@ export class StructureViewer extends Viewer {
         this.createAtoms(relPos, labels, pbc);
 
         this.createLatticeConstants(this.basisVectors, pbc, periodicIndices);
-        this.setupInitialView2D(pbc, periodicIndices);
     }
 
     /**
@@ -1792,7 +1697,6 @@ export class StructureViewer extends Viewer {
         this.createPrimitiveCell(pbc, this.options.cell.enabled);
         this.createAtoms(relPos, labels, pbc);
         this.createLatticeConstants(this.basisVectors, pbc, [0, 1, 2]);
-        this.setupInitialView3D();
     }
 
 	elementNames:string[] = [

@@ -52,6 +52,25 @@ export declare class StructureViewer extends Viewer {
      *   initially centered. Available options are:
      *    - "COC": Center of cell.
      *    - "COP": Center of atom positions.
+     * @param {string} options.layout.viewRotation.align.top Optional alignment
+     * indicating which lattice basis vector should point upwards. Possible
+     * values are: "a", "b", "c", "-a", "-b", "-c".
+     * @param {string} options.layout.viewRotation.align.right Optional alignment
+     * indicating which lattice basis vector should point to the right (more
+     * precisely: the cross-product of options.layout.viewRotation.align.top
+     * and options.layout.viewRotation.align.right will point away from the
+     * screen.). Possible values are: "a", "b", "c", "-a", "-b", "-c".
+     * @param {number[][]} options.layout.viewRotation.align.rotations Optional
+     * rotations that are applied after the alignment has been done (see
+     * options.layout.viewRotation.align). The rotations are given as a list of
+     * 4-element arrays containing the rotations axis and rotation angle in
+     * degrees. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with
+     * respect to the x-coordinate. If multiple rotations are specified, they
+     * will be applied in the given order. Notice that these rotations are
+     * applied with respect to a global coordinate system, not the coordinate
+     * system of the structure. In this global coordinate system [1, 0, 0]
+     * points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away
+     * from the screen.
      *
      * @param {boolean} options.latticeConstants.enabled Show lattice parameters
      * @param {string} options.latticeConstants.font Font size for lattice
@@ -253,27 +272,12 @@ export declare class StructureViewer extends Viewer {
      */
     createCell(origin: any, basisVectors: any, periodicity: any, color: any, linewidth: number, dashed: boolean): THREE.Object3D;
     /**
-     * Setups the initial view so that the scene is centered and rotated
-     * slightly to emphasize 3D nature.
-     */
-    setupInitialView1D(periodicity: boolean[]): void;
-    /**
-     * Setups the initial view so that the scene is centered and rotated
-     * slightly to emphasize 3D nature.
-     */
-    setupInitialView2D(periodicity: boolean[], periodicIndices: any): void;
-    /**
      * @param rotations The rotations as a list. Each rotation should be an
      * array containing four numbers: [x, y, z, angle]. The rotations are
      * applied in the given order.
      */
-    setViewRotation(rotation: any): void;
-    alignView(top?: number, right?: number, back?: number): void;
-    /**
-     * Setups the initial view so that the scene is centered and rotated
-     * slightly to emphasize 3D nature.
-     */
-    setupInitialView3D(): void;
+    rotateView(rotations: any): void;
+    alignView(top: any, right: any): void;
     /**
      * Used to add periodic repetitions of atoms.
      */
@@ -323,6 +327,14 @@ export declare class StructureViewer extends Viewer {
     addAtom(index: any, position: any, atomicNumber: any, mesh: any, relative?: boolean): void;
     render(): void;
     /**
+     * Used to get a number of repetitions that are needed for the given
+     * latticevector to reach the target size.
+     *
+     * @param latticeVector - The vector that is to be extended.
+     * @param targetSize - The targeted size.
+     */
+    getRepetitions(latticeVector: any, targetSize: any): number;
+    /**
      * Setup the view for 0D systems (atoms, molecules).
      */
     setup0D(relPos: any, cartPos: any, labels: any): void;
@@ -333,14 +345,6 @@ export declare class StructureViewer extends Viewer {
      * @param dim - The index of the periodic dimension.
      */
     setup1D(relPos: any, cartPos: any, labels: any, pbc: any, periodicIndices: any): void;
-    /**
-     * Used to get a number of repetitions that are needed for the given
-     * latticevector to reach the target size.
-     *
-     * @param latticeVector - The vector that is to be extended.
-     * @param targetSize - The targeted size.
-     */
-    getRepetitions(latticeVector: any, targetSize: any): number;
     /**
      * Replicates the structure along the specified direction to emphasize the
      * 2D nature of the material.

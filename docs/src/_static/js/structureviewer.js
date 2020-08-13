@@ -7,6 +7,16 @@ let options = {
   layout: {
     viewCenter: "COC",
     periodicity: "boundary",
+    viewRotation: {
+      align: {
+          top: "c",
+          right: "b",
+      },
+      rotations: [
+          [0, 1, 0, 60],
+          [1, 0, 0, 30],
+      ],
+    }
   },
   bonds: {
     enabled: true
