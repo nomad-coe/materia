@@ -6,7 +6,7 @@ let canvas = document.getElementById("canvas");
 let options = {
   layout: {
     viewCenter: "COC",
-    periodicity: "boundary",
+    periodicity: "none",
     viewRotation: {
       align: {
           top: "c",

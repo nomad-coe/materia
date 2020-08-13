@@ -20,10 +20,6 @@ gulp.task('typescript', function(done) {
       .pipe(tsProject());
     return merge(tsResult, tsResult.js)
       .pipe(gulp.dest('./src/js'));
-    // Build Typescript
-    //return gulp.src([paths.typescript])
-        //.pipe(tsProject())
-        //.js.pipe(gulp.dest('./src/js'));
 });
 
 // Copy files from node-modules

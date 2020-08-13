@@ -134,6 +134,10 @@ export class StructureViewer extends Viewer {
      * @param {number} options.outline.size Outline size.
      * 
      * @param {boolean} options.cell.enabled Show unit cell wireframe.
+     * @param {boolean} options.cell.color Unit cell wireframe color.
+     * @param {boolean} options.cell.linewidth Unit cell wireframe line width.
+     * @param {boolean} options.cell.dashSize Unit cell wireframe dash size. Provide a value > 0 for a dashed line.
+     * @param {boolean} options.cell.gapSize Unit cell wireframe dash size. Provide a value > 0 for a dashed line.
      * 
      * @param {boolean} options.bonds.enabled Show bonds.
      * @param {number} options.bonds.radius Bond radius.
@@ -201,28 +205,44 @@ export class StructureViewer extends Viewer {
             },
             cell: {
                 enabled: true,
+                color: "#000000",
+                linewidth: 1.5,
+                dashSize: 0,
+                gapSize: 0
             },
             latticeConstants: {
                 enabled: true,
                 font: "Arial",
                 size: 0.8,
                 a: {
+                    enabled: true,
                     color: "#C52929",
+                    label: "a",
                 },
                 b: {
+                    enabled: true,
                     color: "#47A823",
+                    label: "b",
                 },
                 c: {
+                    enabled: true,
                     color: "#3B5796",
+                    label: "c",
                 },
                 alpha: {
+                    enabled: true,
                     color: "#ffffff",
+                    label: "α",
                 },
                 beta: {
+                    enabled: true,
                     color: "#ffffff",
+                    label: "β",
                 },
                 gamma: {
+                    enabled: true,
                     color: "#ffffff",
+                    label: "γ",
                 },
             },
             bonds: {
@@ -430,6 +450,11 @@ export class StructureViewer extends Viewer {
             }
         }
 
+        let hasCell = true;
+        if (cell === undefined) {
+            hasCell = false;
+        }
+
         // Assume no periodicity if not defined
         if ((periodicity == undefined) || (periodicity == null)) {
             periodicity = [false, false, false];
@@ -448,7 +473,9 @@ export class StructureViewer extends Viewer {
         this.sceneInfo.add(this.infoContainer);
         this.latticeConstants = new THREE.Object3D();
         this.container.add(this.latticeConstants);
-        this.basisVectors = this.createBasisVectors(cell);
+        if (hasCell) {
+            this.basisVectors = this.createBasisVectors(cell);
+        }
         let relPos = [];
         let cartPos = [];
 
@@ -465,12 +492,14 @@ export class StructureViewer extends Viewer {
                 iCartPos.add(this.basisVectors[2].clone().multiplyScalar(iRelPos.z));
                 cartPos.push(iCartPos);
             }
-        } else if (positions !== undefined) {
+        }
+        else if (positions !== undefined) {
             for (let i=0; i < positions.length; ++i) {
                 let pos = positions[i];
                 let iCartPos = new THREE.Vector3().fromArray(pos);
                 cartPos.push(iCartPos);
 
+                /*
                 // Calculate the relative positions
                 let cellMatrix = new THREE.Matrix3();
                 cellMatrix.set(
@@ -481,6 +510,7 @@ export class StructureViewer extends Viewer {
                 let cellInverse = new THREE.Matrix3().getInverse(cellMatrix);
                 let iRelPos = iCartPos.clone().applyMatrix3(cellInverse);
                 relPos.push(iRelPos);
+                */
             }
         }
 
@@ -513,17 +543,12 @@ export class StructureViewer extends Viewer {
                 }
             }
         }
-        if (nPeriodic === 0) {
-            this.setup0D(relPos, cartPos, atomicNumbers);
-        }
-        if (nPeriodic === 1) {
-            this.setup1D(relPos, cartPos, atomicNumbers, periodicity, periodicIndices);
-        }
-        else if (nPeriodic === 2) {
-            this.setup2D(relPos, cartPos, atomicNumbers, periodicity, periodicIndices);
-        }
-        else if (nPeriodic === 3) {
-            this.setup3D(relPos, cartPos, atomicNumbers);
+        if (hasCell) {
+            this.createConventionalCell(periodicity, this.options.cell.enabled);
+            this.createLatticeConstants(this.basisVectors, periodicity, periodicIndices);
+            this.createAtoms(relPos, atomicNumbers, periodicity, true);
+        } else {
+            this.createAtoms(cartPos, atomicNumbers, periodicity, false);
         }
 
         // Determine the corner points that are used to properly fit the
@@ -560,7 +585,9 @@ export class StructureViewer extends Viewer {
         this.setZoom(this.options.controls.zoomLevel);
 
         // Set view alignment and rotation
-        this.alignView(this.options.layout.viewRotation.align.top, this.options.layout.viewRotation.align.right);
+        if (hasCell) {
+            this.alignView(this.options.layout.viewRotation.align.top, this.options.layout.viewRotation.align.right);
+        }
         this.rotateView(this.options.layout.viewRotation.rotations);
 
         if (this.options.view.autoFit) {
@@ -668,13 +695,7 @@ export class StructureViewer extends Viewer {
         this.axisLabels = []
         this.infoContainer.add(this.latticeConstants);
         this.infoContainer.add(this.angleArcs);
-        let nPeriod = 0;
         let infoColor = 0x000000;
-        for (let iDim=0; iDim<periodicity.length; ++iDim) {
-            if (periodicity[iDim]) {
-                ++nPeriod;
-            }
-        }
 
         // Used to create a text label as sprite that lives in 3D space.
         let createLabel = (position:any, label:string, color, stroked:boolean=true, fontFamily:string, fontSize:number) => {
@@ -716,7 +737,6 @@ export class StructureViewer extends Viewer {
         });
         let axisOffset = 1.3;
 
-
         let iBasis = -1;
         let cellBasisColors = [];
         cellBasisColors.push(this.options.latticeConstants.a.color);
@@ -726,8 +746,10 @@ export class StructureViewer extends Viewer {
         angleColors.push(this.options.latticeConstants.alpha.color);
         angleColors.push(this.options.latticeConstants.beta.color);
         angleColors.push(this.options.latticeConstants.gamma.color);
-        let axisLabels = ["a", "b", "c"];
-        let angleLabels = ["γ", "α", "β"];
+        let angleLabels = [this.options.latticeConstants.gamma.label, this.options.latticeConstants.alpha.label, this.options.latticeConstants.beta.label];
+        let axisLabels = [this.options.latticeConstants.a.label, this.options.latticeConstants.b.label, this.options.latticeConstants.c.label];
+        let angleEnableds = [this.options.latticeConstants.gamma.enabled, this.options.latticeConstants.alpha.enabled, this.options.latticeConstants.beta.enabled];
+        let axisEnableds = [this.options.latticeConstants.a.enabled, this.options.latticeConstants.b.enabled, this.options.latticeConstants.c.enabled];
         let axisFonts = [];
         axisFonts.push(this.options.latticeConstants.a.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.a.font);
         axisFonts.push(this.options.latticeConstants.b.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.b.font);
@@ -751,15 +773,9 @@ export class StructureViewer extends Viewer {
         // handed coordinate system.
         let first;
         let second;
-        if (nPeriod === 2) {
-            first = periodicIndices[0];
-            second = periodicIndices[1];
-        }
 
         for (let iTrueBasis=0; iTrueBasis<3; ++iTrueBasis) {
-            if (!periodicity[iTrueBasis]) {
-                continue;
-            }
+
             iBasis += 1;
             let axisLabel = axisLabels[iBasis];
             let axisColor = cellBasisColors[iBasis];
@@ -768,156 +784,144 @@ export class StructureViewer extends Viewer {
             let angleFontSize = angleFontSizes[iBasis];
             let angleFont = angleFonts[iBasis];
             let angleColor = angleColors[iBasis];
-
-            // Basis and angle label selection, same for all systems
             let angleLabel = angleLabels[iBasis];
-
+            let axisEnabled = axisEnableds[iBasis];
+            let angleEnabled = angleEnableds[iBasis];
             let basisVec1 = basis[iTrueBasis];
             let basisVec2 = basis[(iTrueBasis+1) % 3].clone();
             let basisVec3 = basis[(iTrueBasis+2) % 3].clone();
-            let origin = new THREE.Vector3( 0, 0, 0 );
-            let dir = basisVec1.clone()
 
-            // Add an axis label
-            let textPos = dir.clone()
-                .multiplyScalar(0.5);
-            let labelOffset;
-            let newBasis2;
-            let newBasis3;
-            if (basisVec2.length() == 0) {
-                newBasis2 = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
-                labelOffset = new THREE.Vector3().crossVectors(basisVec1, newBasis2);
-            } else if (basisVec3.length() == 0) {
-                newBasis3 = new THREE.Vector3().crossVectors(basisVec1, basisVec2);
-                labelOffset = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
-            } else {
-                let labelOffset1 = new THREE.Vector3().crossVectors(basisVec1, basisVec2)
-                let labelOffset2 = new THREE.Vector3().crossVectors(basisVec1, basisVec3)
-                labelOffset = new THREE.Vector3().sub(labelOffset1).add(labelOffset2)
-            }
-            labelOffset.normalize()
-            labelOffset.multiplyScalar(0.8)
-            textPos.add(labelOffset);
+            if (axisEnabled) {
+                // Basis and angle label selection, same for all systems
 
-            if (nPeriod === 3)  {
-                let axisLabelSprite = createLabel(textPos, axisLabel, axisColor, true, axisFont, axisFontSize);
-                this.latticeConstants.add(axisLabelSprite)
-                this.axisLabels.push(axisLabelSprite);
-            } else if (nPeriod === 2) {
-                let axisLabelSprite = createLabel(textPos, axisLabel, axisColor, true, axisFont, axisFontSize);
-                this.latticeConstants.add(axisLabelSprite)
-                this.axisLabels.push(axisLabelSprite);
-                angleLabel = "γ";
-            } else {
-                let axisText = "a";
-                let axisLabelSprite = createLabel(textPos, axisText, axisColor, true, axisFont, axisFontSize);
-                this.latticeConstants.add(axisLabelSprite)
-                this.axisLabels.push(axisLabelSprite);
-            }
+                let origin = new THREE.Vector3( 0, 0, 0 );
+                let dir = basisVec1.clone()
 
-            // Add basis vector colored line
-            let cellVectorMaterial = new THREE.MeshBasicMaterial({
-                color: axisColor,
-                transparent: true,
-                opacity: 0.75
-            })
-            let cellVector = basisVec1.clone();
-            let cellVectorLine = this.createCylinder(origin.clone(), cellVector.clone().add(origin), 0.09, 10, cellVectorMaterial)
-            this.latticeConstants.add(cellVectorLine);
-
-            // Add basis vector axis line
-            let cellAxisMaterial = new THREE.MeshBasicMaterial({
-                color: "#000000",
-            })
-            let axisStart = this.basisVectors[iTrueBasis].clone();
-            let axisEnd = axisStart.clone().multiplyScalar(1+axisOffset/axisStart.length());
-            let cellAxisVector = basisVec1.clone();
-            let cellAxisVectorLine = this.createCylinder(origin.clone(), axisEnd, 0.02, 10, cellAxisMaterial)
-            this.latticeConstants.add(cellAxisVectorLine);
-
-            // Add axis arrow
-            let arrowGeometry = new THREE.CylinderGeometry( 0, 0.10, 0.5, 12 );
-            let arrowMaterial = new THREE.MeshBasicMaterial({
-                color: infoColor,
-            });
-            let arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
-            arrow.position.copy(dir)
-                .multiplyScalar(1+axisOffset/dir.length());
-            arrow.lookAt(new THREE.Vector3());
-            arrow.rotateX(-Math.PI/2);
-            this.latticeConstants.add(arrow);
-
-            // Add angle label and curve
-            if (nPeriod === 1) {
-                continue;
-            } else if (nPeriod === 2) {
-                if (!(iTrueBasis == first && (iTrueBasis+1)%3 == second)) {
-                    continue;
+                // Add an axis label
+                let textPos = dir.clone()
+                    .multiplyScalar(0.5);
+                let labelOffset;
+                let newBasis2;
+                let newBasis3;
+                if (basisVec2.length() == 0) {
+                    newBasis2 = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
+                    labelOffset = new THREE.Vector3().crossVectors(basisVec1, newBasis2);
+                } else if (basisVec3.length() == 0) {
+                    newBasis3 = new THREE.Vector3().crossVectors(basisVec1, basisVec2);
+                    labelOffset = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
+                } else {
+                    let labelOffset1 = new THREE.Vector3().crossVectors(basisVec1, basisVec2)
+                    let labelOffset2 = new THREE.Vector3().crossVectors(basisVec1, basisVec3)
+                    labelOffset = new THREE.Vector3().sub(labelOffset1).add(labelOffset2)
                 }
+                labelOffset.normalize()
+                labelOffset.multiplyScalar(0.8)
+                textPos.add(labelOffset);
+
+                let axisLabelSprite = createLabel(textPos, axisLabel, axisColor, true, axisFont, axisFontSize);
+                this.latticeConstants.add(axisLabelSprite)
+                this.axisLabels.push(axisLabelSprite);
+
+                // Add basis vector colored line
+                let cellVectorMaterial = new THREE.MeshBasicMaterial({
+                    color: axisColor,
+                    transparent: true,
+                    opacity: 0.75
+                })
+                let cellVector = basisVec1.clone();
+                let cellVectorLine = this.createCylinder(origin.clone(), cellVector.clone().add(origin), 0.09, 10, cellVectorMaterial)
+                this.latticeConstants.add(cellVectorLine);
+
+                // Add basis vector axis line
+                let cellAxisMaterial = new THREE.MeshBasicMaterial({
+                    color: "#000000",
+                })
+                let axisStart = this.basisVectors[iTrueBasis].clone();
+                let axisEnd = axisStart.clone().multiplyScalar(1+axisOffset/axisStart.length());
+                let cellAxisVector = basisVec1.clone();
+                let cellAxisVectorLine = this.createCylinder(origin.clone(), axisEnd, 0.02, 10, cellAxisMaterial)
+                this.latticeConstants.add(cellAxisVectorLine);
+
+                // Add axis arrow
+                let arrowGeometry = new THREE.CylinderGeometry( 0, 0.10, 0.5, 12 );
+                let arrowMaterial = new THREE.MeshBasicMaterial({
+                    color: infoColor,
+                });
+                let arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+                arrow.position.copy(dir)
+                    .multiplyScalar(1+axisOffset/dir.length());
+                arrow.lookAt(new THREE.Vector3());
+                arrow.rotateX(-Math.PI/2);
+                this.latticeConstants.add(arrow);
+
             }
-            let arcMaterial = new THREE.LineDashedMaterial({
-                color: infoColor,
-                linewidth: 2,
-                dashSize: 0.2,
-                gapSize: 0.1
-            });
 
-            let normal = new THREE.Vector3().crossVectors(basisVec1, basisVec2)
-            let angle = basisVec1.angleTo(basisVec2);
-            let radius = Math.max(Math.min(1/4*basisVec1.length(), 1/4*basisVec2.length()), 1)
-            let curve = new THREE.EllipseCurve(
-                0, 0,             // ax, aY
-                radius, radius,   // xRadius, yRadius
-                0, angle,         // aStartAngle, aEndAngle
-                false,            // aClockwise
-                0                 // aRotation
-            );
-            let points = curve.getSpacedPoints( 20 );
-            let arcGeometry = new THREE.Geometry().setFromPoints(points);
-            let arc = new THREE.Line( arcGeometry, arcMaterial);
-            arc.computeLineDistances();
+            if (angleEnabled) {
+                // Add angle label and curve
+                let arcMaterial = new THREE.LineDashedMaterial({
+                    color: infoColor,
+                    linewidth: 2,
+                    dashSize: 0.2,
+                    gapSize: 0.1
+                });
 
-            // First rotate the arc so that it's x-axis points towards the
-            // first basis vector that defines the arc
-            let yAxis = new THREE.Vector3(0, 1, 0);
-            let xAxis = new THREE.Vector3(1, 0, 0);
-            let zAxis = new THREE.Vector3(0, 0, 1);
-            let quaternion = new THREE.Quaternion().setFromUnitVectors(
-                xAxis,
-                basisVec1.clone().normalize()
-            );
-            arc.quaternion.copy(quaternion);
+                let normal = new THREE.Vector3().crossVectors(basisVec1, basisVec2)
+                let angle = basisVec1.angleTo(basisVec2);
+                let radius = Math.max(Math.min(1/4*basisVec1.length(), 1/4*basisVec2.length()), 1)
+                let curve = new THREE.EllipseCurve(
+                    0, 0,             // ax, aY
+                    radius, radius,   // xRadius, yRadius
+                    0, angle,         // aStartAngle, aEndAngle
+                    false,            // aClockwise
+                    0                 // aRotation
+                );
+                let points = curve.getSpacedPoints( 20 );
+                let arcGeometry = new THREE.Geometry().setFromPoints(points);
+                let arc = new THREE.Line( arcGeometry, arcMaterial);
+                arc.computeLineDistances();
 
-            // Then rotate the arc along it's x axis so that the xy-plane
-            // coincides with the plane defined by the the two basis vectors
-            // that define the plane.
-            let lastArcPointLocal = arcGeometry.vertices[arcGeometry.vertices.length-1];
-            arc.updateMatrixWorld();  // The positions are not otherwise updated properly
-            let lastArcPointWorld = arc.localToWorld(lastArcPointLocal.clone());
+                // First rotate the arc so that it's x-axis points towards the
+                // first basis vector that defines the arc
+                let yAxis = new THREE.Vector3(0, 1, 0);
+                let xAxis = new THREE.Vector3(1, 0, 0);
+                let zAxis = new THREE.Vector3(0, 0, 1);
+                let quaternion = new THREE.Quaternion().setFromUnitVectors(
+                    xAxis,
+                    basisVec1.clone().normalize()
+                );
+                arc.quaternion.copy(quaternion);
 
-            // The angle direction is defined by the first basis vector
-            let axis = basisVec1;
-            let arcNormal = new THREE.Vector3()
-                .crossVectors(axis, lastArcPointWorld);
-            let planeAngle = normal.angleTo(arcNormal);
-            let planeCross = new THREE.Vector3()
-                .crossVectors(basisVec2, lastArcPointWorld);
-            let directionValue = planeCross.dot(axis);
-            if (directionValue > 0) {
-                planeAngle = -planeAngle;
+                // Then rotate the arc along it's x axis so that the xy-plane
+                // coincides with the plane defined by the the two basis vectors
+                // that define the plane.
+                let lastArcPointLocal = arcGeometry.vertices[arcGeometry.vertices.length-1];
+                arc.updateMatrixWorld();  // The positions are not otherwise updated properly
+                let lastArcPointWorld = arc.localToWorld(lastArcPointLocal.clone());
+
+                // The angle direction is defined by the first basis vector
+                let axis = basisVec1;
+                let arcNormal = new THREE.Vector3()
+                    .crossVectors(axis, lastArcPointWorld);
+                let planeAngle = normal.angleTo(arcNormal);
+                let planeCross = new THREE.Vector3()
+                    .crossVectors(basisVec2, lastArcPointWorld);
+                let directionValue = planeCross.dot(axis);
+                if (directionValue > 0) {
+                    planeAngle = -planeAngle;
+                }
+                arc.rotateX(planeAngle);
+
+                // Add label for the angle
+                arc.updateMatrixWorld();  // The positions are not otherwise updated properly
+                arc.updateMatrix();  // The positions are not otherwise updated properly
+                let angleLabelPos = arc.localToWorld(arcGeometry.vertices[9].clone());
+                let angleLabelLen = angleLabelPos.length();
+                angleLabelPos.multiplyScalar(1+0.3/angleLabelLen);
+                let angleLabelObj = createLabel(angleLabelPos, angleLabel.toString(), angleColor, true, angleFont, angleFontSize);
+                this.latticeConstants.add(angleLabelObj);
+                this.axisLabels.push(angleLabelObj);
+                this.angleArcs.add(arc);
             }
-            arc.rotateX(planeAngle);
-
-            // Add label for the angle
-            arc.updateMatrixWorld();  // The positions are not otherwise updated properly
-            arc.updateMatrix();  // The positions are not otherwise updated properly
-            let angleLabelPos = arc.localToWorld(arcGeometry.vertices[9].clone());
-            let angleLabelLen = angleLabelPos.length();
-            angleLabelPos.multiplyScalar(1+0.3/angleLabelLen);
-            let angleLabelObj = createLabel(angleLabelPos, angleLabel.toString(), angleColor, true, angleFont, angleFontSize);
-            this.latticeConstants.add(angleLabelObj);
-            this.axisLabels.push(angleLabelObj);
-            this.angleArcs.add(arc);
         }
     }
 
@@ -1014,23 +1018,18 @@ export class StructureViewer extends Viewer {
      *
      */
     createConventionalCell(periodicity, visible) {
-        let cell = this.createCell(new THREE.Vector3(), this.basisVectors, periodicity, 0x000000, 1.5, false);
+        let cell = this.createCell(
+            new THREE.Vector3(),
+            this.basisVectors,
+            periodicity,
+            this.options.cell.color,
+            this.options.cell.linewidth,
+            this.options.cell.dashSize,
+            this.options.cell.gapSize,
+         );
         cell.visible = visible;
         this.convCell = cell;
         this.container.add(this.convCell);
-    }
-
-    /**
-     * Create the primitive cell
-     *
-     */
-    createPrimitiveCell(periodicity, visible) {
-        if (this.primitiveVectors != null) {
-            let cell = this.createCell(new THREE.Vector3(), this.primitiveVectors, periodicity, 0x000000, 1.5, true);
-            cell.visible = visible;
-            this.primCell = cell;
-            this.container.add(this.primCell);
-        }
     }
 
     /**
@@ -1042,16 +1041,17 @@ export class StructureViewer extends Viewer {
      * @param linewidth - Line width fo the wireframe
      * @param dashed - Is wireframe dashed
      */
-    createCell(origin, basisVectors, periodicity, color, linewidth:number, dashed:boolean) {
+    createCell(origin, basisVectors, periodicity, color, linewidth:number, dashSize:number, gapSize:number) {
 
+        let nonPeriodic
         let cell = new THREE.Object3D();
         let lineMaterial;
-        if (dashed) {
+        if (!(dashSize === 0 && gapSize === 0)) {
             lineMaterial = new THREE.LineDashedMaterial({
                 color: color,
                 linewidth: linewidth,
-                dashSize: 0.1,
-                gapSize: 0.1
+                dashSize: dashSize,
+                gapSize: gapSize
             });
         } else {
             lineMaterial = new THREE.LineBasicMaterial({
@@ -1059,12 +1059,14 @@ export class StructureViewer extends Viewer {
                 linewidth: linewidth
             });
         }
+        /*
         let dimMaterial = new THREE.LineDashedMaterial({
-            color: "#999999",
+            color: color,
             linewidth: linewidth,
-            dashSize: 0.1,
-            gapSize: 0.1
+            dashSize: dashSize,
+            gapSize: gapSize
         });
+        */
 
         // Determine the if one of the cell vectors is a zero vector
         let collapsed = true;
@@ -1084,9 +1086,11 @@ export class StructureViewer extends Viewer {
             let line1Mat = lineMaterial.clone();
             let isDim1 = !periodicity[i];
             if (!(isDim1 && collapsed)) {
+                /*
                 if (isDim1) {
                     line1Mat = dimMaterial.clone();
                 }
+                */
                 let lineGeometry = new THREE.Geometry();
                 lineGeometry.vertices.push(
                     origin.clone(),
@@ -1104,9 +1108,11 @@ export class StructureViewer extends Viewer {
 
             if (!(isDim2 && collapsed)) {
                 let line2Mat = lineMaterial.clone();
+                /*
                 if (isDim2) {
                     line2Mat = dimMaterial.clone();
                 }
+                */
                 let line2Geometry = new THREE.Geometry();
                 line2Geometry.vertices.push(
                     secondAddition.clone().add(origin),
@@ -1124,9 +1130,11 @@ export class StructureViewer extends Viewer {
 
             if (!(isDim3 && collapsed)) {
                 let line3Mat = lineMaterial.clone();
+                /*
                 if (isDim3) {
                     line3Mat = dimMaterial.clone();
                 }
+                */
                 let line3Geometry = new THREE.Geometry();
                 line3Geometry.vertices.push(
                     thirdAddition.clone().add(origin),
@@ -1141,9 +1149,11 @@ export class StructureViewer extends Viewer {
             let isDim4 = !periodicity[i] || !periodicity[(i+2)%3] || !periodicity[(i+1)%3];
             if (!(isDim4 && collapsed)) {
                 let line4Mat = lineMaterial.clone();
+                /*
                 if (isDim4) {
                     line4Mat = dimMaterial.clone();
                 }
+                */
                 let line4Geometry = new THREE.Geometry();
                 line4Geometry.vertices.push(
                     secondAddition.clone().add(thirdAddition).add(origin),
@@ -1168,9 +1178,6 @@ export class StructureViewer extends Viewer {
             let basis = new THREE.Vector3(r[0], r[1], r[2]);
             basis.normalize();
             let angle = r[3]/180*Math.PI;
-            console.log(r);
-            console.log(angle);
-            console.log(basis);
             this.rotateAroundWorldAxis(this.root, basis, angle);
             this.rotateAroundWorldAxis(this.sceneInfo, basis, angle);
         }
@@ -1356,7 +1363,7 @@ export class StructureViewer extends Viewer {
      * @param positions - Positions of the atoms
      * @param labels - The element numbers for the atoms
      */
-    createAtoms(relPos, labels, pbc:Array<boolean>) {
+    createAtoms(positions, labels, pbc:Array<boolean>, relative=true) {
         // Delete old atoms
         this.atoms.remove(...this.atoms.children);
         this.elements = {};
@@ -1366,31 +1373,33 @@ export class StructureViewer extends Viewer {
         this.atomOutlines = [];
 
         // Prepare variables
-        let basis1 = this.basisVectors[0];
-        let basis2 = this.basisVectors[1];
-        let basis3 = this.basisVectors[2];
-        let meshMap = {};
+        if (relative) {
+            let basis1 = this.basisVectors[0];
+            let basis2 = this.basisVectors[1];
+            let basis3 = this.basisVectors[2];
 
-       // Determine the periodicity handling
-        if (pbc.some(a => {return a === true})) {
-            let periodicity = this.options.layout.periodicity;
-            if (periodicity === "none") {
-            } else if (periodicity === "wrap") {
-                this.wrap(relPos, pbc);
-            } else if (periodicity === "boundary") {
-                this.addBoundaryAtoms(relPos, labels);
-            } else if (Array.isArray(periodicity)) {
-                this.repeat(periodicity, relPos, labels);
+            // Determine the periodicity handling
+            if (pbc.some(a => {return a === true})) {
+                let periodicity = this.options.layout.periodicity;
+                if (periodicity === "none") {
+                } else if (periodicity === "wrap") {
+                    this.wrap(positions, pbc);
+                } else if (periodicity === "boundary") {
+                    this.addBoundaryAtoms(positions, labels);
+                } else if (Array.isArray(periodicity)) {
+                    this.repeat(periodicity, positions, labels);
+                }
             }
         }
 
         // Create the 3D atoms at the correct positions
-        for (let len=relPos.length, i=0; i<len; ++i) {
-            let iRelPos = relPos[i];
+        let meshMap = {};
+        for (let len=positions.length, i=0; i<len; ++i) {
+            let iPos = positions[i];
 
             // Add the primary atom
             let atomicNumber = labels[i];
-            this.addAtom(i, iRelPos, atomicNumber, meshMap);
+            this.addAtom(i, iPos, atomicNumber, meshMap, relative);
 
             // Gather element legend data
             let elementName = this.elementNames[atomicNumber-1];
@@ -1553,7 +1562,6 @@ export class StructureViewer extends Viewer {
         atom.name = "fill";
         group.add(atom)
         if (this.options.outline.enabled) {
-            console.log("OUTLINE");
             let outline = imesh["outline"].clone();
             this.atomOutlines.push(outline);
             outline.position.copy(true_pos);
@@ -1627,7 +1635,6 @@ export class StructureViewer extends Viewer {
     setup0D(relPos, cartPos, labels) {
         let pbc = [false, false, false];
         this.createConventionalCell(pbc, this.options.cell.enabled);
-        this.createPrimitiveCell(pbc, this.options.cell.enabled);
         this.createAtoms(relPos, labels, pbc);
         this.createLatticeConstants(this.basisVectors, pbc, []);
     }
@@ -1650,7 +1657,6 @@ export class StructureViewer extends Viewer {
 
         if (this.options.cell.enabled) {
             this.createConventionalCell(pbc, this.options.cell.enabled);
-            this.createPrimitiveCell(pbc, this.options.cell.enabled);
         }
         this.createAtoms(relPos, labels, pbc);
 
@@ -1682,7 +1688,6 @@ export class StructureViewer extends Viewer {
         this.options.layout.periodicity = multipliers;
 
         this.createConventionalCell(pbc, this.options.cell.enabled);
-        this.createPrimitiveCell(pbc, this.options.cell.enabled);
         this.createAtoms(relPos, labels, pbc);
 
         this.createLatticeConstants(this.basisVectors, pbc, periodicIndices);
@@ -1694,7 +1699,6 @@ export class StructureViewer extends Viewer {
     setup3D(relPos, cartPos, labels) {
         let pbc = [true, true, true];
         this.createConventionalCell(pbc, this.options.cell.enabled);
-        this.createPrimitiveCell(pbc, this.options.cell.enabled);
         this.createAtoms(relPos, labels, pbc);
         this.createLatticeConstants(this.basisVectors, pbc, [0, 1, 2]);
     }

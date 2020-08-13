@@ -120,6 +120,10 @@ export declare class StructureViewer extends Viewer {
      * @param {number} options.outline.size Outline size.
      *
      * @param {boolean} options.cell.enabled Show unit cell wireframe.
+     * @param {boolean} options.cell.color Unit cell wireframe color.
+     * @param {boolean} options.cell.linewidth Unit cell wireframe line width.
+     * @param {boolean} options.cell.dashSize Unit cell wireframe dash size. Provide a value > 0 for a dashed line.
+     * @param {boolean} options.cell.gapSize Unit cell wireframe dash size. Provide a value > 0 for a dashed line.
      *
      * @param {boolean} options.bonds.enabled Show bonds.
      * @param {number} options.bonds.radius Bond radius.
@@ -257,11 +261,6 @@ export declare class StructureViewer extends Viewer {
      */
     createConventionalCell(periodicity: any, visible: any): void;
     /**
-     * Create the primitive cell
-     *
-     */
-    createPrimitiveCell(periodicity: any, visible: any): void;
-    /**
      * Creates outlines for a cell specified by the given basis vectors.
      * @param origin - The origin for the cell
      * @param basisVectors - The cell basis vectors
@@ -270,7 +269,7 @@ export declare class StructureViewer extends Viewer {
      * @param linewidth - Line width fo the wireframe
      * @param dashed - Is wireframe dashed
      */
-    createCell(origin: any, basisVectors: any, periodicity: any, color: any, linewidth: number, dashed: boolean): THREE.Object3D;
+    createCell(origin: any, basisVectors: any, periodicity: any, color: any, linewidth: number, dashSize: number, gapSize: number): THREE.Object3D;
     /**
      * @param rotations The rotations as a list. Each rotation should be an
      * array containing four numbers: [x, y, z, angle]. The rotations are
@@ -296,7 +295,7 @@ export declare class StructureViewer extends Viewer {
      * @param positions - Positions of the atoms
      * @param labels - The element numbers for the atoms
      */
-    createAtoms(relPos: any, labels: any, pbc: Array<boolean>): void;
+    createAtoms(positions: any, labels: any, pbc: Array<boolean>, relative?: boolean): void;
     /**
      * Creates bonds between the atoms based on radii and distance.
      *

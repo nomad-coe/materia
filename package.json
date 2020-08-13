@@ -11,7 +11,8 @@
   "main": "src/js/materia.js",
   "scripts": {
     "dev-bz": "gulp & npx browser-sync start --config 'bs-config.js' --startPath examples/brillouin_zone/brillouin_zone.html",
-    "dev-structure": "gulp & npx browser-sync start --config 'bs-config.js' --startPath examples/structure/structure.html",
+    "dev-struct-periodic": "gulp & npx browser-sync start --config 'bs-config.js' --startPath examples/structure-periodic/structure.html",
+    "dev-struct-finite": "gulp & npx browser-sync start --config 'bs-config.js' --startPath examples/structure-finite/structure.html",
     "start": "npm run dev-structure",
     "build": "gulp"
   },
