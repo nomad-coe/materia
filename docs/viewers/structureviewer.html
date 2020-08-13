@@ -92,8 +92,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="viewers.html">Viewers</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Structure Viewer</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-a-structure">Loading a structure</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#options">Options</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api">API</a></li>
 </ul>
@@ -183,28 +183,45 @@
     <script src="../_static/js/three.min.js" defer></script>
     <script src="../_static/js/materia.min.js" defer></script>
     <script src="../_static/js/structureviewer.js" defer></script>
-</div><div class="section" id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+</div><div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>This piece of Javascript code shows an example of loading the viewer into a an
 HTML element that has been given the id <code class="code docutils literal notranslate"><span class="pre">canvas</span></code>. This example assumes
 that the global variable installation has been used, but it can be very simply
 changed to also work with the module installation by adding the proper imports
 and changing the <code class="code docutils literal notranslate"><span class="pre">StructureViewer</span></code> constructor call.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Find the HTML element in which the visualizer will be embedded into. It</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Find the element in which the visualizer will be embedded into. It</span>
 <span class="c1">// determines the visualization canvas size.</span>
 <span class="kd">let</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;canvas&quot;</span><span class="p">);</span>
 
 <span class="c1">// Viewer options</span>
 <span class="kd">let</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
-<span class="nx">structure</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">showParam</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="nx">showCell</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="nx">showBonds</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="nx">layout</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">viewCenter</span><span class="o">:</span> <span class="s2">&quot;COC&quot;</span><span class="p">,</span>
-<span class="p">}</span>
+    <span class="nx">periodicity</span><span class="o">:</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="nx">viewRotation</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">align</span><span class="o">:</span> <span class="p">{</span>
+          <span class="nx">top</span><span class="o">:</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span>
+          <span class="nx">right</span><span class="o">:</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span>
+      <span class="p">},</span>
+      <span class="nx">rotations</span><span class="o">:</span> <span class="p">[</span>
+          <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">],</span>
+          <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">],</span>
+      <span class="p">],</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="nx">bonds</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">enabled</span><span class="o">:</span> <span class="kc">true</span>
+  <span class="p">},</span>
+  <span class="nx">cell</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">enabled</span><span class="o">:</span> <span class="kc">true</span>
+  <span class="p">},</span>
+  <span class="nx">latticeConstants</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">enabled</span><span class="o">:</span> <span class="kc">true</span>
+  <span class="p">}</span>
 <span class="p">};</span>
 
-<span class="c1">// Initialize viewer.</span>
+<span class="c1">// Initialize viewer</span>
 <span class="kd">let</span> <span class="nx">viewer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">materia</span><span class="p">.</span><span class="nx">StructureViewer</span><span class="p">(</span><span class="nx">canvas</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
 
 <span class="c1">// Define structure and load into viewer</span>
@@ -231,17 +248,102 @@ and changing the <code class="code docutils literal notranslate"><span class="pr
 </pre></div>
 </div>
 </div>
-<div class="section" id="structure">
-<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<div class="section" id="loading-a-structure">
+<h2>Loading a structure<a class="headerlink" href="#loading-a-structure" title="Permalink to this headline">¶</a></h2>
+<p>You can load a new atomic structure to the viewer by calling the
+<a class="reference internal" href="#StructureViewer.load" title="StructureViewer.load"><code class="xref js js-func docutils literal notranslate"><span class="pre">StructureViewer.load()</span></code></a> method. Check the API for the supported
+parameters.</p>
 </div>
 <div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<p>The options that are given in the constructor are passed to the
+<a class="reference internal" href="#StructureViewer.setOptions" title="StructureViewer.setOptions"><code class="xref js js-func docutils literal notranslate"><span class="pre">StructureViewer.setOptions()</span></code></a> method. These options are provided as a
+nested Javascript object. Check the API for the supported parameters. At any
+time you can also manually call this method to change the options. You can also
+use this method to only update a subset of the options.</p>
 </div>
 <div class="section" id="api">
 <h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<dl class="js function">
+<dt id="StructureViewer.load">
+<code class="sig-prename descclassname">StructureViewer.</code><code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">structure</em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualizes the given atomic structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>structure</strong> (<em>boolean</em>) – A Javascript object containing the structure. See below for the subparameters.</p></li>
+<li><p><strong>structure.positions</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – Cartesian positions. Set either this or scaledPositions.</p></li>
+<li><p><strong>structure.scaledPositions</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – Positions given in the basis of the lattice vectors. Set either this or positions.</p></li>
+<li><p><strong>structure.atomicNumbers</strong> (<em>Array.&lt;number&gt;</em>) – Atomic numbers of the atoms. Set either this or chemicalSymbols.</p></li>
+<li><p><strong>structure.chemicalSymbols</strong> (<em>Array.&lt;string&gt;</em>) – Chemical symbols of the atoms. Set either this or atomicNumbers.</p></li>
+<li><p><strong>structure.cell</strong> (<em>Array.&lt;number&gt;</em>) – The lattice vectors of the unit cell as rows of a 3x3 array.</p></li>
+<li><p><strong>structure.pbc</strong> (<em>Array.&lt;boolean&gt;</em>) – The periodic boundary conditions for the structure as a list of three boolean values for each lattice vector direction.</p></li>
+<li><p><strong>structure.bonds</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – Optional manually set bonds. Provide a list of atomic index pairs, each pair specifying a bond between atoms. If these bonds are not specified, the visualizer will by default use an automated detection of bonds. This can be disabled through options.bonds.enabled.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt id="StructureViewer.setOptions">
+<code class="sig-prename descclassname">StructureViewer.</code><code class="sig-name descname">setOptions</code><span class="sig-paren">(</span><em class="sig-param">options</em>, <em class="sig-param">render</em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.setOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to setup the visualization options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>options</strong> (<em>boolean</em>) – A Javascript object containing the options. See below for the subparameters.</p></li>
+<li><p><strong>options.layout.periodicity</strong> (<em>string|Array.&lt;number&gt;</em>) – How periodicity is handled in the visualization. Available options are: - “none”: Visualized as is. - “wrap”: Positions wrapped within unit cell. - “boundary”: Positions that are on the cell boundaries are repeated. - [a, b, c]: Positions are repeated along each lattice vector the given amount of times.</p></li>
+<li><p><strong>options.layout.translation</strong> (<em>Array.&lt;number&gt;</em>) – A fixed cartesian translation to be applied to the atoms.</p></li>
+<li><p><strong>options.layout.viewCenter</strong> (<em>string</em>) – Determines how the view is initially centered. Available options are: - “COC”: Center of cell. - “COP”: Center of atom positions.</p></li>
+<li><p><strong>options.layout.viewRotation.align.top</strong> (<em>string</em>) – Optional alignment indicating which lattice basis vector should point upwards. Possible values are: “a”, “b”, “c”, “-a”, “-b”, “-c”.</p></li>
+<li><p><strong>options.layout.viewRotation.align.right</strong> (<em>string</em>) – Optional alignment indicating which lattice basis vector should point to the right (more precisely: the cross-product of options.layout.viewRotation.align.top and options.layout.viewRotation.align.right will point away from the screen.). Possible values are: “a”, “b”, “c”, “-a”, “-b”, “-c”.</p></li>
+<li><p><strong>options.layout.viewRotation.align.rotations</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – Optional rotations that are applied after the alignment has been done (see options.layout.viewRotation.align). The rotations are given as a list of 4-element arrays containing the rotations axis and rotation angle in degrees. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with respect to the x-coordinate. If multiple rotations are specified, they will be applied in the given order. Notice that these rotations are applied with respect to a global coordinate system, not the coordinate system of the structure. In this global coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away from the screen.</p></li>
+<li><p><strong>options.latticeConstants.enabled</strong> (<em>boolean</em>) – Show lattice parameters</p></li>
+<li><p><strong>options.latticeConstants.font</strong> (<em>string</em>) – Font size for lattice constants. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
+<li><p><strong>options.latticeConstants.a.color</strong> (<em>string</em>) – Color applied to the lattice constant of the first lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.a.font</strong> (<em>string</em>) – Font family applied to the lattice constant of the first lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.a.size</strong> (<em>number</em>) – Font size applied to the lattice constant of the first lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.b.color</strong> (<em>string</em>) – Color applied to the lattice constant of the second lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.b.font</strong> (<em>string</em>) – Font family applied to the lattice constant of the second lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.b.size</strong> (<em>number</em>) – Font size applied to the lattice constant of the second lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.c.color</strong> (<em>string</em>) – Color applied to the lattice constant of the second lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.c.font</strong> (<em>string</em>) – Font family applied to the lattice constant of the third lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.c.size</strong> (<em>number</em>) – Font size applied to the lattice constant of the third lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.alpha.color</strong> (<em>string</em>) – Color applied to the angle between the second and third lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.alpha.font</strong> (<em>string</em>) – Font family applied to the angle between the second and third lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.alpha.size</strong> (<em>number</em>) – Font size applied to the lattice constant of the third lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.beta.color</strong> (<em>string</em>) – Color applied to the angle between the first and third lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.beta.font</strong> (<em>string</em>) – Font family applied to the angle between the first and third lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.beta.size</strong> (<em>number</em>) – Font size applied to the angle between the first and third lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.gamma.color</strong> (<em>string</em>) – Color applied to the angle between the first and second lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.gamma.font</strong> (<em>string</em>) – Font family applied to the angle between the first and second lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.gamma.size</strong> (<em>number</em>) – Font size applied to the angle between the first and second lattice vector.</p></li>
+<li><p><strong>options.outline.enabled</strong> (<em>boolean</em>) – Used to enable or disable a fixed color outline around atoms and bonds. Notice that enabling the outline incurs a performance penalty.</p></li>
+<li><p><strong>options.outline.color</strong> (<em>string</em>) – Outline color.</p></li>
+<li><p><strong>options.outline.size</strong> (<em>number</em>) – Outline size.</p></li>
+<li><p><strong>options.cell.enabled</strong> (<em>boolean</em>) – Show unit cell wireframe.</p></li>
+<li><p><strong>options.cell.color</strong> (<em>boolean</em>) – Unit cell wireframe color.</p></li>
+<li><p><strong>options.cell.linewidth</strong> (<em>boolean</em>) – Unit cell wireframe line width.</p></li>
+<li><p><strong>options.cell.dashSize</strong> (<em>boolean</em>) – Unit cell wireframe dash size. Provide a value &gt; 0 for a dashed line.</p></li>
+<li><p><strong>options.cell.gapSize</strong> (<em>boolean</em>) – Unit cell wireframe dash size. Provide a value &gt; 0 for a dashed line.</p></li>
+<li><p><strong>options.bonds.enabled</strong> (<em>boolean</em>) – Show bonds.</p></li>
+<li><p><strong>options.bonds.radius</strong> (<em>number</em>) – Bond radius.</p></li>
+<li><p><strong>options.bonds.smoothness</strong> (<em>number</em>) – A value between 0-180 that controls the number of polygons. Used as the angle between adjacent cylinder/sphere sectors that indirectly controls the number of polygons.</p></li>
+<li><p><strong>options.bonds.material.shininess</strong> (<em>number</em>) – Shininess of the bond material.</p></li>
+<li><p><strong>options.bonds.threshold</strong> (<em>number</em>) – Controls the automatic detection of bonds between atoms. If custom bonds have not been specified for the structure, bonds will be detected automatically with the following criteria: distance &lt;= this.options.bonds.threshold * 1.1 * (radius1 + radius2)</p></li>
+<li><p><strong>options.atoms.smoothness</strong> (<em>number</em>) – A value between 0-180 that controls the number of polygons. Used as the angle between adjacent cylinder/sphere sectors that indirectly controls the number of polygons.</p></li>
+<li><p><strong>options.atoms.material.shininess</strong> (<em>number</em>) – Shininess of the bond material.</p></li>
+<li><p><strong>options.atoms.radii</strong> (<em>string|Array.&lt;number&gt;</em>) – The radii to use for atoms. Defaults to covalent radii. Available options are: * “covalent”: Covalent radii from DOI:10.1039/B801115J. * Custom list of atomic radii. Provide an array of floating point numbers where the index corresponds to an atomic number.</p></li>
+<li><p><strong>options.atoms.colors</strong> (<em>string|Array.&lt;string&gt;</em>) – The colors to use for atoms. Available options are: * “Jmol” (default): Jmol colors. * Custom list of colors. Provide an array of hexadesimal colorss where the index corresponds to an atomic number.</p></li>
+<li><p><strong>options.atoms.scale</strong> (<em>number</em>) – Scaling factor for the atomic radii.</p></li>
+<li><p><strong>options.renderer.backgroundColor</strong> (<em>*</em>) – Color of the background. Provide an array with two values, the first being the hexadecimal color value and the second the opacity. E.g. [“#ffffff”, 0] would produce a fully opaque background.</p></li>
+<li><p><strong>options.renderer.shadows.enabled</strong> (<em>boolean</em>) – Whether shows are cast by atoms onto others. Note that enabling this increases the computational cost for doing the visualization.</p></li>
+<li><p><strong>render</strong> (<em>boolean</em>) – Whether to perform a render after settig the options. Defaults to true. You should only disable this setting if you plan to do a render manually afterwards.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 </div>
 
