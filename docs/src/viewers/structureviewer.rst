@@ -24,46 +24,8 @@ that the global variable installation has been used, but it can be very simply
 changed to also work with the module installation by adding the proper imports
 and changing the :code:`StructureViewer` constructor call.
 
-.. code:: javascript
-
-    // Find the HTML element in which the visualizer will be embedded into. It
-    // determines the visualization canvas size.
-    let canvas = document.getElementById("canvas");
-
-    // Viewer options
-    let options = {
-        structure: {
-            showParam: true,
-            showCell: true,
-            showBonds: true,
-            viewCenter: "COC",
-        }
-    };
-
-    // Initialize viewer.
-    let viewer = new materia.StructureViewer(canvas, options);
-
-    // Define structure and load into viewer
-    let nacl = {
-        atomicNumbers: [11, 17, 11, 17, 11, 17, 11, 17],
-        cell: [
-            [5.6402, 0.0, 0.0],
-            [0.0, 5.6402, 0.0],
-            [0.0, 0.0, 5.6402]
-        ],
-        scaledPositions: [
-            [0.0, 0.5, 0.0],
-            [0.0, 0.5, 0.5],
-            [0.0, 0.0, 0.5],
-            [0.0, 0.0, 0.0],
-            [0.5, 0.5, 0.5],
-            [0.5, 0.5, 0.0],
-            [0.5, 0.0, 0.0],
-            [0.5, 0.0, 0.5]
-        ],
-        pbc: [true, true, true],
-    };
-    viewer.load(nacl);
+.. literalinclude :: ../_static/js/structureviewer.js
+   :language: javascript
 
 Loading a structure
 -------------------
@@ -71,21 +33,16 @@ You can load a new atomic structure to the viewer by calling the
 :func:`StructureViewer.load` method. Check the API for the supported
 parameters.
 
-Setting the options
--------------------
-The options that are given in the constructor are passed to the
-:func:`StructureViewer.setOptions` method. Check the API for the supported
-parameters.
-
-Theming
+Options
 -------
-The visualizer suports several theming options that can be used to change the
-appearance to better fit your needs. The theme is provided directly in the
-options under the theme subsetting.
+The options that are given in the constructor are passed to the
+:func:`StructureViewer.setOptions` method. These options are provided as a
+nested Javascript object. Check the API for the supported parameters. At any
+time you can also manually call this method to change the options. You can also
+use this method to only update a subset of the options.
 
 API
 ---
-.. js:autofunction:: StructureViewer#setOptions
-.. js:autofunction:: StructureViewer#setTheme
 .. js:autofunction:: StructureViewer#load
+.. js:autofunction:: StructureViewer#setOptions
 

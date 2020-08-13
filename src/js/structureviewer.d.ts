@@ -1,10 +1,10 @@
 import { Viewer } from "./viewer";
 import * as THREE from 'three';
 /**
- * Class for visualizing a 3D crystal structure. Uses three.js to do the
- * visualization with WegGL or alternatively in html5 canvas.
+ * Class for visualizing an atomic structure.
  */
 export declare class StructureViewer extends Viewer {
+    structure: Object;
     root: THREE.Object3D;
     atoms: THREE.Object3D;
     convCell: THREE.Object3D;
@@ -12,7 +12,9 @@ export declare class StructureViewer extends Viewer {
     bonds: THREE.Object3D;
     atomPos: any[];
     atomNumbers: any[];
-    latticeParameters: any;
+    latticeConstants: any;
+    container: any;
+    infoContainer: any;
     basisVectors: any[];
     primitiveVectors: any[];
     elements: Object;
@@ -22,50 +24,151 @@ export declare class StructureViewer extends Viewer {
     settingsHandler: any;
     elementLegend: any;
     updateBonds: boolean;
+    atomicRadii: Array<number>;
+    elementColors: Array<string>;
     lights: Array<any>;
     bondFills: Array<any>;
     atomFills: Array<any>;
     atomOutlines: Array<any>;
-    cellVectorLines: any;
     angleArcs: any;
     axisLabels: Array<any>;
-    wrapTolerance: number;
     setupScenes(): void;
     /**
      * Used to setup the visualization options.
      *
      * @param {boolean} options A Javascript object containing the options. See
      *   below for the subparameters.
-     * @param {boolean} options.structure.showParam Show lattice parameters
-     * @param {boolean} options.structure.showBonds Show bonds
-     * @param {boolean} options.structure.showCell Show cell wireframe
-     * @param {(string|number[])} options.structure.periodicity How periodicity
+     *
+     * @param {(string|number[])} options.layout.periodicity How periodicity
      *   is handled in the visualization. Available options are:
      *    - "none": Visualized as is.
      *    - "wrap": Positions wrapped within unit cell.
      *    - "boundary": Positions that are on the cell boundaries are repeated.
      *    - [a, b, c]: Positions are repeated along each lattice vector the
      *      given amount of times.
-     * @param {number} options.structure.radiusScale Scaling factor for the
-     *   atomic radii.
-     * @param {number} options.structure.bondScale Scaling factor for
-     *   automatically detecting the bonds.
-     * @param {number[]} options.structure.translation A fixed cartesian
-     *   translation to be applied for the atoms.
-     * @param {string} options.structure.viewCenter Determines how the view is
+     * @param {number[]} options.layout.translation A fixed cartesian
+     *   translation to be applied to the atoms.
+     * @param {string} options.layout.viewCenter Determines how the view is
      *   initially centered. Available options are:
      *    - "COC": Center of cell.
      *    - "COP": Center of atom positions.
-     * @param {boolean} options.structure.showShadows Whether shows are cast by
-     *   atoms onto others. Note that enabling this increases the computational
-     *   cost for doing the visualization.
+     *
+     * @param {boolean} options.latticeConstants.enabled Show lattice parameters
+     * @param {string} options.latticeConstants.font Font size for lattice
+     *   constants. Applied as default to all labels, can be overridden
+     *   individually for each lattice constant.
+     * @param {string} options.latticeConstants.a.color Color applied to the
+     *   lattice constant of the first lattice vector.
+     * @param {string} options.latticeConstants.a.font Font family applied to the
+     *   lattice constant of the first lattice vector.
+     * @param {number} options.latticeConstants.a.size Font size applied to the
+     *   lattice constant of the first lattice vector.
+     * @param {string} options.latticeConstants.b.color Color applied to the
+     *   lattice constant of the second lattice vector.
+     * @param {string} options.latticeConstants.b.font Font family applied to the
+     *   lattice constant of the second lattice vector.
+     * @param {number} options.latticeConstants.b.size Font size applied to the
+     *   lattice constant of the second lattice vector.
+     * @param {string} options.latticeConstants.c.color Color applied to the
+     *   lattice constant of the second lattice vector.
+     * @param {string} options.latticeConstants.c.font Font family applied to the
+     *   lattice constant of the third lattice vector.
+     * @param {number} options.latticeConstants.c.size Font size applied to the
+     *   lattice constant of the third lattice vector.
+     * @param {string} options.latticeConstants.alpha.color Color applied to the
+     *   angle between the second and third lattice vector.
+     * @param {string} options.latticeConstants.alpha.font Font family applied to the
+     *   angle between the second and third lattice vector.
+     * @param {number} options.latticeConstants.alpha.size Font size applied to the
+     *   lattice constant of the third lattice vector.
+     * @param {string} options.latticeConstants.beta.color Color applied to the
+     *   angle between the first and third lattice vector.
+     * @param {string} options.latticeConstants.beta.font Font family applied to the
+     *   angle between the first and third lattice vector.
+     * @param {number} options.latticeConstants.beta.size Font size applied to the
+     *   angle between the first and third lattice vector.
+     * @param {string} options.latticeConstants.gamma.color Color applied to the
+     *   angle between the first and second lattice vector.
+     * @param {string} options.latticeConstants.gamma.font Font family applied to the
+     *   angle between the first and second lattice vector.
+     * @param {number} options.latticeConstants.gamma.size Font size applied to the
+     *   angle between the first and second lattice vector.
+     *
+     * @param {boolean} options.outline.enabled Used to enable or disable a
+     *   fixed color outline around atoms and bonds. Notice that enabling the
+     *   outline incurs a performance penalty.
+     * @param {string} options.outline.color Outline color.
+     * @param {number} options.outline.size Outline size.
+     *
+     * @param {boolean} options.cell.enabled Show unit cell wireframe.
+     *
+     * @param {boolean} options.bonds.enabled Show bonds.
+     * @param {number} options.bonds.radius Bond radius.
+     * @param {number} options.bonds.smoothness A value between 0-180 that
+     *   controls the number of polygons. Used as the angle between adjacent
+     *   cylinder/sphere sectors that indirectly controls the number of
+     *   polygons.
+     * @param {number} options.bonds.material.shininess Shininess of the bond material.
+     * @param {number} options.bonds.threshold Controls the automatic
+     *   detection of bonds between atoms. If custom bonds have not been
+     *   specified for the structure, bonds will be detected automatically with
+     *   the following criteria: distance <=
+     *   this.options.bonds.threshold * 1.1 * (radius1 + radius2)
+     *
+     * @param {number} options.atoms.smoothness A value between 0-180 that
+     *   controls the number of polygons. Used as the angle between adjacent
+     *   cylinder/sphere sectors that indirectly controls the number of
+     *   polygons.
+     * @param {number} options.atoms.material.shininess Shininess of the bond material.
+     * @param {string|number[]} options.atoms.radii The radii to use for atoms.
+     * Defaults to covalent radii. Available options are:
+     *
+     *   * "covalent": Covalent radii from DOI:10.1039/B801115J.
+     *   * Custom list of atomic radii. Provide an array of floating point
+     *     numbers where the index corresponds to an atomic number.
+     *
+     * @param {string|string[]} options.atoms.colors The colors to use
+     * for atoms. Available options are:
+     *
+     *   * "Jmol" (default): Jmol colors.
+     *   * Custom list of colors. Provide an array of hexadesimal colorss where
+     *     the index corresponds to an atomic number.
+     *
+     * @param {number} options.atoms.scale Scaling factor for the atomic radii.
+     *
+     * @param {*} options.renderer.backgroundColor Color of the background.
+     * Provide an array with two values, the first being the hexadecimal color
+     * value and the second the opacity. E.g. ["#ffffff", 0] would produce a
+     * fully opaque background.
+     * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
+     * by atoms onto others. Note that enabling this increases the
+     * computational cost for doing the visualization.
+     * @param {boolean} render Whether to perform a render after settig the
+     * options. Defaults to true. You should only disable this setting if you
+     * plan to do a render manually afterwards.
      */
-    setOptions(options: Object): void;
+    setOptions(options: Object, render?: boolean): void;
     /**
      * Returns the currently set options.
      * @returns {Object} The current options.
      */
     getOptions(): any;
+    /**
+     * Hides or shows the lattice parameter labels.
+     */
+    toggleLatticeConstants(value: boolean): void;
+    /**
+     * Hides or shows the cell.
+     */
+    toggleCell(value: boolean): void;
+    /**
+     * Hides or shows the bonds.
+     */
+    toggleBonds(value: boolean): void;
+    /**
+     * Hides or shows the shadows.
+     */
+    toggleShadows(value: boolean): void;
     /**
      * Visualizes the given atomic structure.
      *
@@ -81,14 +184,14 @@ export declare class StructureViewer extends Viewer {
      *   atoms. Set either this or atomicNumbers.
      * @param {number[]} structure.cell The lattice vectors of the unit cell as
      *   rows of a 3x3 array.
-     * @param {string[]} structure.primitiveCell The lattice vectors of the
-     *   primitive unit cell as rows of a 3x3 array. This is optional and will be
-     *   displayed as an additional wireframe in addition to the unit cell.
      * @param {boolean[]} structure.pbc The periodic boundary conditions for
      *   the structure as a list of three boolean values for each lattice
      *   vector direction.
-     * @param {number[][]} structure.bonds Optional manually set bonds. Use of
+     * @param {number[][]} structure.bonds Optional manually set bonds. Provide a
      *   list of atomic index pairs, each pair specifying a bond between atoms.
+     *   If these bonds are not specified, the visualizer will by default use an
+     *   automated detection of bonds. This can be disabled through
+     *   options.bonds.enabled.
      */
     load(structure: any): boolean;
     /**
@@ -118,32 +221,9 @@ export declare class StructureViewer extends Viewer {
     setupStatic(): void;
     setupLights(): void;
     /**
-     *
-     */
-    toggleElementLegend(value: boolean): void;
-    /**
-     * Hides or shows the lattice parameter labels.
-     */
-    toggleLatticeParameters(value: boolean): void;
-    /**
-     * Hides or shows the cell.
-     */
-    toggleCell(value: boolean): void;
-    /**
-     * Toggles the periodic copies.
-     */
-    /**
-     * Hides or shows the bonds.
-     */
-    toggleBonds(value: boolean): void;
-    /**
-     * Hides or shows the shadows.
-     */
-    toggleShadows(value: boolean): void;
-    /**
      * Create the visuals to show the lattice parameter labels.
      */
-    createLatticeParameters(basis: any, periodicity: any, periodicIndices: any): void;
+    createLatticeConstants(basis: any, periodicity: any, periodicIndices: any): void;
     /**
      * Creates a list of THREE.Vector3s from the given list of arrays.
      *
@@ -182,6 +262,13 @@ export declare class StructureViewer extends Viewer {
      * slightly to emphasize 3D nature.
      */
     setupInitialView2D(periodicity: boolean[], periodicIndices: any): void;
+    /**
+     * @param rotations The rotations as a list. Each rotation should be an
+     * array containing four numbers: [x, y, z, angle]. The rotations are
+     * applied in the given order.
+     */
+    setViewRotation(rotation: any): void;
+    alignView(top?: number, right?: number, back?: number): void;
     /**
      * Setups the initial view so that the scene is centered and rotated
      * slightly to emphasize 3D nature.
@@ -227,14 +314,6 @@ export declare class StructureViewer extends Viewer {
      */
     addBond(i: any, j: any, pos1: any, pos2: any): void;
     /**
-     * Creates atoms.
-     *
-     * @param position - Position of the atom
-     * @param atomicNumber - The atomic number for the added atom
-     * @param relative - Are the coordinates relatice to the cell basis vectors
-     */
-    createAtom(position: any, atomicNumber: any, meshMap: any, relative?: boolean): any[];
-    /**
      * Creates atoms and directly adds themto the scene.
      *
      * @param position - Position of the atom
@@ -276,6 +355,6 @@ export declare class StructureViewer extends Viewer {
     elementNames: string[];
     elementNumbers: object;
     missing: number;
-    elementRadii: number[];
-    elementColors: number[];
+    covalentRadii: number[];
+    jmolColors: string[];
 }

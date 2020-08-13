@@ -2,10 +2,10 @@ import { Viewer } from "./viewer"
 import * as THREE from 'three';
 
 /**
- * Class for visualizing a 3D crystal structure. Uses three.js to do the
- * visualization with WegGL or alternatively in html5 canvas.
+ * Class for visualizing an atomic structure.
  */
 export class StructureViewer extends Viewer {
+    structure:Object;                     // The visualized structure
     root:THREE.Object3D;                  // three.js root object in the scene
     atoms:THREE.Object3D;                 // three.js object for storing the atoms
     convCell:THREE.Object3D;              // three.js object for storing the cell
@@ -13,7 +13,9 @@ export class StructureViewer extends Viewer {
     bonds:THREE.Object3D;                 // Contains the atomic bonds
     atomPos:any[];                        // Contains the positions of the visualized atoms
     atomNumbers:any[];                    // Contains the atomic numbers of the visualized atoms
-    latticeParameters:any;                // Contains visuals for lattice parameters
+    latticeConstants:any;                 // Contains visuals for lattice parameters
+    container:any;                        // Contains visuals
+    infoContainer:any;                    // Contains visuals
     basisVectors:any[];                   // List of basis vectors for the cell
     primitiveVectors:any[];               // List of basis vectors for the primitive cell
     elements:Object;
@@ -23,15 +25,15 @@ export class StructureViewer extends Viewer {
     settingsHandler:any
     elementLegend:any;
     updateBonds:boolean = false;
+    atomicRadii:Array<number> = [];       // Contains the atomic radii
+    elementColors:Array<string> = [];     // Contains the atomic radii
 
     lights:Array<any> = [];               // Contains the lights in the scene
     bondFills:Array<any> = [];            // Contains the bulk of the bonds
     atomFills:Array<any> = [];            // Contains the bulk of the atoms
     atomOutlines:Array<any> = [];         // Contains the outlines of the atoms
-    cellVectorLines:any;
     angleArcs:any;
     axisLabels:Array<any> = [];           // List of all labels in the view.
-    wrapTolerance:number = 0.05;          // Tolerance of the wrapping in Angstroms
 
     /*
      * Overrides the implementation from the base class, as we need two scenes:
@@ -50,53 +52,193 @@ export class StructureViewer extends Viewer {
      *
      * @param {boolean} options A Javascript object containing the options. See
      *   below for the subparameters.
-     * @param {boolean} options.structure.showParam Show lattice parameters
-     * @param {boolean} options.structure.showBonds Show bonds
-     * @param {boolean} options.structure.showCell Show cell wireframe
-     * @param {(string|number[])} options.structure.periodicity How periodicity
+     *
+     * @param {(string|number[])} options.layout.periodicity How periodicity
      *   is handled in the visualization. Available options are:
      *    - "none": Visualized as is.
      *    - "wrap": Positions wrapped within unit cell.
      *    - "boundary": Positions that are on the cell boundaries are repeated.
      *    - [a, b, c]: Positions are repeated along each lattice vector the
      *      given amount of times.
-     * @param {number} options.structure.radiusScale Scaling factor for the
-     *   atomic radii.
-     * @param {number} options.structure.bondScale Scaling factor for
-     *   automatically detecting the bonds.
-     * @param {number[]} options.structure.translation A fixed cartesian
-     *   translation to be applied for the atoms.
-     * @param {string} options.structure.viewCenter Determines how the view is
+     * @param {number[]} options.layout.translation A fixed cartesian
+     *   translation to be applied to the atoms.
+     * @param {string} options.layout.viewCenter Determines how the view is
      *   initially centered. Available options are:
      *    - "COC": Center of cell.
      *    - "COP": Center of atom positions.
-     * @param {boolean} options.structure.showShadows Whether shows are cast by
-     *   atoms onto others. Note that enabling this increases the computational
-     *   cost for doing the visualization.
+     * 
+     * @param {boolean} options.latticeConstants.enabled Show lattice parameters
+     * @param {string} options.latticeConstants.font Font size for lattice
+     *   constants. Applied as default to all labels, can be overridden
+     *   individually for each lattice constant.
+     * @param {string} options.latticeConstants.a.color Color applied to the
+     *   lattice constant of the first lattice vector.
+     * @param {string} options.latticeConstants.a.font Font family applied to the
+     *   lattice constant of the first lattice vector.
+     * @param {number} options.latticeConstants.a.size Font size applied to the
+     *   lattice constant of the first lattice vector.
+     * @param {string} options.latticeConstants.b.color Color applied to the
+     *   lattice constant of the second lattice vector.
+     * @param {string} options.latticeConstants.b.font Font family applied to the
+     *   lattice constant of the second lattice vector.
+     * @param {number} options.latticeConstants.b.size Font size applied to the
+     *   lattice constant of the second lattice vector.
+     * @param {string} options.latticeConstants.c.color Color applied to the
+     *   lattice constant of the second lattice vector.
+     * @param {string} options.latticeConstants.c.font Font family applied to the
+     *   lattice constant of the third lattice vector.
+     * @param {number} options.latticeConstants.c.size Font size applied to the
+     *   lattice constant of the third lattice vector.
+     * @param {string} options.latticeConstants.alpha.color Color applied to the
+     *   angle between the second and third lattice vector.
+     * @param {string} options.latticeConstants.alpha.font Font family applied to the
+     *   angle between the second and third lattice vector.
+     * @param {number} options.latticeConstants.alpha.size Font size applied to the
+     *   lattice constant of the third lattice vector.
+     * @param {string} options.latticeConstants.beta.color Color applied to the
+     *   angle between the first and third lattice vector.
+     * @param {string} options.latticeConstants.beta.font Font family applied to the
+     *   angle between the first and third lattice vector.
+     * @param {number} options.latticeConstants.beta.size Font size applied to the
+     *   angle between the first and third lattice vector.
+     * @param {string} options.latticeConstants.gamma.color Color applied to the
+     *   angle between the first and second lattice vector.
+     * @param {string} options.latticeConstants.gamma.font Font family applied to the
+     *   angle between the first and second lattice vector.
+     * @param {number} options.latticeConstants.gamma.size Font size applied to the
+     *   angle between the first and second lattice vector.
+     * 
+     * @param {boolean} options.outline.enabled Used to enable or disable a
+     *   fixed color outline around atoms and bonds. Notice that enabling the
+     *   outline incurs a performance penalty.
+     * @param {string} options.outline.color Outline color.
+     * @param {number} options.outline.size Outline size.
+     * 
+     * @param {boolean} options.cell.enabled Show unit cell wireframe.
+     * 
+     * @param {boolean} options.bonds.enabled Show bonds.
+     * @param {number} options.bonds.radius Bond radius.
+     * @param {number} options.bonds.smoothness A value between 0-180 that
+     *   controls the number of polygons. Used as the angle between adjacent
+     *   cylinder/sphere sectors that indirectly controls the number of
+     *   polygons.
+     * @param {number} options.bonds.material.shininess Shininess of the bond material.
+     * @param {number} options.bonds.threshold Controls the automatic
+     *   detection of bonds between atoms. If custom bonds have not been
+     *   specified for the structure, bonds will be detected automatically with
+     *   the following criteria: distance <=
+     *   this.options.bonds.threshold * 1.1 * (radius1 + radius2)
+     * 
+     * @param {number} options.atoms.smoothness A value between 0-180 that
+     *   controls the number of polygons. Used as the angle between adjacent
+     *   cylinder/sphere sectors that indirectly controls the number of
+     *   polygons.
+     * @param {number} options.atoms.material.shininess Shininess of the bond material.
+     * @param {string|number[]} options.atoms.radii The radii to use for atoms.
+     * Defaults to covalent radii. Available options are:
+     * 
+     *   * "covalent": Covalent radii from DOI:10.1039/B801115J.
+     *   * Custom list of atomic radii. Provide an array of floating point
+     *     numbers where the index corresponds to an atomic number.
+     * 
+     * @param {string|string[]} options.atoms.colors The colors to use
+     * for atoms. Available options are:
+     * 
+     *   * "Jmol" (default): Jmol colors.
+     *   * Custom list of colors. Provide an array of hexadesimal colorss where
+     *     the index corresponds to an atomic number.
+     * 
+     * @param {number} options.atoms.scale Scaling factor for the atomic radii.
+     * 
+     * @param {*} options.renderer.backgroundColor Color of the background.
+     * Provide an array with two values, the first being the hexadecimal color
+     * value and the second the opacity. E.g. ["#ffffff", 0] would produce a
+     * fully opaque background.
+     * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
+     * by atoms onto others. Note that enabling this increases the
+     * computational cost for doing the visualization.
+     * @param {boolean} render Whether to perform a render after settig the
+     * options. Defaults to true. You should only disable this setting if you
+     * plan to do a render manually afterwards.
      */
-    setOptions(options:Object) {
+    setOptions(options:Object, render:boolean=true) {
         let defaultOptions = {
             view: {
                 fitMargin: 0.5,
             },
-            structure: {
-                showParam: true,
-                showBonds: true,
-                showCell: true,
+            layout: {
                 periodicity: "none",
-                radiusScale: 1,
-                bondScale: 1,
                 translation: [0, 0, 0],
                 viewCenter: "COP",
-                showShadows: false,
+                viewRotation: [],
+                wrapTolerance: 0.05,
             },
+            outline: {
+                enabled: true,
+                color: "#000000",
+                size: 0.025,
+            },
+            cell: {
+                enabled: true,
+            },
+            latticeConstants: {
+                enabled: true,
+                font: "Arial",
+                size: 0.8,
+                a: {
+                    color: "#C52929",
+                },
+                b: {
+                    color: "#47A823",
+                },
+                c: {
+                    color: "#3B5796",
+                },
+                alpha: {
+                    color: "#ffffff",
+                },
+                beta: {
+                    color: "#ffffff",
+                },
+                gamma: {
+                    color: "#ffffff",
+                },
+            },
+            bonds: {
+                enabled: true,
+                material: {
+                    shininess: 30,
+                },
+                radius: 0.08,
+                threshold: 1,
+                smoothness: 145,
+            }, 
+            atoms: {
+                material: {
+                    shininess: 30,
+                },
+                colors: "Jmol",
+                radii: "covalent",
+                scale: 1,
+                smoothness: 165,
+            }
         }
 
-        // Fill with custom options
-        this.fillOptions(options, defaultOptions);
-
-        // Handle base class settings
-        super.setOptions(defaultOptions);
+        // Upon first call, fill the missing values with default options
+        if (Object.keys(this.options).length === 0) {
+            this.fillOptions(options, defaultOptions);
+            super.setOptions(defaultOptions);
+        // On subsequent calls update only the given values and simply do a full
+        // reload for the structure. This is not efficient by any means for most
+        // settings but gets the job done for now.
+        } else {
+            this.fillOptions(options, this.options);
+            super.setOptions(this.options);
+            this.load(this.structure);
+            if (render) {
+                this.render();
+            }
+        }
     }
 
     /**
@@ -105,6 +247,66 @@ export class StructureViewer extends Viewer {
      */
     getOptions() {
         return this.options;
+    }
+
+    /**
+     * Hides or shows the lattice parameter labels.
+     */
+    toggleLatticeConstants(value:boolean) {
+        if (this.latticeConstants !== undefined) {
+            this.latticeConstants.visible = value;
+            this.angleArcs.visible = value;
+        }
+    }
+
+    /**
+     * Hides or shows the cell.
+     */
+    toggleCell(value:boolean) {
+        if (this.convCell !== undefined) {
+            this.convCell.visible = value;
+        }
+        if (this.primCell !== undefined) {
+            this.primCell.visible = value;
+        }
+    }
+
+    /**
+     * Hides or shows the bonds.
+     */
+    toggleBonds(value:boolean) {
+        if (value) {
+            this.createBonds();
+        }
+        this.bonds.visible = value;
+    }
+
+    /**
+     * Hides or shows the shadows.
+     */
+    toggleShadows(value:boolean) {
+
+        this.renderer.shadowMap.enabled = value;
+        for (let i=0; i < this.lights.length; ++i) {
+            let light = this.lights[i];
+            light.castShadow = value;
+        }
+        for (let i=0; i < this.atomFills.length; ++i) {
+            let atom = this.atomFills[i];
+            atom.receiveShadow = value;
+            atom.castShadow = value;
+            atom.material.needsUpdate = true;
+        }
+        for (let i=0; i < this.bondFills.length; ++i) {
+            let bond = this.bondFills[i];
+            bond.receiveShadow = value;
+            bond.castShadow = value;
+            bond.material.needsUpdate = true;
+        }
+
+        // For some reason double rendering is required... Maybe delay()?
+        this.render();
+        this.render();
     }
 
     /**
@@ -122,16 +324,19 @@ export class StructureViewer extends Viewer {
      *   atoms. Set either this or atomicNumbers.
      * @param {number[]} structure.cell The lattice vectors of the unit cell as
      *   rows of a 3x3 array.
-     * @param {string[]} structure.primitiveCell The lattice vectors of the
-     *   primitive unit cell as rows of a 3x3 array. This is optional and will be
-     *   displayed as an additional wireframe in addition to the unit cell.
      * @param {boolean[]} structure.pbc The periodic boundary conditions for
      *   the structure as a list of three boolean values for each lattice
      *   vector direction.
-     * @param {number[][]} structure.bonds Optional manually set bonds. Use of
+     * @param {number[][]} structure.bonds Optional manually set bonds. Provide a
      *   list of atomic index pairs, each pair specifying a bond between atoms.
+     *   If these bonds are not specified, the visualizer will by default use an
+     *   automated detection of bonds. This can be disabled through
+     *   options.bonds.enabled.
      */
     load(structure): boolean {
+        // Store the structure for reloading
+        this.structure = structure;
+
         // Clear all the old data
         this.clear();
         this.setup();
@@ -142,13 +347,26 @@ export class StructureViewer extends Viewer {
         this.setupCamera();
         this.setupControls();
 
+        // Determine the radii to be used
+        if (this.options.atoms.radii === "covalent") {
+            this.atomicRadii = this.covalentRadii;
+        } else if (Array.isArray(this.options.atoms.radii)) {
+            this.atomicRadii = this.options.atoms.radii;
+        }
+
+        // Determine the atom colors to be used
+        if (this.options.atoms.colors === "Jmol") {
+            this.elementColors = this.jmolColors;
+        } else if (Array.isArray(this.options.atoms.colors)) {
+            this.elementColors = this.options.atoms.colors;
+        }
+
         // Check that the received data is OK.
         let positions = structure["positions"];
         let scaledPositions = structure["scaledPositions"];
         let atomicNumbers = structure["atomicNumbers"];
         let chemicalSymbols = structure["chemicalSymbols"];
         let cell = structure["cell"];
-        let primitiveCell = structure["primitiveCell"];
         let periodicity = structure["pbc"];
         let bonds = structure["bonds"];
 
@@ -170,10 +388,10 @@ export class StructureViewer extends Viewer {
 
         // If bonds are not explicitly stated, determine them automatically.
         if (!bonds) {
-            bonds == "auto";
+            bonds = "auto";
         } else {
-            if (bonds != "off" && bonds != "auto" && !Array.isArray(bonds)) {
-                console.log("Invalid value for 'bonds'. Use either 'auto', 'off' or provide a list of index pairs. If not defined, 'auto' is assumed.")
+            if (!Array.isArray(bonds)) {
+                console.log("Invalid value for 'bonds'. Provide a list of index pairs.")
                 return false;
             }
         }
@@ -197,14 +415,18 @@ export class StructureViewer extends Viewer {
         }
 
         this.root = new THREE.Object3D();
+        this.container = new THREE.Object3D();
+        this.infoContainer = new THREE.Object3D();
         this.atoms = new THREE.Object3D();
         this.bonds = new THREE.Object3D();
-        this.cellVectorLines = new THREE.Object3D();
+        this.container.add(this.atoms);
+        this.container.add(this.bonds);
         this.angleArcs = new THREE.Object3D();
-        this.root.add(this.cellVectorLines);
-        this.root.add(this.atoms);
-        this.root.add(this.bonds);
+        this.root.add(this.container);
         this.sceneStructure.add(this.root);
+        this.sceneInfo.add(this.infoContainer);
+        this.latticeConstants = new THREE.Object3D();
+        this.container.add(this.latticeConstants);
         this.basisVectors = this.createBasisVectors(cell);
         let relPos = [];
         let cartPos = [];
@@ -292,7 +514,7 @@ export class StructureViewer extends Viewer {
         this.createBonds(bonds);
 
         // Setup the view center
-        let viewCenter = this.options.structure.viewCenter;
+        let viewCenter = this.options.layout.viewCenter;
         let centerPos;
 
         // Center of positions takes into account also the repeated positions
@@ -311,7 +533,7 @@ export class StructureViewer extends Viewer {
         this.setViewCenter(centerPos);
 
         // Translate the system according to given option
-        this.translate(this.options.structure.translation);
+        this.translate(this.options.layout.translation);
 
         // Zoom according to given option
         this.setZoom(this.options.controls.zoomLevel);
@@ -319,6 +541,7 @@ export class StructureViewer extends Viewer {
         if (this.options.view.autoFit) {
             this.fitToCanvas();
         }
+        this.toggleShadows(this.options.renderer.shadows.enabled);
         this.render();
         return true;
     }
@@ -342,12 +565,8 @@ export class StructureViewer extends Viewer {
      * @param centerPos - The center position as a cartesian vector.
      */
     setViewCenter(centerPos:THREE.Vector3) {
-        this.cornerPoints.position.sub(centerPos);
-        this.atoms.position.sub(centerPos);
-        this.bonds.position.sub(centerPos);
-        this.latticeParameters.position.sub(centerPos);
-        this.angleArcs.position.sub(centerPos);
-        this.convCell.position.sub(centerPos);
+        this.container.position.sub(centerPos);
+        this.infoContainer.position.sub(centerPos);
         this.render();
     }
 
@@ -414,98 +633,15 @@ export class StructureViewer extends Viewer {
     }
 
     /**
-     *
-     */
-    toggleElementLegend(value:boolean) {
-        if (value) {
-            this.elementLegend.style.display = "flex";
-        } else {
-            this.elementLegend.style.display = "None";
-        }
-    }
-
-    /**
-     * Hides or shows the lattice parameter labels.
-     */
-    toggleLatticeParameters(value:boolean) {
-        this.latticeParameters.visible = value;
-        this.cellVectorLines.visible = value;
-        this.angleArcs.visible = value;
-        this.render();
-    }
-
-    /**
-     * Hides or shows the cell.
-     */
-    toggleCell(value:boolean) {
-        if (this.convCell !== undefined) {
-            this.convCell.visible = value;
-        }
-        if (this.primCell !== undefined) {
-            this.primCell.visible = value;
-        }
-        this.render();
-    }
-
-    /**
-     * Toggles the periodic copies.
-     */
-    //toggleCopies(value:boolean) {
-        //if (value !== this.options.structure.showCopies) {
-            //this.options.structure.showCopies = value;
-            //this.createAtoms();
-            //this.createBonds();
-            //this.render();
-        //}
-    //}
-
-    /**
-     * Hides or shows the bonds.
-     */
-    toggleBonds(value:boolean) {
-        if (value) {
-            this.createBonds();
-        }
-        this.bonds.visible = value;
-        this.render();
-    }
-
-    /**
-     * Hides or shows the shadows.
-     */
-    toggleShadows(value:boolean) {
-
-        this.renderer.shadowMap.enabled = value;
-        for (let i=0; i < this.lights.length; ++i) {
-            let light = this.lights[i];
-            light.castShadow = value;
-        }
-        for (let i=0; i < this.atomFills.length; ++i) {
-            let atom = this.atomFills[i];
-            atom.receiveShadow = value;
-            atom.castShadow = value;
-            atom.material.needsUpdate = true;
-        }
-        for (let i=0; i < this.bondFills.length; ++i) {
-            let bond = this.bondFills[i];
-            bond.receiveShadow = value;
-            bond.castShadow = value;
-            bond.material.needsUpdate = true;
-        }
-
-        // For some reason double rendering is required... Maybe delay()?
-        this.render();
-        this.render();
-    }
-
-    /**
      * Create the visuals to show the lattice parameter labels.
      */
-    createLatticeParameters(basis, periodicity, periodicIndices) {
-        this.latticeParameters = new THREE.Object3D();
+    createLatticeConstants(basis, periodicity, periodicIndices) {
+        if (!this.options.latticeConstants.enabled) {
+            return;
+        }
         this.axisLabels = []
-        this.sceneInfo.add(this.latticeParameters);
-        this.sceneInfo.add(this.angleArcs);
+        this.infoContainer.add(this.latticeConstants);
+        this.infoContainer.add(this.angleArcs);
         let nPeriod = 0;
         let infoColor = 0x000000;
         for (let iDim=0; iDim<periodicity.length; ++iDim) {
@@ -515,22 +651,21 @@ export class StructureViewer extends Viewer {
         }
 
         // Used to create a text label as sprite that lives in 3D space.
-        let createLabel = (position:any, label:string, color, stroked:boolean=true) => {
+        let createLabel = (position:any, label:string, color, stroked:boolean=true, fontFamily:string, fontSize:number) => {
             // Configure canvas
             let canvas = document.createElement( 'canvas' );
-            let size = 256;
-            canvas.width = size;
-            canvas.height = size;
+            let size = fontSize*192;
+            canvas.width = 1.1*size;
+            canvas.height = 1.1*size;
             let ctx = canvas.getContext('2d');
 
             // Draw label
             ctx.fillStyle = color;
-            //ctx.fillStyle = "#ffffff";
-            ctx.font = "155px " + this.options.style.font.family;
+            ctx.font = `${size}px ${fontFamily}`;
             ctx.textAlign = "center";
+            ctx.textBaseline = "middle"; 
             if (stroked) {
-                ctx.font = "160px " + this.options.style.font.family;
-                ctx.lineWidth = 8;
+                ctx.lineWidth = 0.06*size;
                 ctx.strokeStyle="#000000";
                 ctx.strokeText(label, size/2, size/2);
             }
@@ -540,10 +675,13 @@ export class StructureViewer extends Viewer {
             texture.needsUpdate = true;
             let material = new THREE.SpriteMaterial( { map: texture } );
             let sprite = new THREE.Sprite( material );
-            sprite.position.copy(position);
-            let scale = 1.5;
-            sprite.scale.set(scale, scale, 1);
-            return sprite;
+            sprite.scale.set(fontSize, fontSize, 1);
+
+            let labelRoot = new THREE.Object3D();
+            labelRoot.position.copy(position);
+            labelRoot.add(sprite);
+
+            return labelRoot;
         }
 
         let axisMaterial = new THREE.LineBasicMaterial({
@@ -552,11 +690,34 @@ export class StructureViewer extends Viewer {
         });
         let axisOffset = 1.3;
 
-        let cellBasisColors = ["#C52929", "#47A823", "#3B5796"];
 
         let iBasis = -1;
+        let cellBasisColors = [];
+        cellBasisColors.push(this.options.latticeConstants.a.color);
+        cellBasisColors.push(this.options.latticeConstants.b.color);
+        cellBasisColors.push(this.options.latticeConstants.c.color);
+        let angleColors = [];
+        angleColors.push(this.options.latticeConstants.alpha.color);
+        angleColors.push(this.options.latticeConstants.beta.color);
+        angleColors.push(this.options.latticeConstants.gamma.color);
         let axisLabels = ["a", "b", "c"];
         let angleLabels = ["γ", "α", "β"];
+        let axisFonts = [];
+        axisFonts.push(this.options.latticeConstants.a.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.a.font);
+        axisFonts.push(this.options.latticeConstants.b.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.b.font);
+        axisFonts.push(this.options.latticeConstants.c.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.c.font);
+        let axisFontSizes = [];
+        axisFontSizes.push(this.options.latticeConstants.a.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.a.size);
+        axisFontSizes.push(this.options.latticeConstants.b.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.b.size);
+        axisFontSizes.push(this.options.latticeConstants.c.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.c.size);
+        let angleFonts = [];
+        angleFonts.push(this.options.latticeConstants.alpha.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.alpha.font);
+        angleFonts.push(this.options.latticeConstants.beta.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.beta.font);
+        angleFonts.push(this.options.latticeConstants.gamma.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.gamma.font);
+        let angleFontSizes = [];
+        angleFontSizes.push(this.options.latticeConstants.alpha.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.alpha.size);
+        angleFontSizes.push(this.options.latticeConstants.beta.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.beta.size);
+        angleFontSizes.push(this.options.latticeConstants.gamma.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.gamma.size);
         let axisLabelSprites = [];
         let angleLabelSprites = [];
 
@@ -576,6 +737,11 @@ export class StructureViewer extends Viewer {
             iBasis += 1;
             let axisLabel = axisLabels[iBasis];
             let axisColor = cellBasisColors[iBasis];
+            let axisFont = axisFonts[iBasis];
+            let axisFontSize = axisFontSizes[iBasis];
+            let angleFontSize = angleFontSizes[iBasis];
+            let angleFont = angleFonts[iBasis];
+            let angleColor = angleColors[iBasis];
 
             // Basis and angle label selection, same for all systems
             let angleLabel = angleLabels[iBasis];
@@ -608,18 +774,18 @@ export class StructureViewer extends Viewer {
             textPos.add(labelOffset);
 
             if (nPeriod === 3)  {
-                let axisLabelSprite = createLabel(textPos, axisLabel, axisColor);
-                this.latticeParameters.add(axisLabelSprite)
+                let axisLabelSprite = createLabel(textPos, axisLabel, axisColor, true, axisFont, axisFontSize);
+                this.latticeConstants.add(axisLabelSprite)
                 this.axisLabels.push(axisLabelSprite);
             } else if (nPeriod === 2) {
-                let axisLabelSprite = createLabel(textPos, axisLabel, axisColor);
-                this.latticeParameters.add(axisLabelSprite)
+                let axisLabelSprite = createLabel(textPos, axisLabel, axisColor, true, axisFont, axisFontSize);
+                this.latticeConstants.add(axisLabelSprite)
                 this.axisLabels.push(axisLabelSprite);
                 angleLabel = "γ";
             } else {
                 let axisText = "a";
-                let axisLabelSprite = createLabel(textPos, axisText, axisColor);
-                this.latticeParameters.add(axisLabelSprite)
+                let axisLabelSprite = createLabel(textPos, axisText, axisColor, true, axisFont, axisFontSize);
+                this.latticeConstants.add(axisLabelSprite)
                 this.axisLabels.push(axisLabelSprite);
             }
 
@@ -631,7 +797,7 @@ export class StructureViewer extends Viewer {
             })
             let cellVector = basisVec1.clone();
             let cellVectorLine = this.createCylinder(origin.clone(), cellVector.clone().add(origin), 0.09, 10, cellVectorMaterial)
-            this.latticeParameters.add(cellVectorLine);
+            this.latticeConstants.add(cellVectorLine);
 
             // Add basis vector axis line
             let cellAxisMaterial = new THREE.MeshBasicMaterial({
@@ -641,7 +807,7 @@ export class StructureViewer extends Viewer {
             let axisEnd = axisStart.clone().multiplyScalar(1+axisOffset/axisStart.length());
             let cellAxisVector = basisVec1.clone();
             let cellAxisVectorLine = this.createCylinder(origin.clone(), axisEnd, 0.02, 10, cellAxisMaterial)
-            this.latticeParameters.add(cellAxisVectorLine);
+            this.latticeConstants.add(cellAxisVectorLine);
 
             // Add axis arrow
             let arrowGeometry = new THREE.CylinderGeometry( 0, 0.10, 0.5, 12 );
@@ -653,7 +819,7 @@ export class StructureViewer extends Viewer {
                 .multiplyScalar(1+axisOffset/dir.length());
             arrow.lookAt(new THREE.Vector3());
             arrow.rotateX(-Math.PI/2);
-            this.latticeParameters.add(arrow);
+            this.latticeConstants.add(arrow);
 
             // Add angle label and curve
             if (nPeriod === 1) {
@@ -716,14 +882,14 @@ export class StructureViewer extends Viewer {
             }
             arc.rotateX(planeAngle);
 
-            // Add label
+            // Add label for the angle
             arc.updateMatrixWorld();  // The positions are not otherwise updated properly
             arc.updateMatrix();  // The positions are not otherwise updated properly
             let angleLabelPos = arc.localToWorld(arcGeometry.vertices[9].clone());
             let angleLabelLen = angleLabelPos.length();
             angleLabelPos.multiplyScalar(1+0.3/angleLabelLen);
-            let angleLabelObj = createLabel(angleLabelPos, angleLabel.toString(), "#FFFFFF", true);
-            this.latticeParameters.add(angleLabelObj);
+            let angleLabelObj = createLabel(angleLabelPos, angleLabel.toString(), angleColor, true, angleFont, angleFontSize);
+            this.latticeConstants.add(angleLabelObj);
             this.axisLabels.push(angleLabelObj);
             this.angleArcs.add(arc);
         }
@@ -779,7 +945,7 @@ export class StructureViewer extends Viewer {
             }
 
             // Determine maximum radius that will be added to the visualization boundaries
-            let iRadius = this.elementRadii[atomicNumbers[i]];
+            let iRadius = this.atomicRadii[atomicNumbers[i]];
             if (iRadius > maxRadii) {
                 maxRadii = iRadius;
             }
@@ -802,7 +968,7 @@ export class StructureViewer extends Viewer {
 
         // Must add the point to root because otherwise they will not be
         // included in the transforms.
-        this.root.add(this.cornerPoints);
+        this.container.add(this.cornerPoints);
     }
 
     createVisualizationBoundaryCell(origin, basis) {
@@ -814,7 +980,7 @@ export class StructureViewer extends Viewer {
 
         // Must add the point to root because otherwise they will not be
         // included in the transforms.
-        this.root.add(this.cornerPoints);
+        this.container.add(this.cornerPoints);
     }
 
     /**
@@ -825,7 +991,7 @@ export class StructureViewer extends Viewer {
         let cell = this.createCell(new THREE.Vector3(), this.basisVectors, periodicity, 0x000000, 1.5, false);
         cell.visible = visible;
         this.convCell = cell;
-        this.root.add(this.convCell);
+        this.container.add(this.convCell);
     }
 
     /**
@@ -837,7 +1003,7 @@ export class StructureViewer extends Viewer {
             let cell = this.createCell(new THREE.Vector3(), this.primitiveVectors, periodicity, 0x000000, 1.5, true);
             cell.visible = visible;
             this.primCell = cell;
-            this.root.add(this.primCell);
+            this.container.add(this.primCell);
         }
     }
 
@@ -1055,6 +1221,60 @@ export class StructureViewer extends Viewer {
     }
 
     /**
+     * @param rotations The rotations as a list. Each rotation should be an
+     * array containing four numbers: [x, y, z, angle]. The rotations are
+     * applied in the given order.
+     */
+    setViewRotation(rotation) {
+        for (let r of rotation) {
+            let basisC = new THREE.Vector3(rotation[0], rotation[1], rotation[2]);
+            basisC.normalize();
+            let angleC = -rotation[4]/180*Math.PI;
+            this.rotateAroundWorldAxis(this.root, basisC, angleC);
+            this.rotateAroundWorldAxis(this.sceneInfo, basisC, angleC);
+        }
+    }
+
+    alignView(top=2, right=1, back=0) {
+        let a = this.basisVectors[back];
+        let b = this.basisVectors[right];
+        let c = this.basisVectors[top];
+
+        // Rotate so that the c-axis points to top
+        this.root.updateMatrixWorld();  // The positions are not otherwise updated properly
+
+        let finalCAxis = new THREE.Vector3(0, 1, 0);
+        let cQuaternion = new THREE.Quaternion().setFromUnitVectors(
+            c.clone().normalize(),
+            finalCAxis
+        );
+        this.root.quaternion.premultiply(cQuaternion);
+        this.sceneInfo.quaternion.premultiply(cQuaternion);
+        this.root.updateMatrixWorld();
+        this.sceneInfo.updateMatrixWorld();
+        b = b.clone().applyQuaternion(cQuaternion);
+        c = c.clone().applyQuaternion(cQuaternion);
+
+        // Rotate so that c x b points to the right
+        let currentAAxis = new THREE.Vector3().crossVectors(b, c);
+        let finalAAxis = new THREE.Vector3(0, 0, 1);
+        let aQuaternion = new THREE.Quaternion().setFromUnitVectors(
+            currentAAxis.clone().normalize(),
+            finalAAxis
+        );
+        this.root.quaternion.premultiply(aQuaternion);
+        this.sceneInfo.quaternion.premultiply(aQuaternion);
+        this.root.updateMatrixWorld();
+        this.sceneInfo.updateMatrixWorld();
+        b = b.clone().applyQuaternion(aQuaternion);
+        c = c.clone().applyQuaternion(aQuaternion);
+
+        let cameraVector = new THREE.Vector3( 0, 0, - 1 );
+        cameraVector.applyQuaternion( this.camera.quaternion );
+        this.render();
+    }
+
+    /**
      * Setups the initial view so that the scene is centered and rotated
      * slightly to emphasize 3D nature.
      */
@@ -1161,13 +1381,13 @@ export class StructureViewer extends Viewer {
             let x = iRelPos.x;
             let y = iRelPos.y;
             let z = iRelPos.z;
-            if (pbc[0] && this.almostEqual(1, x, this.basisVectors[0], this.wrapTolerance)) {
+            if (pbc[0] && this.almostEqual(1, x, this.basisVectors[0], this.options.layout.wrapTolerance)) {
                 x -= 1;
             }
-            if (pbc[1] && this.almostEqual(1, y, this.basisVectors[1], this.wrapTolerance)) {
+            if (pbc[1] && this.almostEqual(1, y, this.basisVectors[1], this.options.layout.wrapTolerance)) {
                 y -= 1;
             }
-            if (pbc[2] && this.almostEqual(1, z, this.basisVectors[2], this.wrapTolerance)) {
+            if (pbc[2] && this.almostEqual(1, z, this.basisVectors[2], this.options.layout.wrapTolerance)) {
                 z -= 1;
             }
         }
@@ -1179,6 +1399,7 @@ export class StructureViewer extends Viewer {
     addBoundaryAtoms(relPos, labels) {
         for (let len=relPos.length, i=0; i<len; ++i) {
             let iRelPos = relPos[i];
+
             let atomicNumber = labels[i];
 
             // If the atom sits on the cell surface, add the periodic images if
@@ -1186,36 +1407,36 @@ export class StructureViewer extends Viewer {
             let x = iRelPos.x;
             let y = iRelPos.y;
             let z = iRelPos.z;
-            let xZero = this.almostEqual(0, x, this.basisVectors[0], this.wrapTolerance);
-            let yZero = this.almostEqual(0, y, this.basisVectors[1], this.wrapTolerance);
-            let zZero = this.almostEqual(0, z, this.basisVectors[2], this.wrapTolerance);;
+            let xZero = this.almostEqual(0, x, this.basisVectors[0], this.options.layout.wrapTolerance);
+            let yZero = this.almostEqual(0, y, this.basisVectors[1], this.options.layout.wrapTolerance);
+            let zZero = this.almostEqual(0, z, this.basisVectors[2], this.options.layout.wrapTolerance);
 
             if (xZero && yZero && zZero) {
-                relPos.push(new THREE.Vector3(1,0,0)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0,1,0)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0,0,1)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(1,1,0)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0,1,1)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(1,0,1)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(1,1,1)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(1,0,0).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(0,1,0).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(0,0,1).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(1,1,0).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(0,1,1).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(1,0,1).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(1,1,1).add(iRelPos)); labels.push(atomicNumber);
             } else if(xZero && yZero && !zZero) {
-                relPos.push(new THREE.Vector3(1,0,0)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0,1,0)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(1,1,0)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(1,0,0).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(0,1,0).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(1,1,0).add(iRelPos)); labels.push(atomicNumber);
             } else if(!xZero && yZero && zZero) {
-                relPos.push(new THREE.Vector3(0,1,0)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0,0,1)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0,1,1)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(0,1,0).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(0,0,1).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(0,1,1).add(iRelPos)); labels.push(atomicNumber);
             } else if(xZero && !yZero && zZero) {
-                relPos.push(new THREE.Vector3(1,0,0)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0,0,1)); labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(1,0,1)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(1,0,0).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(0,0,1).add(iRelPos)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(1,0,1).add(iRelPos)); labels.push(atomicNumber);
             } else if(xZero && !yZero && !zZero) {
-                relPos.push(new THREE.Vector3(1,0,0)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(1,0,0).add(iRelPos)); labels.push(atomicNumber);
             } else if(!xZero && yZero && !zZero) {
-                relPos.push(new THREE.Vector3(0,1,0)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(0,1,0).add(iRelPos)); labels.push(atomicNumber);
             } else if(!xZero && !yZero && zZero) {
-                relPos.push(new THREE.Vector3(0,0,1)); labels.push(atomicNumber);
+                relPos.push(new THREE.Vector3(0,0,1).add(iRelPos)); labels.push(atomicNumber);
             }
         }
     }
@@ -1241,9 +1462,9 @@ export class StructureViewer extends Viewer {
         let basis3 = this.basisVectors[2];
         let meshMap = {};
 
-        // Determine the periodicity handling
+       // Determine the periodicity handling
         if (pbc.some(a => {return a === true})) {
-            let periodicity = this.options.structure.periodicity;
+            let periodicity = this.options.layout.periodicity;
             if (periodicity === "none") {
             } else if (periodicity === "wrap") {
                 this.wrap(relPos, pbc);
@@ -1264,7 +1485,7 @@ export class StructureViewer extends Viewer {
 
             // Gather element legend data
             let elementName = this.elementNames[atomicNumber-1];
-            this.elements[elementName] = [this.elementColors[atomicNumber], this.elementRadii[atomicNumber]];
+            this.elements[elementName] = [this.elementColors[atomicNumber], this.atomicRadii[atomicNumber]];
         }
     }
 
@@ -1275,6 +1496,9 @@ export class StructureViewer extends Viewer {
      *                you can use "auto" to automatically create the bonds.
      */
     createBonds(bonds="auto") {
+        if (!this.options.bonds.enabled) {
+            return;
+        }
 
         // See if the bonds need to be updated.
         if (!this.updateBonds) {
@@ -1305,9 +1529,9 @@ export class StructureViewer extends Viewer {
                         let num1 = this.atomNumbers[i];
                         let num2 = this.atomNumbers[j];
                         let distance = pos2.clone().sub(pos1).length()
-                        let radii1 = this.options.structure.radiusScale*this.elementRadii[num1]
-                        let radii2 = this.options.structure.radiusScale*this.elementRadii[num2]
-                        if (distance <= this.options.structure.bondScale*1.1*(radii1 + radii2)) {
+                        let radii1 = this.options.atoms.scale*this.atomicRadii[num1]
+                        let radii2 = this.options.atoms.scale*this.atomicRadii[num2]
+                        if (distance <= this.options.bonds.threshold*1.1*(radii1 + radii2)) {
                             this.addBond(i, j, pos1, pos2);
                         }
                     }
@@ -1341,78 +1565,30 @@ export class StructureViewer extends Viewer {
      */
     addBond(i, j, pos1, pos2) {
         // Bond
-        let radius = 0.08;
-        let bondMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFFFF, shininess: 30} );
-        let cylinder = this.createCylinder(pos1, pos2, radius, 10, bondMaterial);
+        let radius = this.options.bonds.radius;
+        let targetAngle = this.options.bonds.smoothness;
+        let nSegments = Math.ceil(360/(180-targetAngle));
+        let bondMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFFFF, shininess: this.options.bonds.material.shininess} );
+        let cylinder = this.createCylinder(pos1, pos2, radius, nSegments, bondMaterial);
         cylinder.name = "fill";
         this.bondFills.push(cylinder);
 
-        // Bond outline hack
-        let addition = 0.02;
-        let scale = addition/radius + 1;
-        let outlineMaterial = new THREE.MeshBasicMaterial({color : 0x000000, side: THREE.BackSide});
-        let outline = this.createCylinder(pos1, pos2, scale*radius, 10, outlineMaterial);
-        outline.name = "outline";
 
-        // Put all vonds visuals inside a named group
+        // Put all bonds visuals inside a named group
         let group = new THREE.Group();
         group.name = "bond" + i + "-" + j;
         group.add(cylinder);
-        group.add(outline);
-        this.bonds.add(group);
-    }
 
-    /**
-     * Creates atoms.
-     *
-     * @param position - Position of the atom
-     * @param atomicNumber - The atomic number for the added atom
-     * @param relative - Are the coordinates relatice to the cell basis vectors
-     */
-    createAtom(position, atomicNumber, meshMap, relative:boolean=true) {
-
-        let exists = atomicNumber in meshMap;
-        if (!exists) {
-            // Calculate the amount of segments that are needed to reach a
-            // certain angle for the ball surface segements
-            let radius = this.options.structure.radiusScale*this.elementRadii[atomicNumber];
-            let targetAngle = 165;
-            let nSegments = Math.ceil(360/(180-targetAngle));
-
-            // Atom
-            let color = this.elementColors[atomicNumber];
-            let atomGeometry = new THREE.SphereGeometry( radius, nSegments, nSegments );
-            let atomMaterial = new THREE.MeshPhongMaterial( { color: color, shininess: 30 } );
-            let atom = new THREE.Mesh( atomGeometry, atomMaterial );
-
-            // Atom outline hack
-            let addition = 0.03;
+        // Bond outline hack
+        if (this.options.outline.enabled) {
+            let addition = this.options.outline.size;
             let scale = addition/radius + 1;
-            let outlineGeometry = new THREE.SphereGeometry( radius*scale, nSegments, nSegments );
-            let outlineMaterial = new THREE.MeshBasicMaterial({color : 0x000000, side: THREE.BackSide});
-            let outline = new THREE.Mesh( outlineGeometry, outlineMaterial );
-
-            meshMap[atomicNumber] = {"atom": atom, "outline": outline}
+            let outlineMaterial = new THREE.MeshBasicMaterial({color: this.options.outline.color, side: THREE.BackSide});
+            let outline = this.createCylinder(pos1, pos2, scale*radius, 10, outlineMaterial);
+            outline.name = "outline";
+            group.add(outline);
         }
-        let mesh = meshMap[atomicNumber];
-        let true_pos = new THREE.Vector3();
-        if (relative) {
-            true_pos.add(this.basisVectors[0].clone().multiplyScalar(position.x));
-            true_pos.add(this.basisVectors[1].clone().multiplyScalar(position.y));
-            true_pos.add(this.basisVectors[2].clone().multiplyScalar(position.z));
-        } else {
-            true_pos.copy(position);
-        }
-
-        // Add atom
-        let atom = mesh["atom"].clone();
-        atom.position.copy(true_pos)
-
-        // Add atom outline
-        let outline = mesh["outline"].clone();
-        outline.position.copy(true_pos);
-
-        return [atom, outline, true_pos];
+        this.bonds.add(group);
     }
 
     /**
@@ -1423,23 +1599,62 @@ export class StructureViewer extends Viewer {
      * @param relative - Are the coordinates relatice to the cell basis vectors
      */
     addAtom(index, position, atomicNumber, mesh, relative:boolean=true) {
-        let atomData = this.createAtom(position, atomicNumber, mesh, relative);
-        let atom = atomData[0];
-        let outline = atomData[1];
-        let pos = atomData[2];
+        let exists = atomicNumber in mesh;
+        if (!exists) {
+            mesh[atomicNumber] = {};
+            // Calculate the amount of segments that are needed to reach a
+            // certain angle for the ball surface segments
+            let radius = this.options.atoms.scale*this.atomicRadii[atomicNumber];
+            let targetAngle = this.options.atoms.smoothness;
+            let nSegments = Math.ceil(360/(180-targetAngle));
+
+            // Atom
+            let color = this.elementColors[atomicNumber];
+            let atomGeometry = new THREE.SphereGeometry( radius, nSegments, nSegments );
+            let atomMaterial = new THREE.MeshPhongMaterial( { color: color, shininess: this.options.atoms.material.shininess } );
+            let atom = new THREE.Mesh( atomGeometry, atomMaterial );
+            mesh[atomicNumber].atom = atom;
+
+            // Atom outline hack
+            if (this.options.outline.enabled) {
+                let addition = this.options.outline.size;
+                let scale = addition/radius + 1;
+                let outlineGeometry = new THREE.SphereGeometry( radius*scale, nSegments, nSegments );
+                let outlineMaterial = new THREE.MeshBasicMaterial({color : this.options.outline.color, side: THREE.BackSide});
+                let outline = new THREE.Mesh( outlineGeometry, outlineMaterial );
+                mesh[atomicNumber].outline = outline;
+            }
+
+        }
+        let imesh =mesh[atomicNumber];
+        let true_pos = new THREE.Vector3();
+        if (relative) {
+            true_pos.add(this.basisVectors[0].clone().multiplyScalar(position.x));
+            true_pos.add(this.basisVectors[1].clone().multiplyScalar(position.y));
+            true_pos.add(this.basisVectors[2].clone().multiplyScalar(position.z));
+        } else {
+            true_pos.copy(position);
+        }
 
         // Put all atoms visuals inside a named group
         let group = new THREE.Group();
-        group.name = "atom"+index;
+        group.name = "atom" + index;
+        let atom = imesh["atom"].clone();
+        atom.position.copy(true_pos)
         atom.name = "fill";
-        outline.name = "outline";
         group.add(atom)
-        group.add(outline)
-        this.atoms.add(group)
+        if (this.options.outline.enabled) {
+            console.log("OUTLINE");
+            let outline = imesh["outline"].clone();
+            this.atomOutlines.push(outline);
+            outline.position.copy(true_pos);
+            outline.name = "outline";
+            group.add(outline)
+        }
 
+        this.atoms.add(group)
         this.atomFills.push(atom);
-        this.atomOutlines.push(outline);
-        this.atomPos.push(pos);
+        this.atomPos.push(true_pos);
         this.atomNumbers.push(atomicNumber);
         
         // Always after adding an atom the bond information should be updated.
@@ -1488,10 +1703,10 @@ export class StructureViewer extends Viewer {
      */
     setup0D(relPos, cartPos, labels) {
         let pbc = [false, false, false];
-        this.createConventionalCell(pbc, this.options.structure.showCell);
-        this.createPrimitiveCell(pbc, this.options.structure.showCell);
+        this.createConventionalCell(pbc, this.options.cell.enabled);
+        this.createPrimitiveCell(pbc, this.options.cell.enabled);
         this.createAtoms(relPos, labels, pbc);
-        this.createLatticeParameters(this.basisVectors, pbc, []);
+        this.createLatticeConstants(this.basisVectors, pbc, []);
         this.setupInitialView3D();
     }
 
@@ -1509,15 +1724,15 @@ export class StructureViewer extends Viewer {
         let multiplier = this.getRepetitions(translation1, 15);
         let multipliers = [1, 1, 1];
         multipliers[dim] = multiplier;
-        this.options.structure.periodicity = multipliers;
+        this.options.layout.periodicity = multipliers;
 
-        if (this.options.structure.showCell) {
-            this.createConventionalCell(pbc, this.options.structure.showCell);
-            this.createPrimitiveCell(pbc, this.options.structure.showCell);
+        if (this.options.cell.enabled) {
+            this.createConventionalCell(pbc, this.options.cell.enabled);
+            this.createPrimitiveCell(pbc, this.options.cell.enabled);
         }
         this.createAtoms(relPos, labels, pbc);
 
-        this.createLatticeParameters(this.basisVectors, pbc, periodicIndices);
+        this.createLatticeConstants(this.basisVectors, pbc, periodicIndices);
 
         this.setupInitialView1D(pbc);
     }
@@ -1551,20 +1766,20 @@ export class StructureViewer extends Viewer {
         let translation2 = this.basisVectors[dim2].clone();
         let width = 0;
         let height = 0;
-        if (this.options.structure.allowRepeat) {
+        if (this.options.layout.allowRepeat) {
             width = this.getRepetitions(translation1, 12);
             height = this.getRepetitions(translation2, 12);
         }
         let multipliers = [1, 1, 1];
         multipliers[dim1] = width;
         multipliers[dim2] = height;
-        this.options.structure.periodicity = multipliers;
+        this.options.layout.periodicity = multipliers;
 
-        this.createConventionalCell(pbc, this.options.structure.showCell);
-        this.createPrimitiveCell(pbc, this.options.structure.showCell);
+        this.createConventionalCell(pbc, this.options.cell.enabled);
+        this.createPrimitiveCell(pbc, this.options.cell.enabled);
         this.createAtoms(relPos, labels, pbc);
 
-        this.createLatticeParameters(this.basisVectors, pbc, periodicIndices);
+        this.createLatticeConstants(this.basisVectors, pbc, periodicIndices);
         this.setupInitialView2D(pbc, periodicIndices);
     }
 
@@ -1573,10 +1788,10 @@ export class StructureViewer extends Viewer {
      */
     setup3D(relPos, cartPos, labels) {
         let pbc = [true, true, true];
-        this.createConventionalCell(pbc, this.options.structure.showCell);
-        this.createPrimitiveCell(pbc, this.options.structure.showCell);
+        this.createConventionalCell(pbc, this.options.cell.enabled);
+        this.createPrimitiveCell(pbc, this.options.cell.enabled);
         this.createAtoms(relPos, labels, pbc);
-        this.createLatticeParameters(this.basisVectors, pbc, [0, 1, 2]);
+        this.createLatticeConstants(this.basisVectors, pbc, [0, 1, 2]);
         this.setupInitialView3D();
     }
 
@@ -1622,7 +1837,7 @@ export class StructureViewer extends Viewer {
     //  Jorge Echeverría, Eduard Cremades, Flavia Barragán and Santiago Alvarez,
     //  Dalton Trans., 2008, 2832-2838 DOI:10.1039/B801115J
     missing = 0.2;
-    elementRadii:number[] = [
+    covalentRadii:number[] = [
         this.missing,
         0.31,
         0.28,
@@ -1729,116 +1944,116 @@ export class StructureViewer extends Viewer {
         this.missing,
     ]
     // Jmol colors. See: http://jmol.sourceforge.net/jscolors/#color_U
-    elementColors:number[] = [
-        0xff0000,
-        0xffffff,
-        0xd9ffff,
-        0xcc80ff,
-        0xc2ff00,
-        0xffb5b5,
-        0x909090,
-        0x3050f8,
-        0xff0d0d,
-        0x90e050,
-        0xb3e3f5,
-        0xab5cf2,
-        0x8aff00,
-        0xbfa6a6,
-        0xf0c8a0,
-        0xff8000,
-        0xffff30,
-        0x1ff01f,
-        0x80d1e3,
-        0x8f40d4,
-        0x3dff00,
-        0xe6e6e6,
-        0xbfc2c7,
-        0xa6a6ab,
-        0x8a99c7,
-        0x9c7ac7,
-        0xe06633,
-        0xf090a0,
-        0x50d050,
-        0xc88033,
-        0x7d80b0,
-        0xc28f8f,
-        0x668f8f,
-        0xbd80e3,
-        0xffa100,
-        0xa62929,
-        0x5cb8d1,
-        0x702eb0,
-        0x00ff00,
-        0x94ffff,
-        0x94e0e0,
-        0x73c2c9,
-        0x54b5b5,
-        0x3b9e9e,
-        0x248f8f,
-        0x0a7d8c,
-        0x006985,
-        0xc0c0c0,
-        0xffd98f,
-        0xa67573,
-        0x668080,
-        0x9e63b5,
-        0xd47a00,
-        0x940094,
-        0x429eb0,
-        0x57178f,
-        0x00c900,
-        0x70d4ff,
-        0xffffc7,
-        0xd9ffc7,
-        0xc7ffc7,
-        0xa3ffc7,
-        0x8fffc7,
-        0x61ffc7,
-        0x45ffc7,
-        0x30ffc7,
-        0x1fffc7,
-        0x00ff9c,
-        0x00e675,
-        0x00d452,
-        0x00bf38,
-        0x00ab24,
-        0x4dc2ff,
-        0x4da6ff,
-        0x2194d6,
-        0x267dab,
-        0x266696,
-        0x175487,
-        0xd0d0e0,
-        0xffd123,
-        0xb8b8d0,
-        0xa6544d,
-        0x575961,
-        0x9e4fb5,
-        0xab5c00,
-        0x754f45,
-        0x428296,
-        0x420066,
-        0x007d00,
-        0x70abfa,
-        0x00baff,
-        0x00a1ff,
-        0x008fff,
-        0x0080ff,
-        0x006bff,
-        0x545cf2,
-        0x785ce3,
-        0x8a4fe3,
-        0xa136d4,
-        0xb31fd4,
-        0xb31fba,
-        0xb30da6,
-        0xbd0d87,
-        0xc70066,
-        0xcc0059,
-        0xd1004f,
-        0xd90045,
-        0xe00038,
-        0xe6002e,
-        0xeb0026,
+    jmolColors:string[] = [
+        "#ff0000",
+        "#ffffff",
+        "#d9ffff",
+        "#cc80ff",
+        "#c2ff00",
+        "#ffb5b5",
+        "#909090",
+        "#3050f8",
+        "#ff0d0d",
+        "#90e050",
+        "#b3e3f5",
+        "#ab5cf2",
+        "#8aff00",
+        "#bfa6a6",
+        "#f0c8a0",
+        "#ff8000",
+        "#ffff30",
+        "#1ff01f",
+        "#80d1e3",
+        "#8f40d4",
+        "#3dff00",
+        "#e6e6e6",
+        "#bfc2c7",
+        "#a6a6ab",
+        "#8a99c7",
+        "#9c7ac7",
+        "#e06633",
+        "#f090a0",
+        "#50d050",
+        "#c88033",
+        "#7d80b0",
+        "#c28f8f",
+        "#668f8f",
+        "#bd80e3",
+        "#ffa100",
+        "#a62929",
+        "#5cb8d1",
+        "#702eb0",
+        "#00ff00",
+        "#94ffff",
+        "#94e0e0",
+        "#73c2c9",
+        "#54b5b5",
+        "#3b9e9e",
+        "#248f8f",
+        "#0a7d8c",
+        "#006985",
+        "#c0c0c0",
+        "#ffd98f",
+        "#a67573",
+        "#668080",
+        "#9e63b5",
+        "#d47a00",
+        "#940094",
+        "#429eb0",
+        "#57178f",
+        "#00c900",
+        "#70d4ff",
+        "#ffffc7",
+        "#d9ffc7",
+        "#c7ffc7",
+        "#a3ffc7",
+        "#8fffc7",
+        "#61ffc7",
+        "#45ffc7",
+        "#30ffc7",
+        "#1fffc7",
+        "#00ff9c",
+        "#00e675",
+        "#00d452",
+        "#00bf38",
+        "#00ab24",
+        "#4dc2ff",
+        "#4da6ff",
+        "#2194d6",
+        "#267dab",
+        "#266696",
+        "#175487",
+        "#d0d0e0",
+        "#ffd123",
+        "#b8b8d0",
+        "#a6544d",
+        "#575961",
+        "#9e4fb5",
+        "#ab5c00",
+        "#754f45",
+        "#428296",
+        "#420066",
+        "#007d00",
+        "#70abfa",
+        "#00baff",
+        "#00a1ff",
+        "#008fff",
+        "#0080ff",
+        "#006bff",
+        "#545cf2",
+        "#785ce3",
+        "#8a4fe3",
+        "#a136d4",
+        "#b31fd4",
+        "#b31fba",
+        "#b30da6",
+        "#bd0d87",
+        "#c70066",
+        "#cc0059",
+        "#d1004f",
+        "#d90045",
+        "#e00038",
+        "#e6002e",
+        "#eb0026",
     ]
 }

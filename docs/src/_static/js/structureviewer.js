@@ -4,11 +4,18 @@ let canvas = document.getElementById("canvas");
 
 // Viewer options
 let options = {
-  structure: {
-    showParam: true,
-    showCell: true,
-    showBonds: true,
+  layout: {
     viewCenter: "COC",
+    periodicity: "boundary",
+  },
+  bonds: {
+    enabled: true
+  },
+  cell: {
+    enabled: true
+  },
+  latticeConstants: {
+    enabled: true
   }
 };
 

@@ -4,28 +4,61 @@ let targetElem = document.getElementById("visualizationCanvas");
 // Viewer options
 let options = {
   view: {
-    autoResize: true,       // Automatically fit canvas to the root visualization element
-    autoFit: true,          // Automatically set the zoom to fit the structure into the canvas
-    fitMargin: 0.5,
+      fitMargin: 0.5,
   },
-  controls: {
-    enableZoom: true,       // Enable zoom with mouse wheel/pinch
-    enablePan: true,        // Enable pan with mouse/touch
-    enableRotate: true,     // Enable rotation
-    zoomLevel: 1,           // Default zoom level
+  layout: {
+      periodicity: "boundary",
+      translation: [0, 0, 0],
+      viewCenter: "COP",
   },
-  structure: {
-    showParam: true,        // Show lattice parameters
-    showShadows: true,      // Enable shadows: requires a bit more from GPU
-    showCell: true,         // Show unit cell wireframe
-    periodicity: [2,1,1],   // The way to deal with periodicity
-    createLegend: false,    // Show atom labels
-    showLegend: true,       // Show atom labels
-    showOptions: true,      // Show the options toolbar
-    showBonds: true,        // Show or hide bonds
-    radiusScale: 0.8,       // Scaling factor for atomic radii
-    bondScale: 1.2,         // Scaling factor for the automatic bond detection
-    viewCenter: "COC",      // The rotation and view center position. Valid values are: "COP" (center of position), "COC" center of cell, or a custom position given as array of three cartesian coordinates.
+  outline: {
+      enabled: true,
+      color: "#000000",
+      size: 0.025,
+  },
+  cell: {
+      enabled: true,
+  },
+  latticeConstants: {
+      enabled: true,
+      font: "Arial",
+      size: 0.8,
+      a: {
+          color: "#C52929",
+      },
+      b: {
+          color: "#47A823",
+      },
+      c: {
+          color: "#3B5796",
+      },
+      alpha: {
+          color: "#ffffff",
+      },
+      beta: {
+          color: "#ffffff",
+      },
+      gamma: {
+          color: "#ffffff",
+      },
+  },
+  bonds: {
+      enabled: true,
+      material: {
+          shininess: 30,
+      },
+      radius: 0.08,
+      threshold: 1,
+      smoothness: 145,
+  }, 
+  atoms: {
+      material: {
+          shininess: 30,
+      },
+      colors: "Jmol",
+      radii: "covalent",
+      scale: 1,
+      smoothness: 165,
   }
 };
 
@@ -58,6 +91,7 @@ var bulk = {
     "pbc": [true, true, true],
 };
 viewer.load(bulk);
+//viewer.alignView();
 
 // Load finite molecule with cartesian positions and cell
 //var molecule = {

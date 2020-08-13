@@ -52,11 +52,11 @@ export abstract class Viewer {
                 autoResize: true,
                 fitMargin: 0.5,
             },
-            style: {
-                backgroundColor: [0xffffff, 0],
-                font: {
-                    family: "Arial"
-                }
+            renderer: {
+                backgroundColor: ["#ffffff", 0],
+                shadows: {
+                    enabled: false,
+                },
             }
         }
 
@@ -246,7 +246,7 @@ export abstract class Viewer {
         } else {
             console.log("WebGL is not supported on this browser, cannot display structure.");
         }
-        let bg = this.options.style.backgroundColor;
+        let bg = this.options.renderer.backgroundColor;
         this.renderer.shadowMap.enabled = false;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setSize(this.rootElement.clientWidth, this.rootElement.clientHeight);
