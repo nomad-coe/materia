@@ -72,11 +72,7 @@ export declare abstract class Viewer {
     /**
      * Used to setup the DOM element where the viewer will be displayed.
      */
-    setupHostElement(hostElement: any): void;
-    /**
-     * Used to setup the DOM element where the viewer will be displayed.
-     */
-    changeHostElement(hostElement: any): void;
+    changeHostElement(hostElement: any, refit?: boolean, render?: boolean): void;
     /**
      * Used to reset the original view.
      */
@@ -116,7 +112,7 @@ export declare abstract class Viewer {
      * @param radius - Cylinder radius
      * @param material - Cylinder material
      */
-    createCylinder(pos1: any, pos2: any, radius: any, nSegments: any, material: any): THREE.Mesh;
+    createCylinder(pos1: any, pos2: any, radius: any, nSegments: any, material: any): THREE.Mesh<THREE.CylinderGeometry, any>;
     /**
      * Rotate an object around an arbitrary axis in world space
      * @param obj - The THREE.Object3D to rotate

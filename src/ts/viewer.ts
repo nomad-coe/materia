@@ -29,7 +29,7 @@ export abstract class Viewer {
         this.setupStatic();
         this.setupCamera();
         this.setupControls()
-        this.setupHostElement(hostElement);
+        this.changeHostElement(hostElement, false, false);
         if (this.options.view.autoResize) {
             window.addEventListener('resize', this.onWindowResize.bind(this), false);
         }
@@ -289,7 +289,12 @@ export abstract class Viewer {
     /**
      * Used to setup the DOM element where the viewer will be displayed.
      */
-    setupHostElement(hostElement:any) {
+    changeHostElement(hostElement:any, refit=true, render=true) {
+
+        // If no host element currently specified, don't do anything
+        if (hostElement === undefined) {
+            return
+        }
 
         // If a previous target element is set, remove it
         if (this.hostElement) {
@@ -298,20 +303,16 @@ export abstract class Viewer {
             }
         }
 
-        // Setup the new targetElment
+        // Setup the new targetElement
         hostElement.appendChild(this.rootElement);
         this.resizeCanvasToHostElement();
-    }
 
-    /**
-     * Used to setup the DOM element where the viewer will be displayed.
-     */
-    changeHostElement(hostElement:any) {
-        this.setupHostElement(hostElement);
-        if (this.options.view.autoFit) {
+        if (refit) {
             this.fitToCanvas();
         }
-        this.render();
+        if (render) {
+            this.render();
+        }
     }
 
     /**
@@ -381,6 +382,11 @@ export abstract class Viewer {
      * Will also leave a small margin.
      */
     fitToCanvas() {
+        // If cornerpoints have not yet been defined, do nothing
+        if (this.cornerPoints === undefined) {
+            return
+        }
+
         // Make sure that all transforms are updated
         this.scenes.forEach((scene) => scene.updateMatrixWorld());
 

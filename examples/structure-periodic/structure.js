@@ -7,9 +7,9 @@ let options = {
     fitMargin: 0.5,
   },
   layout: {
-    periodicity: "boundary",
+    periodicity: "none",
     translation: [0, 0, 0],
-    viewCenter: "COP",
+    viewCenter: "COC",
     viewRotation: {
       align: {
           top: "c",
@@ -75,32 +75,33 @@ let options = {
 // Initialize viewer and load structure
 var viewer = new materia.StructureViewer(targetElem, options);
 
-// Define structure and load it into the viewer it
+// Define structure and load it into the viewer
+let positions = [
+    [0.0, 0.5, 0.0],
+    [0.0, 0.5, 0.5],
+    [0.0, 0.0, 0.5],
+    [0.0, 0.0, 0.0],
+    [0.5, 0.5, 0.5],
+    [0.5, 0.5, 0.0],
+    [0.5, 0.0, 0.0],
+    [0.5, 0.0, 0.5]
+];
 var bulk = {
     "atomicNumbers": [11, 17, 11, 17, 11, 17, 11, 17],
     "cell": [
-        [5.6402, 0.0, 0.0],
-        [0.0, 5.6402, 0.0],
-        [0.0, 0.0, 5.6402]
+        [5.6402, 5.6402, 0.0],
+        [0.0, 5.6402, 5.6402],
+        [5.6402, 0.0, 5.6402]
     ],
-    "scaledPositions": [
-        [0.0, 0.5, 0.0],
-        [0.0, 0.5, 0.5],
-        [0.0, 0.0, 0.5],
-        [0.0, 0.0, 0.0],
-        [0.5, 0.5, 0.5],
-        [0.5, 0.5, 0.0],
-        [0.5, 0.0, 0.0],
-        [0.5, 0.0, 0.5]
-    ],
-    "primitiveCell": [
-        [0.0, 2.8201, 2.8201],
-        [2.8201, 0.0, 2.8201],
-        [2.8201, 2.8201, 0.0]
-    ],
+    "scaledPositions": positions,
     "pbc": [true, true, true],
 };
 viewer.load(bulk);
+
+setInterval(function() {
+  positions[0][2] += 0.01;
+  viewer.setPositions(positions, true, true)
+}, 100);
 
 // Load finite molecule with cartesian positions and cell
 //var molecule = {

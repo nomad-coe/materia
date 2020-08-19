@@ -16,17 +16,18 @@ export class StructureViewer extends Viewer {
     latticeConstants:any;                 // Contains visuals for lattice parameters
     container:any;                        // Contains visuals
     infoContainer:any;                    // Contains visuals
-    basisVectors:any[];                   // List of basis vectors for the cell
+    B:THREE.Matrix3;
+    Bi:THREE.Matrix3;
+    basisVectors:THREE.Vector3[];
     primitiveVectors:any[];               // List of basis vectors for the primitive cell
-    elements:Object;
+    elements:Object;                      // Contains information about the elements included in the structure
     sceneStructure:any;
     sceneInfo:any;
     settings:Object;
     settingsHandler:any
-    elementLegend:any;
     updateBonds:boolean = false;
     atomicRadii:Array<number> = [];       // Contains the atomic radii
-    elementColors:Array<string> = [];     // Contains the atomic radii
+    elementColors:Array<string> = [];     // Contains the element colors
 
     lights:Array<any> = [];               // Contains the lights in the scene
     bondFills:Array<any> = [];            // Contains the bulk of the bonds
@@ -184,7 +185,7 @@ export class StructureViewer extends Viewer {
      * options. Defaults to true. You should only disable this setting if you
      * plan to do a render manually afterwards.
      */
-    setOptions(options:Object, render:boolean=true) {
+    setOptions(options:any, render:boolean=true, reload:boolean=true) {
         let defaultOptions = {
             view: {
                 fitMargin: 0.5,
@@ -193,10 +194,7 @@ export class StructureViewer extends Viewer {
                 periodicity: "none",
                 translation: [0, 0, 0],
                 viewCenter: "COP",
-                viewRotation: [],
                 wrapTolerance: 0.05,
-                align: {},
-                rotations: [],
             },
             outline: {
                 enabled: true,
@@ -213,7 +211,7 @@ export class StructureViewer extends Viewer {
             latticeConstants: {
                 enabled: true,
                 font: "Arial",
-                size: 0.8,
+                size: 0.7,
                 a: {
                     enabled: true,
                     color: "#C52929",
@@ -275,11 +273,71 @@ export class StructureViewer extends Viewer {
         } else {
             this.fillOptions(options, this.options);
             super.setOptions(this.options);
-            this.load(this.structure);
+
+            // Check if a full structure reload is required
+            if (reload) {
+                if (this.needFullReload(options) && this.structure !== undefined) {
+                    this.load(this.structure);
+                } else {
+                    if (options?.latticeConstants?.enabled !== undefined) {this.toggleLatticeConstants(options.latticeConstants.enabled)};
+                    if (options?.cell?.enabled !== undefined) {this.toggleCell(options.cell.enabled)};
+                    if (options?.bonds?.enabled !== undefined) {this.toggleBonds(options.bonds.enabled)};
+                    if (options?.renderer?.shadows?.enabled !== undefined) {this.toggleShadows(options.renderer.shadows.enabled)};
+                }
+            }
             if (render) {
                 this.render();
             }
         }
+    }
+
+    /**
+     * Used to determine if a full realod of the structure is needed given the
+     * updated options.
+     * @param {*} options The updated options.
+     */
+    needFullReload(options:any) {
+        // Options that do not require a full reload
+        let noReload = {
+            cell: {
+                enabled: true,
+            },
+            latticeConstants: {
+                enabled: true,
+            },
+            bonds: {
+                enabled: true,
+            },
+            shadows: {
+                enabled: true,
+            }
+        }
+
+        // Check it anything else is defined besides the options that do not need
+        // a full reload.
+        // Overrride with settings from user and child class
+        function eachRecursive(source, target) {
+            for (var k in source) {
+                // Find variable in default settings
+                if (source[k] !== null && Object.prototype.toString.call(source[k]) === "[object Object]") {
+                    // If the current level is not defined in the target, it is
+                    // initialized with empty object.
+                    if (target[k] === undefined) {
+                        return true;
+                    }
+                    let update = eachRecursive(source[k], target[k]);
+                    if (update) {
+                        return true;
+                    }
+                } else {
+                    if (target[k] === undefined) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        return eachRecursive(options, noReload);
     }
 
     /**
@@ -288,6 +346,14 @@ export class StructureViewer extends Viewer {
      */
     getOptions() {
         return this.options;
+    }
+
+    /**
+     * Returns information about the elements included in the structure.
+     * @returns {Object} The current options.
+     */
+    getElementInfo() {
+        return this.elements;
     }
 
     /**
@@ -319,7 +385,9 @@ export class StructureViewer extends Viewer {
         if (value) {
             this.createBonds();
         }
-        this.bonds.visible = value;
+        if (this.bonds !== undefined) {
+            this.bonds.visible = value;
+        }
     }
 
     /**
@@ -375,7 +443,7 @@ export class StructureViewer extends Viewer {
      *   options.bonds.enabled.
      */
     load(structure): boolean {
-        // Store the structure for reloading
+        // Deep copy the structure for reloading
         this.structure = structure;
 
         // Clear all the old data
@@ -405,7 +473,7 @@ export class StructureViewer extends Viewer {
         // Check that the received data is OK.
         let positions = structure["positions"];
         let scaledPositions = structure["scaledPositions"];
-        let atomicNumbers = structure["atomicNumbers"];
+        let atomicNumbers = structure["atomicNumbers"] === undefined ? undefined : [...structure["atomicNumbers"]];
         let chemicalSymbols = structure["chemicalSymbols"];
         let cell = structure["cell"];
         let periodicity = structure["pbc"];
@@ -437,22 +505,26 @@ export class StructureViewer extends Viewer {
             }
         }
 
-        if (positions) {
-            if (positions.length != atomicNumbers.length) {
-                console.log("The number of positions does not match the number of labels.")
-                return false;
-            }
-        }
+        let isRelative;
+        let truePositions;
         if (scaledPositions) {
             if (scaledPositions.length != atomicNumbers.length) {
                 console.log("The number of scaled positions does not match the number of labels.")
                 return false;
             }
+            isRelative = true;
+            truePositions = scaledPositions;
         }
-
-        let hasCell = true;
-        if (cell === undefined) {
-            hasCell = false;
+        if (positions) {
+            if (isRelative) {
+                throw "Please provide only either scaledPositions or positions.";
+            }
+            if (positions.length != atomicNumbers.length) {
+                console.log("The number of positions does not match the number of labels.")
+                return false;
+            }
+            isRelative = false;
+            truePositions = positions;
         }
 
         // Assume no periodicity if not defined
@@ -473,44 +545,32 @@ export class StructureViewer extends Viewer {
         this.sceneInfo.add(this.infoContainer);
         this.latticeConstants = new THREE.Object3D();
         this.container.add(this.latticeConstants);
-        if (hasCell) {
-            this.basisVectors = this.createBasisVectors(cell);
-        }
+
+        // Create a set of relative and cartesian positions
+        this.createBasisVectors(cell);
         let relPos = [];
         let cartPos = [];
 
         // Create a set of relative and cartesian positions
-        if (scaledPositions !== undefined) {
-            for (let i=0; i < scaledPositions.length; ++i) {
-                let pos = scaledPositions[i];
+        if (isRelative === true) {
+            for (let i=0; i < truePositions.length; ++i) {
+                let pos = truePositions[i];
                 let iRelPos = new THREE.Vector3().fromArray(pos);
                 relPos.push(iRelPos);
-
-                let iCartPos = new THREE.Vector3();
-                iCartPos.add(this.basisVectors[0].clone().multiplyScalar(iRelPos.x));
-                iCartPos.add(this.basisVectors[1].clone().multiplyScalar(iRelPos.y));
-                iCartPos.add(this.basisVectors[2].clone().multiplyScalar(iRelPos.z));
-                cartPos.push(iCartPos);
+                cartPos.push(this.toCartesian(iRelPos));
             }
         }
-        else if (positions !== undefined) {
-            for (let i=0; i < positions.length; ++i) {
+        else if (isRelative === false) {
+            for (let i=0; i < truePositions.length; ++i) {
                 let pos = positions[i];
                 let iCartPos = new THREE.Vector3().fromArray(pos);
                 cartPos.push(iCartPos);
-
-                /*
-                // Calculate the relative positions
-                let cellMatrix = new THREE.Matrix3();
-                cellMatrix.set(
-                    cell[0][0], cell[0][1], cell[0][2],
-                    cell[1][0], cell[1][1], cell[1][2],
-                    cell[2][0], cell[2][1], cell[2][2],
-                )
-                let cellInverse = new THREE.Matrix3().getInverse(cellMatrix);
-                let iRelPos = iCartPos.clone().applyMatrix3(cellInverse);
-                relPos.push(iRelPos);
-                */
+            }
+            if (this.B !== undefined) {
+                for (let i=0, size=cartPos.length; i < size; ++i) {
+                    let iRelPos = this.toScaled(cartPos[i]);
+                    relPos.push(iRelPos);
+                }
             }
         }
 
@@ -543,7 +603,7 @@ export class StructureViewer extends Viewer {
                 }
             }
         }
-        if (hasCell) {
+        if (this.B !== undefined) {
             this.createConventionalCell(periodicity, this.options.cell.enabled);
             this.createLatticeConstants(this.basisVectors, periodicity, periodicIndices);
             this.createAtoms(relPos, atomicNumbers, periodicity, true);
@@ -568,6 +628,7 @@ export class StructureViewer extends Viewer {
         if (viewCenter === "COP") {
             centerPos = this.calculateCOP(this.atomPos);
         } else if (viewCenter === "COC") {
+
             centerPos = new THREE.Vector3()
                 .add(this.basisVectors[0])
                 .add(this.basisVectors[1])
@@ -585,10 +646,10 @@ export class StructureViewer extends Viewer {
         this.setZoom(this.options.controls.zoomLevel);
 
         // Set view alignment and rotation
-        if (hasCell) {
-            this.alignView(this.options.layout.viewRotation.align.top, this.options.layout.viewRotation.align.right);
+        if (this.B !== undefined) {
+            this.alignView(this.options?.layout?.viewRotation?.align?.top, this.options?.layout?.viewRotation?.align?.right);
         }
-        this.rotateView(this.options.layout.viewRotation.rotations);
+        this.rotateView(this.options?.layout?.viewRotation?.rotations);
 
         if (this.options.view.autoFit) {
             this.fitToCanvas();
@@ -636,6 +697,56 @@ export class StructureViewer extends Viewer {
     }
 
     /**
+     * Set the position for atoms in the currently loaded structure.
+     */
+    setPositions(positions:number[][], relative=false, render=true) {
+
+        // Check the periodicity setting. You can only call this function if no
+        // additional atoms need to be created through the periodicity setting.
+        if (this.options.layout.periodicity !== "none") {
+            throw "Setting new positions is only allowed if options.layout.periodicity = 'none'.";
+        }
+
+        if (relative) {
+            for (let i=0, size=positions.length; i < size; ++i) {
+                let atom = this.getAtom(i);
+                let position = this.toCartesian(new THREE.Vector3().fromArray(positions[i]));
+                atom.position.copy(position);
+            }
+        } else {
+            for (let i=0, size=positions.length; i < size; ++i) {
+                let atom = this.getAtom(i);
+                let position = new THREE.Vector3().fromArray(positions[i]);
+                atom.position.copy(position);
+            }
+        }
+
+        if (render) {
+            this.render();
+        }
+    }
+
+    toCartesian(position:THREE.Vector3) {
+        return position.clone().applyMatrix3(this.B);
+    }
+
+    toScaled(position:THREE.Vector3) {
+        return position.clone().applyMatrix3(this.Bi);
+    }
+
+    /**
+     * Get a specific atom as defined by a THREE.js Group.
+     *
+     * @param index - Index of the atom.
+     * 
+     * @return THREE.js Group containing the visuals for the atom. The position
+     * of the atom is determined by the position of the group.
+     */
+    getAtom(index:number) {
+        return this.atoms.getObjectByName(`atom${index}`);
+    }
+
+    /**
      * Set the zoom level
      *
      * @param zoomLevel - The zoom level as a scalar.
@@ -643,12 +754,6 @@ export class StructureViewer extends Viewer {
     setZoom(zoomLevel:number[]) {
         this.camera.zoom = zoomLevel;
         this.render();
-    }
-
-    /**
-     * This function will setup the element legend div.
-     */
-    setupStatic() {
     }
 
     setupLights() {
@@ -701,14 +806,14 @@ export class StructureViewer extends Viewer {
         let createLabel = (position:any, label:string, color, stroked:boolean=true, fontFamily:string, fontSize:number) => {
             // Configure canvas
             let canvas = document.createElement( 'canvas' );
-            let size = fontSize*192;
-            canvas.width = 1.1*size;
-            canvas.height = 1.1*size;
+            let size = 256;
+            canvas.width = size;
+            canvas.height = size;
             let ctx = canvas.getContext('2d');
 
             // Draw label
             ctx.fillStyle = color;
-            ctx.font = `${size}px ${fontFamily}`;
+            ctx.font = `${0.90*size}px ${fontFamily}`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle"; 
             if (stroked) {
@@ -931,14 +1036,24 @@ export class StructureViewer extends Viewer {
      *
      * @param vectors - The positions from which to create vectors.
      */
-    createBasisVectors(vectors:number[][]) {
-        let result = [];
-        for (let len=vectors.length, i=0; i<len; ++i) {
-            let vector = vectors[i];
-            let basis_vector = new THREE.Vector3().fromArray(vector);
-            result.push(basis_vector);
+    createBasisVectors(basis:number[][]) {
+        if (basis === undefined) {
+            return undefined;
         }
-        return result;
+
+        // Create basis transformation matrices
+        let a = new THREE.Vector3().fromArray(basis[0]);
+        let b = new THREE.Vector3().fromArray(basis[1]);
+        let c = new THREE.Vector3().fromArray(basis[2]);
+        this.basisVectors = [a, b, c];
+        let B = new THREE.Matrix3();
+        B.set(
+            a.x, b.x, c.x,
+            a.y, b.y, c.y,
+            a.z, b.z, c.z,
+        )
+        this.B = B;
+        this.Bi = new THREE.Matrix3().getInverse(B);
     }
 
     createVisualizationBoundaryPositions(positions, atomicNumbers) {
@@ -1173,7 +1288,10 @@ export class StructureViewer extends Viewer {
      * array containing four numbers: [x, y, z, angle]. The rotations are
      * applied in the given order.
      */
-    rotateView(rotations) {
+    rotateView(rotations, render=true) {
+        if (rotations === undefined) {
+            return;
+        }
         for (let r of rotations) {
             let basis = new THREE.Vector3(r[0], r[1], r[2]);
             basis.normalize();
@@ -1181,10 +1299,12 @@ export class StructureViewer extends Viewer {
             this.rotateAroundWorldAxis(this.root, basis, angle);
             this.rotateAroundWorldAxis(this.sceneInfo, basis, angle);
         }
-        this.render();
+        if (render) {
+            this.render();
+        }
     }
 
-    alignView(top, right) {
+    alignView(top, right, render=true) {
         if (top === undefined) {
             return;
         }
@@ -1247,7 +1367,9 @@ export class StructureViewer extends Viewer {
             this.root.updateMatrixWorld();
             this.sceneInfo.updateMatrixWorld();
         }
-        this.render();
+        if (render) {
+            this.render();
+        }
     }
 
     /**
@@ -1403,8 +1525,7 @@ export class StructureViewer extends Viewer {
 
             // Gather element legend data
             let elementName = this.elementNames[atomicNumber-1];
-            this.elements[elementName] = [this.elementColors[atomicNumber], this.atomicRadii[atomicNumber]];
-        }
+            this.elements[elementName] = [this.elementColors[atomicNumber], this.atomicRadii[atomicNumber]]; }
     }
 
     /**
@@ -1558,16 +1679,15 @@ export class StructureViewer extends Viewer {
         let group = new THREE.Group();
         group.name = "atom" + index;
         let atom = imesh["atom"].clone();
-        atom.position.copy(true_pos)
         atom.name = "fill";
         group.add(atom)
         if (this.options.outline.enabled) {
             let outline = imesh["outline"].clone();
             this.atomOutlines.push(outline);
-            outline.position.copy(true_pos);
             outline.name = "outline";
             group.add(outline)
         }
+        group.position.copy(true_pos);
 
         this.atoms.add(group)
         this.atomFills.push(atom);

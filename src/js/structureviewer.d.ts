@@ -15,14 +15,15 @@ export declare class StructureViewer extends Viewer {
     latticeConstants: any;
     container: any;
     infoContainer: any;
-    basisVectors: any[];
+    B: THREE.Matrix3;
+    Bi: THREE.Matrix3;
+    basisVectors: THREE.Vector3[];
     primitiveVectors: any[];
     elements: Object;
     sceneStructure: any;
     sceneInfo: any;
     settings: Object;
     settingsHandler: any;
-    elementLegend: any;
     updateBonds: boolean;
     atomicRadii: Array<number>;
     elementColors: Array<string>;
@@ -146,15 +147,15 @@ export declare class StructureViewer extends Viewer {
      * @param {string|number[]} options.atoms.radii The radii to use for atoms.
      * Defaults to covalent radii. Available options are:
      *
-     *   * "covalent": Covalent radii from DOI:10.1039/B801115J.
-     *   * Custom list of atomic radii. Provide an array of floating point
+     *   - "covalent": Covalent radii from DOI:10.1039/B801115J.
+     *   - Custom list of atomic radii. Provide an array of floating point
      *     numbers where the index corresponds to an atomic number.
      *
      * @param {string|string[]} options.atoms.colors The colors to use
      * for atoms. Available options are:
      *
-     *   * "Jmol" (default): Jmol colors.
-     *   * Custom list of colors. Provide an array of hexadesimal colorss where
+     *   - "Jmol" (default): Jmol colors.
+     *   - Custom list of colors. Provide an array of hexadesimal colorss where
      *     the index corresponds to an atomic number.
      *
      * @param {number} options.atoms.scale Scaling factor for the atomic radii.
@@ -166,16 +167,27 @@ export declare class StructureViewer extends Viewer {
      * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
      * by atoms onto others. Note that enabling this increases the
      * computational cost for doing the visualization.
-     * @param {boolean} render Whether to perform a render after settig the
+     * @param {boolean} render Whether to perform a render after setting the
      * options. Defaults to true. You should only disable this setting if you
      * plan to do a render manually afterwards.
      */
-    setOptions(options: Object, render?: boolean): void;
+    setOptions(options: any, render?: boolean, reload?: boolean): void;
+    /**
+     * Used to determine if a full realod of the structure is needed given the
+     * updated options.
+     * @param {*} options The updated options.
+     */
+    needFullReload(options: any): boolean;
     /**
      * Returns the currently set options.
      * @returns {Object} The current options.
      */
     getOptions(): any;
+    /**
+     * Returns information about the elements included in the structure.
+     * @returns {Object} The current options.
+     */
+    getElementInfo(): Object;
     /**
      * Hides or shows the lattice parameter labels.
      */
@@ -233,15 +245,26 @@ export declare class StructureViewer extends Viewer {
      */
     translate(translation: number[]): void;
     /**
+     * Set the position for atoms in the currently loaded structure.
+     */
+    setPositions(positions: number[][], relative?: boolean, render?: boolean): void;
+    toCartesian(position: THREE.Vector3): THREE.Vector3;
+    toScaled(position: THREE.Vector3): THREE.Vector3;
+    /**
+     * Get a specific atom as defined by a THREE.js Group.
+     *
+     * @param index - Index of the atom.
+     *
+     * @return THREE.js Group containing the visuals for the atom. The position
+     * of the atom is determined by the position of the group.
+     */
+    getAtom(index: number): THREE.Object3D;
+    /**
      * Set the zoom level
      *
      * @param zoomLevel - The zoom level as a scalar.
      */
     setZoom(zoomLevel: number[]): void;
-    /**
-     * This function will setup the element legend div.
-     */
-    setupStatic(): void;
     setupLights(): void;
     /**
      * Create the visuals to show the lattice parameter labels.
@@ -252,7 +275,7 @@ export declare class StructureViewer extends Viewer {
      *
      * @param vectors - The positions from which to create vectors.
      */
-    createBasisVectors(vectors: number[][]): any[];
+    createBasisVectors(basis: number[][]): any;
     createVisualizationBoundaryPositions(positions: any, atomicNumbers: any): void;
     createVisualizationBoundaryCell(origin: any, basis: any): void;
     /**
@@ -275,8 +298,8 @@ export declare class StructureViewer extends Viewer {
      * array containing four numbers: [x, y, z, angle]. The rotations are
      * applied in the given order.
      */
-    rotateView(rotations: any): void;
-    alignView(top: any, right: any): void;
+    rotateView(rotations: any, render?: boolean): void;
+    alignView(top: any, right: any, render?: boolean): void;
     /**
      * Used to add periodic repetitions of atoms.
      */

@@ -9,16 +9,6 @@ let options = {
   layout: {
     periodicity: "none",
     viewCenter: "COP",
-    viewRotation: {
-      align: {
-          top: "c",
-          right: "b",
-      },
-      rotations: [
-          [0, 1, 0, 60],
-          [1, 0, 0, 30],
-      ],
-    }
   },
   outline: {
     enabled: true,
