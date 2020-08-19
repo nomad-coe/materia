@@ -422,7 +422,7 @@ export class StructureViewer extends Viewer {
      * plan to do a render manually afterwards.
      */
     setOptions(options, render = true, reload = true) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f, _g;
         let defaultOptions = {
             view: {
                 fitMargin: 0.5,
@@ -534,6 +534,10 @@ export class StructureViewer extends Viewer {
                     ;
                 }
             }
+            if (((_f = options === null || options === void 0 ? void 0 : options.renderer) === null || _f === void 0 ? void 0 : _f.backgroundColor) !== undefined) {
+                this.setBackgroundColor((_g = options === null || options === void 0 ? void 0 : options.renderer) === null || _g === void 0 ? void 0 : _g.backgroundColor);
+            }
+            ;
             if (render) {
                 this.render();
             }

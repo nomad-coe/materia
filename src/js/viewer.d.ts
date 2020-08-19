@@ -58,6 +58,11 @@ export declare abstract class Viewer {
      * use a canvas fallback is WegGL is not available.
      */
     setupRenderer(): void;
+    /**
+     * This will setup the three.js renderer object. Uses WebGL by default, can
+     * use a canvas fallback is WegGL is not available.
+     */
+    setBackgroundColor(color: any[]): void;
     setupCamera(): void;
     /**
      * Used to setup a root DIV element that will contain the whole

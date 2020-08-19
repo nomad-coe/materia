@@ -4,7 +4,7 @@ let targetElem = document.getElementById("visualizationCanvas");
 // Viewer options
 let options = {
   view: {
-    fitMargin: 0.5,
+    fitMargin: 0.1,
   },
   layout: {
     periodicity: "none",
@@ -96,12 +96,49 @@ var bulk = {
     "scaledPositions": positions,
     "pbc": [true, true, true],
 };
-viewer.load(bulk);
 
-setInterval(function() {
-  positions[0][2] += 0.01;
-  viewer.setPositions(positions, true, true)
-}, 100);
+let system = {
+  "positions": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      1.232799,
+      -0.711757,
+      0
+    ]
+  ],
+  "atomicNumbers": [
+    6,
+    6
+  ],
+  "pbc": [
+    true,
+    true,
+    true
+  ],
+  "cell": [
+    [
+      1.232799,
+      -2.135271,
+      0
+    ],
+    [
+      1.232799,
+      2.135271,
+      0
+    ],
+    [
+      0,
+      0,
+      20
+    ]
+  ],
+}
+
+viewer.load(system);
 
 // Load finite molecule with cartesian positions and cell
 //var molecule = {

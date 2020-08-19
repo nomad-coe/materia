@@ -285,6 +285,7 @@ export class StructureViewer extends Viewer {
                     if (options?.renderer?.shadows?.enabled !== undefined) {this.toggleShadows(options.renderer.shadows.enabled)};
                 }
             }
+            if (options?.renderer?.backgroundColor !== undefined) {this.setBackgroundColor(options?.renderer?.backgroundColor)};
             if (render) {
                 this.render();
             }

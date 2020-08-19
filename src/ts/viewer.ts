@@ -258,6 +258,15 @@ export abstract class Viewer {
         this.renderer.autoClear = false;
     }
 
+    /**
+     * This will setup the three.js renderer object. Uses WebGL by default, can
+     * use a canvas fallback is WegGL is not available.
+     */
+    setBackgroundColor(color:any[]) {
+        // Create the renderer. The "alpha: true" enables to set a background color.
+        this.renderer.setClearColor(color[0], color[1]);
+    }
+
     /*
      * Used to setup and position the camera.
      */
@@ -391,11 +400,13 @@ export abstract class Viewer {
         this.scenes.forEach((scene) => scene.updateMatrixWorld());
 
         // Project all 8 corners of the normalized cell into screen space and
-        // see how the system should be scaled to fit it to screen
+        // see how the system should be scaled to fit into screen
         let canvas = this.rootElement;
         let canvasWidth = canvas.clientWidth;
         let canvasHeight = canvas.clientHeight;
         let cornerPos = [];
+        //console.log(canvas.clientWidth)
+        //console.log(canvas.clientHeight)
 
         // Figure out the center in order to add margins in right direction
         let centerPos = new THREE.Vector3();
@@ -407,6 +418,7 @@ export abstract class Viewer {
 
         for (let len=this.cornerPoints.geometry.vertices.length, i=0; i<len; ++i) {
             let screenPos = this.cornerPoints.geometry.vertices[i].clone();
+            //console.log(screenPos)
             this.cornerPoints.localToWorld(screenPos);
 
             // Default the zoom to 1 for the projection
@@ -422,6 +434,7 @@ export abstract class Viewer {
 
             // Map to corner coordinates to
             screenPos.project( this.camera );
+            //console.log(screenPos)
 
             // Add a margin
             let margin = this.options.view.fitMargin;
@@ -469,25 +482,18 @@ export abstract class Viewer {
                 minY = y;
             }
         }
-        // Calculate width margin by scaling the
-        let width = maxX - minX;
-        let height = maxY - minY;
-        let xFactor = canvasWidth/width;
-        let yFactor = canvasHeight/height;
 
-        // Decide which dimension is the more restricting one
-        let factor;
-        if (xFactor <= 1 && yFactor <= 1) {
-            factor = Math.min(xFactor, yFactor);
-        } else if (xFactor >= 1 && yFactor >= 1) {
-            factor = Math.min(xFactor, yFactor);
-        } else if (xFactor <= 1 && yFactor >= 1) {
-            factor = xFactor;
-        } else if (yFactor <= 1 && xFactor >= 1) {
-            factor = yFactor;
-        }
-
-        this.camera.zoom = factor;
+        // Determine new zoom that will ensure that all cornerpositions are
+        // visible on screen, assuming that the zoom center is set to view
+        // center.
+        let centerX = (canvasWidth/2)
+        let centerY = (canvasHeight/2)
+        let zoomRight = centerX/Math.abs(maxX-centerX)
+        let zoomLeft = centerX/Math.abs(minX-centerX)
+        let zoomUp = centerY/Math.abs(minY-centerY)
+        let zoomDown = centerY/Math.abs(maxY-centerY)
+        let newZoom = Math.min(zoomRight, zoomLeft, zoomUp, zoomDown)
+        this.camera.zoom = newZoom
         this.camera.updateProjectionMatrix();
     }
 
