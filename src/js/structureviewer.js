@@ -393,7 +393,7 @@ export class StructureViewer extends Viewer {
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
-     * @param {number} options.atoms.material.shininess Shininess of the bond material.
+     * @param {number} options.atoms.material.shininess Shininess of the atom material.
      * @param {string|number[]} options.atoms.radii The radii to use for atoms.
      * Defaults to covalent radii. Available options are:
      *
@@ -405,7 +405,7 @@ export class StructureViewer extends Viewer {
      * for atoms. Available options are:
      *
      *   - "Jmol" (default): Jmol colors.
-     *   - Custom list of colors. Provide an array of hexadesimal colorss where
+     *   - Custom list of colors. Provide an array of hexadecimal colors where
      *     the index corresponds to an atomic number.
      *
      * @param {number} options.atoms.scale Scaling factor for the atomic radii.
@@ -664,16 +664,14 @@ export class StructureViewer extends Viewer {
     /**
      * Visualizes the given atomic structure.
      *
-     * @param {boolean} structure A Javascript object containing the structure. See
+     * @param {object} structure A Javascript object containing the structure. See
      *   below for the subparameters.
-     * @param {number[][]} structure.positions Cartesian positions. Set either
-     *   this or scaledPositions.
-     * @param {number[][]} structure.scaledPositions Positions given in the
-     *   basis of the lattice vectors. Set either this or positions.
-     * @param {number[]} structure.atomicNumbers Atomic numbers of the atoms.
-     *   Set either this or chemicalSymbols.
-     * @param {string[]} structure.chemicalSymbols Chemical symbols of the
-     *   atoms. Set either this or atomicNumbers.
+     * @param {number[][]} structure.positions Atomic positions. Default
+     *   interpretation is as cartesian positions, but you can specify whether they
+     *   are cartesial or fractional with the "fractional" attribute.
+     * @param {boolean} structure.fractional Whether the given positions are
+     *   fractional or not. Defaults to false if not specified.
+     * @param {string[]|number[]} structure.species Atomic numbers or chemical symbols of the atoms.
      * @param {number[]} structure.cell The lattice vectors of the unit cell as
      *   rows of a 3x3 array.
      * @param {boolean[]} structure.pbc The periodic boundary conditions for
@@ -712,28 +710,24 @@ export class StructureViewer extends Viewer {
             this.elementColors = this.options.atoms.colors;
         }
         // Check that the received data is OK.
+        let isFractional = structure["fractional"] === undefined ? false : structure["fractional"];
         let positions = structure["positions"];
-        let scaledPositions = structure["scaledPositions"];
-        let atomicNumbers = structure["atomicNumbers"] === undefined ? undefined : [...structure["atomicNumbers"]];
-        let chemicalSymbols = structure["chemicalSymbols"];
+        let species = structure["species"];
         let cell = structure["cell"];
         let periodicity = structure["pbc"];
         let bonds = structure["bonds"];
-        if (!scaledPositions && !positions) {
+        if (!positions) {
             console.log("No atom positions given to the structure viewer");
             return false;
         }
-        if (!atomicNumbers && !chemicalSymbols) {
-            console.log("No atomicNumbers or chemicalSymbols given to the structure viewer.");
+        if (!species) {
+            console.log("No species  given to the structure viewer.");
             return false;
         }
         // Determine the atomicNumbers if not given
-        if (!atomicNumbers) {
-            atomicNumbers = chemicalSymbols.map(symb => {
-                return this.elementNumbers[symb];
-            });
-        }
-        ;
+        let atomicNumbers = typeof species[0] === "number" ? species : species.map(symb => {
+            return this.elementNumbers[symb];
+        });
         // If bonds are not explicitly stated, determine them automatically.
         if (!bonds) {
             bonds = "auto";
@@ -744,26 +738,9 @@ export class StructureViewer extends Viewer {
                 return false;
             }
         }
-        let isRelative;
-        let truePositions;
-        if (scaledPositions) {
-            if (scaledPositions.length != atomicNumbers.length) {
-                console.log("The number of scaled positions does not match the number of labels.");
-                return false;
-            }
-            isRelative = true;
-            truePositions = scaledPositions;
-        }
-        if (positions) {
-            if (isRelative) {
-                throw "Please provide only either scaledPositions or positions.";
-            }
-            if (positions.length != atomicNumbers.length) {
-                console.log("The number of positions does not match the number of labels.");
-                return false;
-            }
-            isRelative = false;
-            truePositions = positions;
+        if (positions.length != atomicNumbers.length) {
+            console.log("The number of positions does not match the number of labels.");
+            return false;
         }
         // Assume no periodicity if not defined
         if ((periodicity == undefined) || (periodicity == null)) {
@@ -782,29 +759,29 @@ export class StructureViewer extends Viewer {
         this.sceneInfo.add(this.infoContainer);
         this.latticeConstants = new THREE.Object3D();
         this.container.add(this.latticeConstants);
-        // Create a set of relative and cartesian positions
+        // Create a set of fractional and cartesian positions
         this.createBasisVectors(cell);
-        let relPos = [];
+        let fracPos = [];
         let cartPos = [];
-        // Create a set of relative and cartesian positions
-        if (isRelative === true) {
-            for (let i = 0; i < truePositions.length; ++i) {
-                let pos = truePositions[i];
-                let iRelPos = new THREE.Vector3().fromArray(pos);
-                relPos.push(iRelPos);
-                cartPos.push(this.toCartesian(iRelPos));
+        // Create a set of fractional and cartesian positions
+        if (isFractional === true) {
+            for (let i = 0; i < positions.length; ++i) {
+                let pos = positions[i];
+                let iFracPos = new THREE.Vector3().fromArray(pos);
+                fracPos.push(iFracPos);
+                cartPos.push(this.toCartesian(iFracPos));
             }
         }
-        else if (isRelative === false) {
-            for (let i = 0; i < truePositions.length; ++i) {
+        else if (isFractional === false) {
+            for (let i = 0; i < positions.length; ++i) {
                 let pos = positions[i];
                 let iCartPos = new THREE.Vector3().fromArray(pos);
                 cartPos.push(iCartPos);
             }
             if (this.B !== undefined) {
                 for (let i = 0, size = cartPos.length; i < size; ++i) {
-                    let iRelPos = this.toScaled(cartPos[i]);
-                    relPos.push(iRelPos);
+                    let iFracPos = this.toScaled(cartPos[i]);
+                    fracPos.push(iFracPos);
                 }
             }
         }
@@ -841,15 +818,16 @@ export class StructureViewer extends Viewer {
         if (this.B !== undefined) {
             this.createConventionalCell(periodicity, this.options.cell.enabled);
             this.createLatticeConstants(this.basisVectors, periodicity, periodicIndices);
-            this.createAtoms(relPos, atomicNumbers, periodicity, true);
+            this.createAtoms(fracPos, atomicNumbers, periodicity, true);
         }
         else {
             this.createAtoms(cartPos, atomicNumbers, periodicity, false);
         }
+        let atomPos = this.getPositions();
         // Determine the corner points that are used to properly fit the
         // structure into the viewer. The fit takes also into account the
         // periodic duplicates and atoms created at the boundary.
-        this.createVisualizationBoundaryPositions(this.atomPos, atomicNumbers);
+        this.createVisualizationBoundaryPositions(atomPos, atomicNumbers);
         // Create bonds
         this.createBonds(bonds);
         // Setup the view center
@@ -858,7 +836,7 @@ export class StructureViewer extends Viewer {
         // Center of positions takes into account also the repeated positions
         // and positions created at the cell boundaries.
         if (viewCenter === "COP") {
-            centerPos = this.calculateCOP(this.atomPos);
+            centerPos = this.calculateCOP(atomPos);
         }
         else if (viewCenter === "COC") {
             centerPos = new THREE.Vector3()
@@ -923,13 +901,13 @@ export class StructureViewer extends Viewer {
     /**
      * Set the position for atoms in the currently loaded structure.
      */
-    setPositions(positions, relative = false, render = true) {
+    setPositions(positions, fractional = false, render = true) {
         // Check the periodicity setting. You can only call this function if no
         // additional atoms need to be created through the periodicity setting.
         if (this.options.layout.periodicity !== "none") {
             throw "Setting new positions is only allowed if options.layout.periodicity = 'none'.";
         }
-        if (relative) {
+        if (fractional) {
             for (let i = 0, size = positions.length; i < size; ++i) {
                 let atom = this.getAtom(i);
                 let position = this.toCartesian(new THREE.Vector3().fromArray(positions[i]));
@@ -943,9 +921,34 @@ export class StructureViewer extends Viewer {
                 atom.position.copy(position);
             }
         }
+        this.updateBonds = true;
+        this.createBonds();
         if (render) {
             this.render();
         }
+    }
+    /**
+     * Set the position for atoms in the currently loaded structure.
+     */
+    getPositions(fractional = false) {
+        let positions = [];
+        let atoms = this.atoms.children;
+        let nAtoms = atoms.length;
+        if (fractional) {
+            for (let i = 0; i < nAtoms; ++i) {
+                let atom = atoms[i];
+                let position = this.toScaled(atom.position.clone());
+                positions.push(position);
+            }
+        }
+        else {
+            for (let i = 0; i < nAtoms; ++i) {
+                let atom = atoms[i];
+                let position = atom.position.clone();
+                positions.push(position);
+            }
+        }
+        return positions;
     }
     toCartesian(position) {
         return position.clone().applyMatrix3(this.B);
@@ -1512,7 +1515,7 @@ export class StructureViewer extends Viewer {
     /**
      * Used to add periodic repetitions of atoms.
      */
-    repeat(multipliers, relPos, labels) {
+    repeat(multipliers, fracPos, labels) {
         let a = new THREE.Vector3(1, 0, 0);
         let b = new THREE.Vector3(0, 1, 0);
         let c = new THREE.Vector3(0, 0, 1);
@@ -1527,8 +1530,8 @@ export class StructureViewer extends Viewer {
                         let bTranslation = b.clone().multiplyScalar(j);
                         let cTranslation = c.clone().multiplyScalar(k);
                         // Add in front
-                        for (let l = 0; l < relPos.length; ++l) {
-                            let iPos = new THREE.Vector3().copy(relPos[l]);
+                        for (let l = 0; l < fracPos.length; ++l) {
+                            let iPos = new THREE.Vector3().copy(fracPos[l]);
                             iPos.add(aTranslation);
                             iPos.add(bTranslation);
                             iPos.add(cTranslation);
@@ -1540,19 +1543,19 @@ export class StructureViewer extends Viewer {
                 }
             }
         }
-        relPos.push.apply(newPos);
+        fracPos.push.apply(newPos);
         labels.push.apply(newLabels);
     }
     /**
      * Wraps all atoms to be within the unit cell.
      */
-    wrap(relPos, pbc) {
-        for (let len = relPos.length, i = 0; i < len; ++i) {
-            let iRelPos = relPos[i];
+    wrap(fracPos, pbc) {
+        for (let len = fracPos.length, i = 0; i < len; ++i) {
+            let iFracPos = fracPos[i];
             // Wrap the positions
-            let x = iRelPos.x;
-            let y = iRelPos.y;
-            let z = iRelPos.z;
+            let x = iFracPos.x;
+            let y = iFracPos.y;
+            let z = iFracPos.z;
             if (pbc[0] && this.almostEqual(1, x, this.basisVectors[0], this.options.layout.wrapTolerance)) {
                 x -= 1;
             }
@@ -1567,68 +1570,68 @@ export class StructureViewer extends Viewer {
     /**
      * Used to add periodic repetitions of atoms at the unit cell boundary.
      */
-    addBoundaryAtoms(relPos, labels) {
-        for (let len = relPos.length, i = 0; i < len; ++i) {
-            let iRelPos = relPos[i];
+    addBoundaryAtoms(fracPos, labels) {
+        for (let len = fracPos.length, i = 0; i < len; ++i) {
+            let iFracPos = fracPos[i];
             let atomicNumber = labels[i];
             // If the atom sits on the cell surface, add the periodic images if
             // requested.
-            let x = iRelPos.x;
-            let y = iRelPos.y;
-            let z = iRelPos.z;
+            let x = iFracPos.x;
+            let y = iFracPos.y;
+            let z = iFracPos.z;
             let xZero = this.almostEqual(0, x, this.basisVectors[0], this.options.layout.wrapTolerance);
             let yZero = this.almostEqual(0, y, this.basisVectors[1], this.options.layout.wrapTolerance);
             let zZero = this.almostEqual(0, z, this.basisVectors[2], this.options.layout.wrapTolerance);
             if (xZero && yZero && zZero) {
-                relPos.push(new THREE.Vector3(1, 0, 0).add(iRelPos));
+                fracPos.push(new THREE.Vector3(1, 0, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0, 1, 0).add(iRelPos));
+                fracPos.push(new THREE.Vector3(0, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0, 0, 1).add(iRelPos));
+                fracPos.push(new THREE.Vector3(0, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(1, 1, 0).add(iRelPos));
+                fracPos.push(new THREE.Vector3(1, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0, 1, 1).add(iRelPos));
+                fracPos.push(new THREE.Vector3(0, 1, 1).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(1, 0, 1).add(iRelPos));
+                fracPos.push(new THREE.Vector3(1, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(1, 1, 1).add(iRelPos));
+                fracPos.push(new THREE.Vector3(1, 1, 1).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (xZero && yZero && !zZero) {
-                relPos.push(new THREE.Vector3(1, 0, 0).add(iRelPos));
+                fracPos.push(new THREE.Vector3(1, 0, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0, 1, 0).add(iRelPos));
+                fracPos.push(new THREE.Vector3(0, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(1, 1, 0).add(iRelPos));
+                fracPos.push(new THREE.Vector3(1, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (!xZero && yZero && zZero) {
-                relPos.push(new THREE.Vector3(0, 1, 0).add(iRelPos));
+                fracPos.push(new THREE.Vector3(0, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0, 0, 1).add(iRelPos));
+                fracPos.push(new THREE.Vector3(0, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0, 1, 1).add(iRelPos));
+                fracPos.push(new THREE.Vector3(0, 1, 1).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (xZero && !yZero && zZero) {
-                relPos.push(new THREE.Vector3(1, 0, 0).add(iRelPos));
+                fracPos.push(new THREE.Vector3(1, 0, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(0, 0, 1).add(iRelPos));
+                fracPos.push(new THREE.Vector3(0, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
-                relPos.push(new THREE.Vector3(1, 0, 1).add(iRelPos));
+                fracPos.push(new THREE.Vector3(1, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (xZero && !yZero && !zZero) {
-                relPos.push(new THREE.Vector3(1, 0, 0).add(iRelPos));
+                fracPos.push(new THREE.Vector3(1, 0, 0).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (!xZero && yZero && !zZero) {
-                relPos.push(new THREE.Vector3(0, 1, 0).add(iRelPos));
+                fracPos.push(new THREE.Vector3(0, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (!xZero && !yZero && zZero) {
-                relPos.push(new THREE.Vector3(0, 0, 1).add(iRelPos));
+                fracPos.push(new THREE.Vector3(0, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
             }
         }
@@ -1639,16 +1642,15 @@ export class StructureViewer extends Viewer {
      * @param positions - Positions of the atoms
      * @param labels - The element numbers for the atoms
      */
-    createAtoms(positions, labels, pbc, relative = true) {
+    createAtoms(positions, labels, pbc, fractional = true) {
         // Delete old atoms
         this.atoms.remove(...this.atoms.children);
         this.elements = {};
-        this.atomPos = [];
         this.atomNumbers = [];
         this.atomFills = [];
         this.atomOutlines = [];
         // Prepare variables
-        if (relative) {
+        if (fractional) {
             let basis1 = this.basisVectors[0];
             let basis2 = this.basisVectors[1];
             let basis3 = this.basisVectors[2];
@@ -1674,7 +1676,7 @@ export class StructureViewer extends Viewer {
             let iPos = positions[i];
             // Add the primary atom
             let atomicNumber = labels[i];
-            this.addAtom(i, iPos, atomicNumber, meshMap, relative);
+            this.addAtom(i, iPos, atomicNumber, meshMap, fractional);
             // Gather element legend data
             let elementName = this.elementNames[atomicNumber - 1];
             this.elements[elementName] = [this.elementColors[atomicNumber], this.atomicRadii[atomicNumber]];
@@ -1697,24 +1699,26 @@ export class StructureViewer extends Viewer {
         // Delete old bonds
         this.bondFills = [];
         this.bonds.remove(...this.bonds.children);
+        // Get current positions
+        let atomPos = this.getPositions();
         // Manual bonds
         if (Array.isArray(bonds)) {
             for (let bond of bonds) {
                 let i = bond[0];
                 let j = bond[1];
-                let pos1 = this.atomPos[i];
-                let pos2 = this.atomPos[j];
+                let pos1 = atomPos[i];
+                let pos2 = atomPos[j];
                 this.addBond(i, j, pos1, pos2);
             }
             // Automatically detect bonds
         }
         else if (bonds === "auto") {
-            let nAtoms = this.atomPos.length;
+            let nAtoms = atomPos.length;
             for (let i = 0; i < nAtoms; ++i) {
                 for (let j = 0; j < nAtoms; ++j) {
                     if (j > i) {
-                        let pos1 = this.atomPos[i];
-                        let pos2 = this.atomPos[j];
+                        let pos1 = atomPos[i];
+                        let pos2 = atomPos[j];
                         let num1 = this.atomNumbers[i];
                         let num2 = this.atomNumbers[j];
                         let distance = pos2.clone().sub(pos1).length();
@@ -1730,7 +1734,7 @@ export class StructureViewer extends Viewer {
         this.updateBonds = false;
     }
     /**
-     * Used to check if the given relative position component is almost the
+     * Used to check if the given fractional position component is almost the
      * given target value with a tolerance given in cartesian corodinates.
      */
     almostEqual(target, coordinate, basisVector, tolerance) {
@@ -1748,7 +1752,7 @@ export class StructureViewer extends Viewer {
      *
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
-     * @param relative - Are the coordinates relatice to the cell basis vectors
+     * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
     addBond(i, j, pos1, pos2) {
         // Bond
@@ -1779,9 +1783,9 @@ export class StructureViewer extends Viewer {
      *
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
-     * @param relative - Are the coordinates relatice to the cell basis vectors
+     * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
-    addAtom(index, position, atomicNumber, mesh, relative = true) {
+    addAtom(index, position, atomicNumber, mesh, fractional = true) {
         let exists = atomicNumber in mesh;
         if (!exists) {
             mesh[atomicNumber] = {};
@@ -1808,7 +1812,7 @@ export class StructureViewer extends Viewer {
         }
         let imesh = mesh[atomicNumber];
         let true_pos = new THREE.Vector3();
-        if (relative) {
+        if (fractional) {
             true_pos.add(this.basisVectors[0].clone().multiplyScalar(position.x));
             true_pos.add(this.basisVectors[1].clone().multiplyScalar(position.y));
             true_pos.add(this.basisVectors[2].clone().multiplyScalar(position.z));
@@ -1831,7 +1835,6 @@ export class StructureViewer extends Viewer {
         group.position.copy(true_pos);
         this.atoms.add(group);
         this.atomFills.push(atom);
-        this.atomPos.push(true_pos);
         this.atomNumbers.push(atomicNumber);
         // Always after adding an atom the bond information should be updated.
         this.updateBonds = true;
@@ -1883,10 +1886,10 @@ export class StructureViewer extends Viewer {
     /**
      * Setup the view for 0D systems (atoms, molecules).
      */
-    setup0D(relPos, cartPos, labels) {
+    setup0D(fracPos, cartPos, labels) {
         let pbc = [false, false, false];
         this.createConventionalCell(pbc, this.options.cell.enabled);
-        this.createAtoms(relPos, labels, pbc);
+        this.createAtoms(fracPos, labels, pbc);
         this.createLatticeConstants(this.basisVectors, pbc, []);
     }
     /**
@@ -1895,7 +1898,7 @@ export class StructureViewer extends Viewer {
      *
      * @param dim - The index of the periodic dimension.
      */
-    setup1D(relPos, cartPos, labels, pbc, periodicIndices) {
+    setup1D(fracPos, cartPos, labels, pbc, periodicIndices) {
         // Duplicate the cell in the periodic dimensions. The number of
         // duplications is determined so that a certain size is achieved.
         let dim = periodicIndices[0];
@@ -1907,7 +1910,7 @@ export class StructureViewer extends Viewer {
         if (this.options.cell.enabled) {
             this.createConventionalCell(pbc, this.options.cell.enabled);
         }
-        this.createAtoms(relPos, labels, pbc);
+        this.createAtoms(fracPos, labels, pbc);
         this.createLatticeConstants(this.basisVectors, pbc, periodicIndices);
     }
     /**
@@ -1916,7 +1919,7 @@ export class StructureViewer extends Viewer {
      *
      * @param periodicIndices - The indices of the periodic dimension.
      */
-    setup2D(relPos, cartPos, labels, pbc, periodicIndices) {
+    setup2D(fracPos, cartPos, labels, pbc, periodicIndices) {
         // Duplicate the cell in the periodic dimensions. The number of
         // duplications is determined so that a certain size is achieved.
         let dim1 = periodicIndices[0];
@@ -1934,16 +1937,16 @@ export class StructureViewer extends Viewer {
         multipliers[dim2] = height;
         this.options.layout.periodicity = multipliers;
         this.createConventionalCell(pbc, this.options.cell.enabled);
-        this.createAtoms(relPos, labels, pbc);
+        this.createAtoms(fracPos, labels, pbc);
         this.createLatticeConstants(this.basisVectors, pbc, periodicIndices);
     }
     /**
      * Setup the view for 3D systems (crystals)
      */
-    setup3D(relPos, cartPos, labels) {
+    setup3D(fracPos, cartPos, labels) {
         let pbc = [true, true, true];
         this.createConventionalCell(pbc, this.options.cell.enabled);
-        this.createAtoms(relPos, labels, pbc);
+        this.createAtoms(fracPos, labels, pbc);
         this.createLatticeConstants(this.basisVectors, pbc, [0, 1, 2]);
     }
 }

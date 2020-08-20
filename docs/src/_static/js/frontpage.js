@@ -5,8 +5,8 @@ let canvas = document.getElementById("canvas");
 // Viewer options
 let options = {
   layout: {
-    viewCenter: "COC",
-    periodicity: "none",
+    viewCenter: "COP",
+    periodicity: "boundary",
     viewRotation: {
       align: {
           top: "c",
@@ -18,14 +18,24 @@ let options = {
       ],
     }
   },
+  view: {
+    autoFit: false,
+    autoResize: false,
+    fitMargin: 0.1
+  },
+  controls: {
+    enableZoom: false,
+    enablePan: false,
+  },
   bonds: {
-    enabled: true
+    enabled: true,
+    threshold: 1.5,
   },
   cell: {
-    enabled: true
+    enabled: false
   },
   latticeConstants: {
-    enabled: true
+    enabled: false
   }
 };
 
@@ -34,11 +44,11 @@ let viewer = new materia.StructureViewer(canvas, options);
 
 // Define structure and load into viewer
 let nacl = {
-    species: [11, 17, 11, 17, 11, 17, 11, 17],
+    species: ["C", "Pb", "C", "Pb", "C", "Pb", "C", "Pb"],
     cell: [
-        [5.6402, 0.0, 0.0],
-        [0.0, 5.6402, 0.0],
-        [0.0, 0.0, 5.6402]
+        [7, 0.0, 0.0],
+        [0.0, 7, 0.0],
+        [0.0, 0.0, 7]
     ],
     positions: [
         [0.0, 0.5, 0.0],
@@ -54,3 +64,7 @@ let nacl = {
     pbc: [true, true, true],
 };
 viewer.load(nacl);
+viewer.fitToCanvas()
+setInterval(() => {
+  viewer.rotateView([[1, 1, 0, 0.25]])
+}, 50)

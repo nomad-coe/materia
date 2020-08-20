@@ -143,7 +143,7 @@ export declare class StructureViewer extends Viewer {
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
-     * @param {number} options.atoms.material.shininess Shininess of the bond material.
+     * @param {number} options.atoms.material.shininess Shininess of the atom material.
      * @param {string|number[]} options.atoms.radii The radii to use for atoms.
      * Defaults to covalent radii. Available options are:
      *
@@ -155,7 +155,7 @@ export declare class StructureViewer extends Viewer {
      * for atoms. Available options are:
      *
      *   - "Jmol" (default): Jmol colors.
-     *   - Custom list of colors. Provide an array of hexadesimal colorss where
+     *   - Custom list of colors. Provide an array of hexadecimal colors where
      *     the index corresponds to an atomic number.
      *
      * @param {number} options.atoms.scale Scaling factor for the atomic radii.
@@ -207,16 +207,14 @@ export declare class StructureViewer extends Viewer {
     /**
      * Visualizes the given atomic structure.
      *
-     * @param {boolean} structure A Javascript object containing the structure. See
+     * @param {object} structure A Javascript object containing the structure. See
      *   below for the subparameters.
-     * @param {number[][]} structure.positions Cartesian positions. Set either
-     *   this or scaledPositions.
-     * @param {number[][]} structure.scaledPositions Positions given in the
-     *   basis of the lattice vectors. Set either this or positions.
-     * @param {number[]} structure.atomicNumbers Atomic numbers of the atoms.
-     *   Set either this or chemicalSymbols.
-     * @param {string[]} structure.chemicalSymbols Chemical symbols of the
-     *   atoms. Set either this or atomicNumbers.
+     * @param {number[][]} structure.positions Atomic positions. Default
+     *   interpretation is as cartesian positions, but you can specify whether they
+     *   are cartesial or fractional with the "fractional" attribute.
+     * @param {boolean} structure.fractional Whether the given positions are
+     *   fractional or not. Defaults to false if not specified.
+     * @param {string[]|number[]} structure.species Atomic numbers or chemical symbols of the atoms.
      * @param {number[]} structure.cell The lattice vectors of the unit cell as
      *   rows of a 3x3 array.
      * @param {boolean[]} structure.pbc The periodic boundary conditions for
@@ -247,7 +245,11 @@ export declare class StructureViewer extends Viewer {
     /**
      * Set the position for atoms in the currently loaded structure.
      */
-    setPositions(positions: number[][], relative?: boolean, render?: boolean): void;
+    setPositions(positions: number[][], fractional?: boolean, render?: boolean): void;
+    /**
+     * Set the position for atoms in the currently loaded structure.
+     */
+    getPositions(fractional?: boolean): any[];
     toCartesian(position: THREE.Vector3): THREE.Vector3;
     toScaled(position: THREE.Vector3): THREE.Vector3;
     /**
@@ -303,22 +305,22 @@ export declare class StructureViewer extends Viewer {
     /**
      * Used to add periodic repetitions of atoms.
      */
-    repeat(multipliers: Array<number>, relPos: any, labels: any): void;
+    repeat(multipliers: Array<number>, fracPos: any, labels: any): void;
     /**
      * Wraps all atoms to be within the unit cell.
      */
-    wrap(relPos: any, pbc: any): void;
+    wrap(fracPos: any, pbc: any): void;
     /**
      * Used to add periodic repetitions of atoms at the unit cell boundary.
      */
-    addBoundaryAtoms(relPos: any, labels: any): void;
+    addBoundaryAtoms(fracPos: any, labels: any): void;
     /**
      * Creates representation for all the given atoms.
      *
      * @param positions - Positions of the atoms
      * @param labels - The element numbers for the atoms
      */
-    createAtoms(positions: any, labels: any, pbc: Array<boolean>, relative?: boolean): void;
+    createAtoms(positions: any, labels: any, pbc: Array<boolean>, fractional?: boolean): void;
     /**
      * Creates bonds between the atoms based on radii and distance.
      *
@@ -327,7 +329,7 @@ export declare class StructureViewer extends Viewer {
      */
     createBonds(bonds?: string): void;
     /**
-     * Used to check if the given relative position component is almost the
+     * Used to check if the given fractional position component is almost the
      * given target value with a tolerance given in cartesian corodinates.
      */
     almostEqual(target: number, coordinate: number, basisVector: any, tolerance: number): boolean;
@@ -336,7 +338,7 @@ export declare class StructureViewer extends Viewer {
      *
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
-     * @param relative - Are the coordinates relatice to the cell basis vectors
+     * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
     addBond(i: any, j: any, pos1: any, pos2: any): void;
     /**
@@ -344,9 +346,9 @@ export declare class StructureViewer extends Viewer {
      *
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
-     * @param relative - Are the coordinates relatice to the cell basis vectors
+     * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
-    addAtom(index: any, position: any, atomicNumber: any, mesh: any, relative?: boolean): void;
+    addAtom(index: any, position: any, atomicNumber: any, mesh: any, fractional?: boolean): void;
     render(): void;
     /**
      * Used to get a number of repetitions that are needed for the given
@@ -359,25 +361,25 @@ export declare class StructureViewer extends Viewer {
     /**
      * Setup the view for 0D systems (atoms, molecules).
      */
-    setup0D(relPos: any, cartPos: any, labels: any): void;
+    setup0D(fracPos: any, cartPos: any, labels: any): void;
     /**
      * Replicates the structure along the specified direction to emphasize the
      * 1D nature of the material.
      *
      * @param dim - The index of the periodic dimension.
      */
-    setup1D(relPos: any, cartPos: any, labels: any, pbc: any, periodicIndices: any): void;
+    setup1D(fracPos: any, cartPos: any, labels: any, pbc: any, periodicIndices: any): void;
     /**
      * Replicates the structure along the specified direction to emphasize the
      * 2D nature of the material.
      *
      * @param periodicIndices - The indices of the periodic dimension.
      */
-    setup2D(relPos: any, cartPos: any, labels: any, pbc: any, periodicIndices: any): void;
+    setup2D(fracPos: any, cartPos: any, labels: any, pbc: any, periodicIndices: any): void;
     /**
      * Setup the view for 3D systems (crystals)
      */
-    setup3D(relPos: any, cartPos: any, labels: any): void;
+    setup3D(fracPos: any, cartPos: any, labels: any): void;
     elementNames: string[];
     elementNumbers: object;
     missing: number;

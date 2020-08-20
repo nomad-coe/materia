@@ -34,13 +34,13 @@ let viewer = new materia.StructureViewer(canvas, options);
 
 // Define structure and load into viewer
 let nacl = {
-    atomicNumbers: [11, 17, 11, 17, 11, 17, 11, 17],
+    species: [11, 17, 11, 17, 11, 17, 11, 17],
     cell: [
         [5.6402, 0.0, 0.0],
         [0.0, 5.6402, 0.0],
         [0.0, 0.0, 5.6402]
     ],
-    scaledPositions: [
+    positions: [
         [0.0, 0.5, 0.0],
         [0.0, 0.5, 0.5],
         [0.0, 0.0, 0.5],
@@ -50,6 +50,7 @@ let nacl = {
         [0.5, 0.0, 0.0],
         [0.5, 0.0, 0.5]
     ],
+    fractional: true,
     pbc: [true, true, true],
 };
 viewer.load(nacl);

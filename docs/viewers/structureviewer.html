@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Structure Viewer &mdash; materia 0.0.1 documentation</title>
+  <title>Structure Viewer &mdash; materia 0.0.5 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.0.1
+                0.0.5
               </div>
             
           
@@ -226,13 +226,13 @@ and changing the <code class="code docutils literal notranslate"><span class="pr
 
 <span class="c1">// Define structure and load into viewer</span>
 <span class="kd">let</span> <span class="nx">nacl</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="nx">atomicNumbers</span><span class="o">:</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">],</span>
+    <span class="nx">species</span><span class="o">:</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">17</span><span class="p">],</span>
     <span class="nx">cell</span><span class="o">:</span> <span class="p">[</span>
         <span class="p">[</span><span class="mf">5.6402</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
         <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">5.6402</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
         <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">5.6402</span><span class="p">]</span>
     <span class="p">],</span>
-    <span class="nx">scaledPositions</span><span class="o">:</span> <span class="p">[</span>
+    <span class="nx">positions</span><span class="o">:</span> <span class="p">[</span>
         <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
         <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
         <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
@@ -242,6 +242,7 @@ and changing the <code class="code docutils literal notranslate"><span class="pr
         <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
         <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
     <span class="p">],</span>
+    <span class="nx">fractional</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
     <span class="nx">pbc</span><span class="o">:</span> <span class="p">[</span><span class="kc">true</span><span class="p">,</span> <span class="kc">true</span><span class="p">,</span> <span class="kc">true</span><span class="p">],</span>
 <span class="p">};</span>
 <span class="nx">viewer</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">nacl</span><span class="p">);</span>
@@ -271,11 +272,10 @@ use this method to only update a subset of the options.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>structure</strong> (<em>boolean</em>) – A Javascript object containing the structure. See below for the subparameters.</p></li>
-<li><p><strong>structure.positions</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – Cartesian positions. Set either this or scaledPositions.</p></li>
-<li><p><strong>structure.scaledPositions</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – Positions given in the basis of the lattice vectors. Set either this or positions.</p></li>
-<li><p><strong>structure.atomicNumbers</strong> (<em>Array.&lt;number&gt;</em>) – Atomic numbers of the atoms. Set either this or chemicalSymbols.</p></li>
-<li><p><strong>structure.chemicalSymbols</strong> (<em>Array.&lt;string&gt;</em>) – Chemical symbols of the atoms. Set either this or atomicNumbers.</p></li>
+<li><p><strong>structure</strong> (<em>object</em>) – A Javascript object containing the structure. See below for the subparameters.</p></li>
+<li><p><strong>structure.positions</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – Atomic positions. Default interpretation is as cartesian positions, but you can specify whether they are cartesial or fractional with the “fractional” attribute.</p></li>
+<li><p><strong>structure.fractional</strong> (<em>boolean</em>) – Whether the given positions are fractional or not. Defaults to false if not specified.</p></li>
+<li><p><strong>structure.species</strong> (<em>Array.&lt;string&gt;|Array.&lt;number&gt;</em>) – Atomic numbers or chemical symbols of the atoms.</p></li>
 <li><p><strong>structure.cell</strong> (<em>Array.&lt;number&gt;</em>) – The lattice vectors of the unit cell as rows of a 3x3 array.</p></li>
 <li><p><strong>structure.pbc</strong> (<em>Array.&lt;boolean&gt;</em>) – The periodic boundary conditions for the structure as a list of three boolean values for each lattice vector direction.</p></li>
 <li><p><strong>structure.bonds</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – Optional manually set bonds. Provide a list of atomic index pairs, each pair specifying a bond between atoms. If these bonds are not specified, the visualizer will by default use an automated detection of bonds. This can be disabled through options.bonds.enabled.</p></li>
@@ -332,13 +332,13 @@ use this method to only update a subset of the options.</p>
 <li><p><strong>options.bonds.material.shininess</strong> (<em>number</em>) – Shininess of the bond material.</p></li>
 <li><p><strong>options.bonds.threshold</strong> (<em>number</em>) – Controls the automatic detection of bonds between atoms. If custom bonds have not been specified for the structure, bonds will be detected automatically with the following criteria: distance &lt;= this.options.bonds.threshold * 1.1 * (radius1 + radius2)</p></li>
 <li><p><strong>options.atoms.smoothness</strong> (<em>number</em>) – A value between 0-180 that controls the number of polygons. Used as the angle between adjacent cylinder/sphere sectors that indirectly controls the number of polygons.</p></li>
-<li><p><strong>options.atoms.material.shininess</strong> (<em>number</em>) – Shininess of the bond material.</p></li>
-<li><p><strong>options.atoms.radii</strong> (<em>string|Array.&lt;number&gt;</em>) – The radii to use for atoms. Defaults to covalent radii. Available options are: * “covalent”: Covalent radii from DOI:10.1039/B801115J. * Custom list of atomic radii. Provide an array of floating point numbers where the index corresponds to an atomic number.</p></li>
-<li><p><strong>options.atoms.colors</strong> (<em>string|Array.&lt;string&gt;</em>) – The colors to use for atoms. Available options are: * “Jmol” (default): Jmol colors. * Custom list of colors. Provide an array of hexadesimal colorss where the index corresponds to an atomic number.</p></li>
+<li><p><strong>options.atoms.material.shininess</strong> (<em>number</em>) – Shininess of the atom material.</p></li>
+<li><p><strong>options.atoms.radii</strong> (<em>string|Array.&lt;number&gt;</em>) – The radii to use for atoms. Defaults to covalent radii. Available options are: - “covalent”: Covalent radii from DOI:10.1039/B801115J. - Custom list of atomic radii. Provide an array of floating point numbers where the index corresponds to an atomic number.</p></li>
+<li><p><strong>options.atoms.colors</strong> (<em>string|Array.&lt;string&gt;</em>) – The colors to use for atoms. Available options are: - “Jmol” (default): Jmol colors. - Custom list of colors. Provide an array of hexadecimal colors where the index corresponds to an atomic number.</p></li>
 <li><p><strong>options.atoms.scale</strong> (<em>number</em>) – Scaling factor for the atomic radii.</p></li>
 <li><p><strong>options.renderer.backgroundColor</strong> (<em>*</em>) – Color of the background. Provide an array with two values, the first being the hexadecimal color value and the second the opacity. E.g. [“#ffffff”, 0] would produce a fully opaque background.</p></li>
 <li><p><strong>options.renderer.shadows.enabled</strong> (<em>boolean</em>) – Whether shows are cast by atoms onto others. Note that enabling this increases the computational cost for doing the visualization.</p></li>
-<li><p><strong>render</strong> (<em>boolean</em>) – Whether to perform a render after settig the options. Defaults to true. You should only disable this setting if you plan to do a render manually afterwards.</p></li>
+<li><p><strong>render</strong> (<em>boolean</em>) – Whether to perform a render after setting the options. Defaults to true. You should only disable this setting if you plan to do a render manually afterwards.</p></li>
 </ul>
 </dd>
 </dl>
@@ -393,14 +393,14 @@ use this method to only update a subset of the options.</p>
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Versions</span>
-      v: 0.0.1
+      v: 0.0.5
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
       <dl>
         <dt>Versions</dt>
         
-          <dd><a href="https://lauri-codes.github.io/materia">0.0.1 (latest stable)</a></dd>
+          <dd><a href="https://lauri-codes.github.io/materia">0.0.5 (latest stable)</a></dd>
         
       </dl>
     </div>

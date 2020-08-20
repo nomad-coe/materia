@@ -1,6 +1,17 @@
 materia
 =======
 
+.. raw:: html
+
+    <div>
+        <div id="container" style="margin-top: -2rem; width: 100%; height: 20rem; display: flex; justify-content: center; align-items: center">
+            <div id="canvas" style="width: 20rem; height: 20rem"></div>
+        </div>
+        <script src="./_static/js/three.min.js" defer></script>
+        <script src="./_static/js/materia.min.js" defer></script>
+        <script src="./_static/js/frontpage.js" defer></script>
+    </div>
+
 Materia is a Javascript library for creating browser-based 3D visualizations
 of atomistic structures and other material properties. Check the demos and
 installation guide for further details.

@@ -58,7 +58,7 @@ let options = {
         shininess: 30,
     },
     radius: 0.08,
-    threshold: 1,
+    threshold: 1.5,
     smoothness: 145,
   }, 
   atoms: {
@@ -87,13 +87,14 @@ let positions = [
     [0.5, 0.0, 0.5]
 ];
 var bulk = {
-    "atomicNumbers": [11, 17, 11, 17, 11, 17, 11, 17],
+    "species": [11, 17, 11, 17, 11, 17, 11, 17],
     "cell": [
         [5.6402, 5.6402, 0.0],
         [0.0, 5.6402, 5.6402],
         [5.6402, 0.0, 5.6402]
     ],
-    "scaledPositions": positions,
+    "positions": positions,
+    "fractional": true,
     "pbc": [true, true, true],
 };
 
@@ -110,7 +111,7 @@ let system = {
       0
     ]
   ],
-  "atomicNumbers": [
+  "species": [
     6,
     6
   ],
@@ -138,7 +139,12 @@ let system = {
   ],
 }
 
-viewer.load(system);
+viewer.load(bulk);
+
+/* setInterval(() => {
+  positions[0][0] += 0.01
+  viewer.setPositions(positions, fractional=true)
+}, 100) */
 
 // Load finite molecule with cartesian positions and cell
 //var molecule = {
