@@ -48,7 +48,7 @@ var viewer = new materia.StructureViewer(targetElem, options);
 
 // Load finite molecule with cartesian positions and cell
 var molecule = {
-    "atomicNumbers": [8, 1],
+    "species": [8, 1],
     "positions": [
         [0.0, 0.5, 0.0],
         [0.0, 1.5, 0.0],

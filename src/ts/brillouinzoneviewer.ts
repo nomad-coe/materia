@@ -42,7 +42,7 @@ export class BrillouinZoneViewer extends Viewer {
      *
      * @data {object} Data that describes the Brillouin Zone.
      */
-    setupVisualization(data: object): boolean {
+    load(data: object): boolean {
         // Add the Brillouin zone and the k-point path
         let vertices = data["vertices"];
         let faces = data["faces"];
@@ -76,10 +76,16 @@ export class BrillouinZoneViewer extends Viewer {
             view: {
                 fitMargin: 0.01,
             },
-            brillouinZone: {
-                segments: {
-                    color: "#E56400"
-                }
+            segments: {
+                color: "#E56400"
+            },
+            labels: {
+                font: "Arial",
+                size: 0.7,
+                color: "#E56400",
+            },
+            renderer: {
+                backgroundColor: ["#ffffff", 1]
             }
         }
 
@@ -217,7 +223,7 @@ export class BrillouinZoneViewer extends Viewer {
 
             // Draw label
             ctx.fillStyle = "#000000";
-            ctx.font = "90px " + this.options.style.font.family;
+            ctx.font = "90px " + this.options.labels.font;
             ctx.textAlign = "center";
             ctx.fillText(label, size/2, size/2);
 
@@ -303,12 +309,12 @@ export class BrillouinZoneViewer extends Viewer {
             // Draw circle
             ctx.beginPath();
             ctx.arc(size/2, size/2, size/15, 0, 2*Math.PI);
-            ctx.fillStyle = this.options.brillouinZone.segments.color;
+            ctx.fillStyle = this.options.segments.color;
             ctx.fill();
 
             // Draw label
             ctx.fillStyle = "#000000";
-            ctx.font = "100px " + this.options.style.font.family;
+            ctx.font = "100px " + this.options.labels.font;
             ctx.textAlign = "center";
             ctx.fillText(label, canvas.width/2, 80);
 
@@ -326,7 +332,7 @@ export class BrillouinZoneViewer extends Viewer {
         // that the segments are linear and the segment path is determined by
         // the start and end point.
         let kpathMaterial = new THREE.LineBasicMaterial({
-            color: this.options.brillouinZone.segments.color,
+            color: this.options.segments.color,
             linewidth: 3,
         });
         let kpathGeometry = new THREE.Geometry();

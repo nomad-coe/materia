@@ -13,7 +13,7 @@ export declare class BrillouinZoneViewer extends Viewer {
      *
      * @data {object} Data that describes the Brillouin Zone.
      */
-    setupVisualization(data: object): boolean;
+    load(data: object): boolean;
     /**
      * Used to setup the visualization according to the given options.
      */

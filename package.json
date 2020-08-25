@@ -10,10 +10,9 @@
   },
   "main": "src/js/materia.js",
   "scripts": {
-    "dev-bz": "gulp & npx browser-sync start --config 'bs-config.js' --startPath examples/brillouin_zone/brillouin_zone.html",
-    "dev-struct-periodic": "gulp & npx browser-sync start --config 'bs-config.js' --startPath examples/structure-periodic/structure.html",
-    "dev-struct-finite": "gulp & npx browser-sync start --config 'bs-config.js' --startPath examples/structure-finite/structure.html",
-    "start": "npm run dev-structure",
+    "brillouin-zone": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/brillouin_zone/brillouin_zone.html\"",
+    "structure-periodic": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/structure-periodic/structure.html\"",
+    "structure-finite": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/structure-finite/structure.html\"",
     "build": "gulp"
   },
   "dependencies": {
@@ -21,13 +20,14 @@
   },
   "devDependencies": {
     "browser-sync": "^2.26.12",
+    "concurrently": "^5.3.0",
     "eslint": "^7.6.0",
     "gulp": "^4.0.2",
     "gulp-typescript": "^6.0.0-alpha.1",
+    "merge-stream": "^2.0.0",
     "typescript": "^3.9.7",
     "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12",
-    "merge-stream": "^2.0.0"
+    "webpack-cli": "^3.3.12"
   },
   "files": [
     "src/js/**/*",

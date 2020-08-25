@@ -1530,7 +1530,7 @@ export class StructureViewer extends Viewer {
                         let bTranslation = b.clone().multiplyScalar(j);
                         let cTranslation = c.clone().multiplyScalar(k);
                         // Add in front
-                        for (let l = 0; l < fracPos.length; ++l) {
+                        for (let l = 0, size = fracPos.length; l < size; ++l) {
                             let iPos = new THREE.Vector3().copy(fracPos[l]);
                             iPos.add(aTranslation);
                             iPos.add(bTranslation);
@@ -1543,8 +1543,10 @@ export class StructureViewer extends Viewer {
                 }
             }
         }
-        fracPos.push.apply(newPos);
-        labels.push.apply(newLabels);
+        for (let i = 0; i < newPos.length; ++i) {
+            fracPos.push(newPos[i]);
+            labels.push(newLabels[i]);
+        }
     }
     /**
      * Wraps all atoms to be within the unit cell.
