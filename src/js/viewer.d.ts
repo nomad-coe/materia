@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { Object3D, Vector2, Vector3 } from "three/build/three.module.js";
 /**
  * Abstract base class for visualizing 3D scenes with three.js.
  */
@@ -19,7 +19,7 @@ export declare abstract class Viewer {
      * @param {Object} options An object that can hold custom settings for the viewer.
      */
     constructor(hostElement: any, options?: {});
-    setOptions(options: Object): void;
+    setOptions(options: Record<string, unknown>): void;
     /**
      * Used to recursively fill the target options with options stored in the
      * source object.
@@ -30,16 +30,6 @@ export declare abstract class Viewer {
      * lights, camera and controls.
      */
     setup(): void;
-    /**
-     * Loads visuzalization data from a JSON url.
-     *
-     * @param {string} url Path to the json resource.
-     */
-    /**
-     * This function can be used to setup any static assets in the
-     * constructore, like dat.gui settings window.
-     */
-    setupStatic(): void;
     abstract setupLights(): void;
     setupScenes(): void;
     clear(): void;
@@ -48,7 +38,7 @@ export declare abstract class Viewer {
      * Can be used to download the current visualization as a jpg-image to the
      * browser's download location.
      */
-    takeScreenShot(filename: any): void;
+    takeScreenShot(filename: string): void;
     /**
      * This will check if WegGL is available on the current browser.
      */
@@ -62,7 +52,7 @@ export declare abstract class Viewer {
      * This will setup the three.js renderer object. Uses WebGL by default, can
      * use a canvas fallback is WegGL is not available.
      */
-    setBackgroundColor(color: any[]): void;
+    setBackgroundColor(color: string, opacity: number): void;
     setupCamera(): void;
     /**
      * Used to setup a root DIV element that will contain the whole
@@ -93,7 +83,7 @@ export declare abstract class Viewer {
      * @param origin - The origin of the cuboid.
      * @param basis - The vectors that define the cuboid.
      */
-    createCornerPoints(origin: any, basis: any): THREE.Geometry;
+    createCornerPoints(origin: any, basis: any): any;
     /**
      * This will automatically fit the structure to the given rendering area.
      * Will also leave a small margin.
@@ -117,10 +107,19 @@ export declare abstract class Viewer {
      * @param radius - Cylinder radius
      * @param material - Cylinder material
      */
-    createCylinder(pos1: any, pos2: any, radius: any, nSegments: any, material: any): THREE.Mesh<THREE.CylinderGeometry, any>;
+    createCylinder(pos1: any, pos2: any, radius: any, nSegments: any, material: any): any;
+    /**
+     * Helper function for creating a text sprite that lives in 3D space.
+     *
+     * @param pos1 - Start position
+     * @param pos2 - End position
+     * @param radius - Cylinder radius
+     * @param material - Cylinder material
+     */
+    createLabel(position: Vector3, label: string, color: string, fontFamily: string, fontSize: number, offset?: Vector2, strokeWidth?: number, strokeColor?: string): Object3D;
     /**
      * Rotate an object around an arbitrary axis in world space
-     * @param obj - The THREE.Object3D to rotate
+     * @param obj - The Object3D to rotate
      * @param axis - The axis in world space
      * @param radians - The angle in radians
      */

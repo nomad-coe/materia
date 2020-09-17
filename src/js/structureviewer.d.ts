@@ -1,23 +1,23 @@
 import { Viewer } from "./viewer";
-import * as THREE from 'three';
+import { Object3D, Vector3, Matrix3 } from "three/build/three.module.js";
 /**
  * Class for visualizing an atomic structure.
  */
 export declare class StructureViewer extends Viewer {
     structure: Object;
-    root: THREE.Object3D;
-    atoms: THREE.Object3D;
-    convCell: THREE.Object3D;
-    primCell: THREE.Object3D;
-    bonds: THREE.Object3D;
+    root: Object3D;
+    atoms: Object3D;
+    convCell: Object3D;
+    primCell: Object3D;
+    bonds: Object3D;
     atomPos: any[];
     atomNumbers: any[];
     latticeConstants: any;
     container: any;
     infoContainer: any;
-    B: THREE.Matrix3;
-    Bi: THREE.Matrix3;
-    basisVectors: THREE.Vector3[];
+    B: Matrix3;
+    Bi: Matrix3;
+    basisVectors: Vector3[];
     primitiveVectors: any[];
     elements: Object;
     sceneStructure: any;
@@ -160,10 +160,8 @@ export declare class StructureViewer extends Viewer {
      *
      * @param {number} options.atoms.scale Scaling factor for the atomic radii.
      *
-     * @param {*} options.renderer.backgroundColor Color of the background.
-     * Provide an array with two values, the first being the hexadecimal color
-     * value and the second the opacity. E.g. ["#ffffff", 0] would produce a
-     * fully opaque background.
+     * @param {string} options.renderer.background.color Color of the background.
+     * @param {number} options.renderer.background.opacity Opacity of the background.
      * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
      * by atoms onto others. Note that enabling this increases the
      * computational cost for doing the visualization.
@@ -230,12 +228,12 @@ export declare class StructureViewer extends Viewer {
     /**
      *
      */
-    calculateCOP(positions: any): THREE.Vector3;
+    calculateCOP(positions: any): any;
     /**
      * Centers the visualization around a specific point.
      * @param centerPos - The center position as a cartesian vector.
      */
-    setViewCenter(centerPos: THREE.Vector3): void;
+    setViewCenter(centerPos: Vector3): void;
     /**
      * Translate the atoms.
      *
@@ -250,17 +248,17 @@ export declare class StructureViewer extends Viewer {
      * Set the position for atoms in the currently loaded structure.
      */
     getPositions(fractional?: boolean): any[];
-    toCartesian(position: THREE.Vector3): THREE.Vector3;
-    toScaled(position: THREE.Vector3): THREE.Vector3;
+    toCartesian(position: Vector3): any;
+    toScaled(position: Vector3): any;
     /**
-     * Get a specific atom as defined by a THREE.js Group.
+     * Get a specific atom as defined by a js Group.
      *
      * @param index - Index of the atom.
      *
-     * @return THREE.js Group containing the visuals for the atom. The position
+     * @return js Group containing the visuals for the atom. The position
      * of the atom is determined by the position of the group.
      */
-    getAtom(index: number): THREE.Object3D;
+    getAtom(index: number): any;
     /**
      * Set the zoom level
      *
@@ -273,7 +271,7 @@ export declare class StructureViewer extends Viewer {
      */
     createLatticeConstants(basis: any, periodicity: any, periodicIndices: any): void;
     /**
-     * Creates a list of THREE.Vector3s from the given list of arrays.
+     * Creates a list of Vector3s from the given list of arrays.
      *
      * @param vectors - The positions from which to create vectors.
      */
@@ -294,14 +292,14 @@ export declare class StructureViewer extends Viewer {
      * @param linewidth - Line width fo the wireframe
      * @param dashed - Is wireframe dashed
      */
-    createCell(origin: any, basisVectors: any, periodicity: any, color: any, linewidth: number, dashSize: number, gapSize: number): THREE.Object3D;
+    createCell(origin: any, basisVectors: any, periodicity: any, color: any, linewidth: number, dashSize: number, gapSize: number): any;
     /**
      * @param rotations The rotations as a list. Each rotation should be an
      * array containing four numbers: [x, y, z, angle]. The rotations are
      * applied in the given order.
      */
-    rotateView(rotations: any, render?: boolean): void;
-    alignView(top: any, right: any, render?: boolean): void;
+    rotateView(rotations: number[], render?: boolean): void;
+    alignView(top: string, right: string, render?: boolean): void;
     /**
      * Used to add periodic repetitions of atoms.
      */

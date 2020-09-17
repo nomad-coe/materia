@@ -1,5 +1,8 @@
 import { Viewer } from "./viewer";
-import * as THREE from 'three';
+import { MeshPhongMaterial, Group, Mesh, Object3D, Vector2, Vector3, Matrix3, Points, BackSide, FrontSide, Texture, CylinderGeometry, MeshBasicMaterial, Sprite, SpriteMaterial, Quaternion, Geometry, Scene, DirectionalLight, AmbientLight, } from "three/build/three.module.js";
+import { ConvexGeometry } from './ConvexGeometry';
+import { MeshLine, MeshLineMaterial } from 'threejs-meshline';
+import voronoi from 'voronoi-diagram';
 /*
  * A 3D visualizer for the Brillouin Zone and the k-point path within it.
  */
@@ -10,19 +13,18 @@ export class BrillouinZoneViewer extends Viewer {
      */
     setupScenes() {
         this.scenes = [];
-        this.sceneZone = new THREE.Scene();
+        this.sceneZone = new Scene();
         this.scenes.push(this.sceneZone);
-        this.sceneInfo = new THREE.Scene();
+        this.sceneInfo = new Scene();
         this.scenes.push(this.sceneInfo);
-        //this.setupControlVariables(10, 2.5, 50);
     }
     setupLights() {
         // White directional light shining from the top.
-        let directionalLight = new THREE.DirectionalLight(0xffffff, 0.05);
+        const directionalLight = new DirectionalLight(0xffffff, 0.2);
         directionalLight.position.set(0, 0, 30);
         this.sceneZone.add(directionalLight);
         // White ambient light.
-        let ambientLight = new THREE.AmbientLight(0x404040, 4.1); // soft white light
+        const ambientLight = new AmbientLight(0x404040, 4.1); // soft white light
         this.sceneZone.add(ambientLight);
     }
     /**
@@ -31,32 +33,82 @@ export class BrillouinZoneViewer extends Viewer {
      * @data {object} Data that describes the Brillouin Zone.
      */
     load(data) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        // Deep copy the structure for reloading
+        this.data = data;
+        // Clear all the old data
+        this.clear();
+        this.setup();
+        // Reconstruct the visualization
+        this.setupScenes();
+        this.setupLights();
+        this.setupCamera();
+        this.setupControls();
         // Add the Brillouin zone and the k-point path
-        let vertices = data["vertices"];
-        let faces = data["faces"];
-        let basis = data["basis"];
-        let segments = data["segments"];
-        let labels = data["labels"];
+        const vertices = data["vertices"];
+        const faces = data["faces"];
+        const basis = data["basis"];
+        const segments = data["segments"];
+        const kpoints = data["kpoints"];
         this.basis = data["basis"];
-        if (!vertices || !faces || !basis || !segments) {
+        if (!basis || !segments) {
             console.log("The data given for the Brillouin zone viewer is incomplete.");
             return false;
         }
         else {
-            if (!labels) {
-                console.log("No labels provided for Brillouin zone viewer.");
-            }
-            this.createBrillouinZone(vertices, faces, basis, segments, labels);
+            this.createBrillouinZone(basis, segments, kpoints);
         }
-        this.setupInitialView();
+        // Set view alignment and rotation
+        if (this.B !== undefined) {
+            this.alignView((_d = (_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.layout) === null || _b === void 0 ? void 0 : _b.viewRotation) === null || _c === void 0 ? void 0 : _c.align) === null || _d === void 0 ? void 0 : _d.up, (_h = (_g = (_f = (_e = this.options) === null || _e === void 0 ? void 0 : _e.layout) === null || _f === void 0 ? void 0 : _f.viewRotation) === null || _g === void 0 ? void 0 : _g.align) === null || _h === void 0 ? void 0 : _h.segments);
+        }
+        this.rotateView((_l = (_k = (_j = this.options) === null || _j === void 0 ? void 0 : _j.layout) === null || _k === void 0 ? void 0 : _k.viewRotation) === null || _l === void 0 ? void 0 : _l.rotations);
         return true;
     }
     /**
-     * Used to setup the visualization according to the given options.
+     * Used to setup the visualization options.
+     *
+     * @param {boolean} options A Javascript object containing the options. See
+     *   below for the subparameters.
+     * @param {string} options.segments.color Segment color
+     * @param {number} options.segments.linewidth Segment linewidth
+     *
+     * @param {string} options.kpoints.label.color Label color
+     * @param {number} options.kpoints.label.size Label size
+     * @param {string} options.kpoints.label.font Label font
+     * @param {boolean} options.kpoints.label.offset2D Offset of the labels in
+     * the sprite's 2D coordinate system. The offset is relative to the font
+     * size and the default [0, 0] corresponds to centered labels.
+     * @param {string} options.kpoints.stroke.width.font Label outline stroke width
+     * @param {string} options.kpoints.stroke.width.font Label outline stroke color
+     * @param {string} options.kpoints.point.color Point color
+     * @param {number} options.kpoints.point.size Point size
+     *
+     * @param {boolean} options.basis.enabled Show basis
+     * @param {string} options.basis.font Font size for basis labels. Applied as
+     * default to all labels, can be overridden individually for each basis.
+     * @param {string} options.basis.a.color Color applied to the
+     *   label of the first reciprocal lattice vector.
+     * @param {string} options.basis.a.font Font family applied to the
+     *   label of the first reciprocal lattice vector.
+     * @param {number} options.basis.a.size Font size applied to the
+     *   label of the first reciprocal lattice vector.
+     * @param {string} options.basis.b.color Color applied to the
+     *   label of the second reciprocal lattice vector.
+     * @param {string} options.basis.b.font Font family applied to the
+     *   label of the second reciprocal lattice vector.
+     * @param {number} options.basis.b.size Font size applied to the
+     *   label of the second reciprocal lattice vector.
+     * @param {string} options.basis.c.color Color applied to the
+     *   label of the third reciprocal lattice vector.
+     * @param {string} options.basis.c.font Font family applied to the
+     *   label of the third reciprocal lattice vector.
+     * @param {number} options.basis.c.size Font size applied to the
+     *   label of the third reciprocal lattice vector.
      */
-    setOptions(opt) {
+    setOptions(options) {
         // The default settings object
-        let options = {
+        const defaultOptions = {
             controls: {
                 rotateSpeed: 40,
                 enablePan: false
@@ -64,49 +116,111 @@ export class BrillouinZoneViewer extends Viewer {
             view: {
                 fitMargin: 0.01,
             },
-            segments: {
-                color: "#E56400"
-            },
-            labels: {
+            basis: {
+                enabled: true,
+                offset: 0.02,
                 font: "Arial",
-                size: 0.7,
+                size: 0.03,
+                stroke: {
+                    width: 0.06,
+                    color: "#000",
+                },
+                a: {
+                    enabled: true,
+                    color: "#C52929",
+                    label: "a",
+                    stroke: {
+                        width: 0.06,
+                        color: "#000",
+                    },
+                },
+                b: {
+                    enabled: true,
+                    color: "#47A823",
+                    label: "b",
+                    stroke: {
+                        width: 0.06,
+                        color: "#000",
+                    },
+                },
+                c: {
+                    enabled: true,
+                    color: "#3B5796",
+                    label: "c",
+                    stroke: {
+                        width: 0.06,
+                        color: "#000",
+                    },
+                },
+            },
+            segments: {
                 color: "#E56400",
+                linewidth: 0.0025,
+            },
+            kpoints: {
+                point: {
+                    enabled: true,
+                    size: 0.01,
+                    color: "#E56400",
+                },
+                label: {
+                    enabled: true,
+                    font: "Arial",
+                    size: 0.03,
+                    color: "#E56400",
+                    offset2D: [0, -0.75],
+                    stroke: {
+                        width: 0.06,
+                        color: "#000",
+                    },
+                }
+            },
+            faces: {
+                color: "#eee",
+                opacity: 0.7,
+            },
+            edges: {
+                color: "#999",
+                width: 0.001,
             },
             renderer: {
-                backgroundColor: ["#ffffff", 1]
+                background: {
+                    color: "#ffffff",
+                    transparency: 1,
+                }
             }
         };
-        this.fillOptions(opt, options);
+        this.fillOptions(options, defaultOptions);
         // Handle base class settings
-        super.setOptions(options);
+        super.setOptions(defaultOptions);
     }
     setupInitialView() {
-        //Rotate the scene so that the first basis vector is pointing up.
-        let yAxis = new THREE.Vector3(0, 1, 0);
-        let xAxis = new THREE.Vector3(1, 0, 0);
-        let zAxis = new THREE.Vector3(0, 0, 1);
-        let direction = new THREE.Vector3().fromArray(this.basis[0]);
-        let quaternion = new THREE.Quaternion().setFromUnitVectors(yAxis, direction.clone().normalize());
+        // Rotate the scene so that the first basis vector is pointing up.
+        const yAxis = new Vector3(0, 1, 0);
+        const xAxis = new Vector3(1, 0, 0);
+        const zAxis = new Vector3(0, 0, 1);
+        const direction = new Vector3().fromArray(this.basis[0]);
+        const quaternion = new Quaternion().setFromUnitVectors(yAxis, direction.clone().normalize());
         quaternion.conjugate();
         this.info.quaternion.copy(quaternion);
         this.zone.quaternion.copy(quaternion);
         // Rotate the scene so that the segments are shown properly
         this.info.updateMatrixWorld(); // The positions are not otherwise updated properly
         this.zone.updateMatrixWorld();
-        let average = new THREE.Vector3();
-        let nLabelPoints = this.labelPoints.length;
+        const average = new Vector3();
+        const nLabelPoints = this.labelPoints.length;
         for (let iSegmentPoint = 0; iSegmentPoint < nLabelPoints; ++iSegmentPoint) {
-            let segmentPoint = this.labelPoints[iSegmentPoint];
-            average.add(segmentPoint.getWorldPosition(new THREE.Vector3()));
+            const segmentPoint = this.labelPoints[iSegmentPoint];
+            average.add(segmentPoint.getWorldPosition(new Vector3()));
         }
         average.multiplyScalar(1 / nLabelPoints);
         average.y = 0;
-        let segmentQ = new THREE.Quaternion().setFromUnitVectors(zAxis, average.clone().normalize());
+        const segmentQ = new Quaternion().setFromUnitVectors(zAxis, average.clone().normalize());
         segmentQ.conjugate();
         this.info.quaternion.premultiply(segmentQ);
         this.zone.quaternion.premultiply(segmentQ);
         // Rotate the zone so that it is shown from slightly above
-        let qX = new THREE.Quaternion();
+        const qX = new Quaternion();
         qX.setFromAxisAngle(xAxis, Math.PI / 8);
         this.info.quaternion.premultiply(qX);
         this.zone.quaternion.premultiply(qX);
@@ -114,177 +228,225 @@ export class BrillouinZoneViewer extends Viewer {
     /*
      * Used to create the representation for the first Brillouin Zone.
      */
-    createBrillouinZone(vertices, faces, basis, segments, labels) {
-        this.zone = new THREE.Object3D();
-        this.zone.name = "zone";
-        this.sceneZone.add(this.zone);
-        this.info = new THREE.Object3D();
-        this.info.name = "info";
-        this.sceneInfo.add(this.info);
-        let bzGeometry = new THREE.Geometry();
-        let bzMaterial = new THREE.MeshLambertMaterial({
-            color: 0xeeeeee,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.8
-        });
-        let lineMaterial = new THREE.LineBasicMaterial({
-            color: 0x3333333,
-            linewidth: 2,
-        });
-        // Create vertices
-        for (let iVertex = 0; iVertex < vertices.length; ++iVertex) {
-            let vertex = vertices[iVertex];
-            bzGeometry.vertices.push(new THREE.Vector3().fromArray(vertex).multiplyScalar(1E-10));
-        }
-        // Create faces
-        let faceMap = {};
-        for (let iFace = 0; iFace < faces.length; ++iFace) {
-            let faceIndices = faces[iFace];
-            let nPoints = faceIndices.length;
-            for (let iPoint = 0; iPoint < nPoints; ++iPoint) {
-                // Create edges
-                let firstIndex = faceIndices[iPoint];
-                let secondIndex = faceIndices[(iPoint + 1) % nPoints];
-                let key1 = [firstIndex, secondIndex];
-                let key2 = [secondIndex, firstIndex];
-                if (!faceMap.hasOwnProperty(key1.toString()) && !faceMap.hasOwnProperty(key2.toString())) {
-                    faceMap[key1.toString()] = true;
-                    faceMap[key2.toString()] = true;
-                    let lineGeometry = new THREE.Geometry();
-                    lineGeometry.vertices.push(new THREE.Vector3().fromArray(vertices[firstIndex]).multiplyScalar(1E-10), new THREE.Vector3().fromArray(vertices[secondIndex]).multiplyScalar(1E-10));
-                    let line = new THREE.Line(lineGeometry, lineMaterial);
-                    this.zone.add(line);
-                }
-                // Create surfaces
-                if (iPoint < nPoints - 2) {
-                    let face = new THREE.Face3(faceIndices[0], faceIndices[(iPoint + 1) % nPoints], faceIndices[(iPoint + 2) % nPoints]
-                    //normal
-                    );
-                    bzGeometry.faces.push(face);
+    createBrillouinZone(basis, segments, labels) {
+        // Create list of reciprocal lattice points
+        const B = new Matrix3();
+        const a = new Vector3().fromArray(basis[0]);
+        const b = new Vector3().fromArray(basis[1]);
+        const c = new Vector3().fromArray(basis[2]);
+        B.set(a.x, b.x, c.x, a.y, b.y, c.y, a.z, b.z, c.z);
+        this.basisVectors = [a, b, c];
+        this.B = B;
+        const points = [];
+        const limit = 1;
+        for (let i = -limit; i <= limit; ++i) {
+            for (let j = -limit; j <= limit; ++j) {
+                for (let k = -limit; k <= limit; ++k) {
+                    const multiplier = new Vector3(i, j, k);
+                    const point = multiplier.applyMatrix3(B);
+                    points.push(point.toArray());
                 }
             }
         }
-        // Compute normals that are needed for shading the surface
-        bzGeometry.computeFaceNormals();
+        // Create voronoi cells
+        const res = voronoi(points);
+        // Find the finite cell with center at origin, i.e. the first Brillouin
+        // Zone
+        for (const cell of res.cells) {
+            // Check if cell is finite
+            const vpoints = [];
+            let finite = true;
+            let finite2 = true;
+            for (const index of cell) {
+                if (index === -1) {
+                    finite = false;
+                    break;
+                }
+                const vpoint = res.positions[index];
+                for (let j = 0; j < 3; ++j) {
+                    if (Number.isNaN(vpoint[j])) {
+                        finite2 = false;
+                        break;
+                    }
+                }
+                vpoints.push(vpoint);
+            }
+            if (!finite || !finite2) {
+                continue;
+            }
+            // Find cell that is centered on origin 
+            const center = new Vector3(0, 0, 0);
+            const vertices = [];
+            for (let i = 0; i < vpoints.length; ++i) {
+                const vertex = new Vector3().fromArray(vpoints[i]);
+                vertices.push(vertex);
+                center.add(vertex);
+            }
+            center.divideScalar(vertices.length);
+            if (center.length() < 1e-7) {
+                const pointGeometry = new Geometry();
+                for (const vertex of vertices) {
+                    pointGeometry.vertices.push(vertex.multiplyScalar(1E-10));
+                }
+                this.cornerPoints = new Points(pointGeometry);
+                this.cornerPoints.visible = false;
+                break;
+            }
+        }
+        this.zone = new Object3D();
+        this.zone.name = "zone";
+        this.sceneZone.add(this.zone);
+        this.info = new Object3D();
+        this.info.name = "info";
+        this.sceneInfo.add(this.info);
+        this.sceneInfo.add(this.cornerPoints);
+        // Weird hack for achieving translucent surfaces. Setting
+        // side=DoubleSide will not do.
+        const group = new Group();
+        const bzGeometry = new ConvexGeometry(this.cornerPoints.geometry.vertices);
+        const meshMaterial = new MeshPhongMaterial({
+            color: this.options.faces.color,
+            opacity: this.options.faces.opacity,
+            transparent: true
+        });
+        const mesh = new Mesh(bzGeometry, meshMaterial);
+        mesh.material.side = BackSide; // back faces
+        mesh.renderOrder = 0;
+        group.add(mesh);
+        const mesh2 = new Mesh(bzGeometry, meshMaterial.clone());
+        mesh2.material.side = FrontSide; // front faces
+        mesh2.renderOrder = 1;
+        group.add(mesh2);
+        // Create edges as closed loops around each face
+        const edgeWidth = this.options.edges.width;
+        const edgeMaterial = new MeshLineMaterial({
+            color: this.options.edges.color,
+            lineWidth: edgeWidth,
+            sizeAttenuation: true,
+        });
+        for (const face of bzGeometry.faceEdges) {
+            const edgeGeometry = new Geometry();
+            for (const vertex of face) {
+                let scaledVertex = vertex.clone();
+                const length = scaledVertex.length();
+                scaledVertex = scaledVertex.multiplyScalar(1 + 0.5 * edgeWidth / length);
+                edgeGeometry.vertices.push(scaledVertex);
+            }
+            const edgeLine = new MeshLine();
+            edgeLine.setVertices(edgeGeometry.vertices);
+            const edgeMesh = new Mesh(edgeLine, edgeMaterial);
+            this.zone.add(edgeMesh);
+        }
         // Create the reciprocal space axes
-        let createAxisLabel = (position, label) => {
-            // Configure canvas
-            let canvas = document.createElement('canvas');
-            let size = 256;
-            canvas.width = size;
-            canvas.height = size;
-            let ctx = canvas.getContext('2d');
-            // Draw label
-            ctx.fillStyle = "#000000";
-            ctx.font = "90px " + this.options.labels.font;
-            ctx.textAlign = "center";
-            ctx.fillText(label, size / 2, size / 2);
-            let texture = new THREE.Texture(canvas);
-            texture.needsUpdate = true;
-            let material = new THREE.SpriteMaterial({ map: texture });
-            let sprite = new THREE.Sprite(material);
-            sprite.position.copy(position);
-            let scale = 1 / 11;
-            sprite.scale.set(scale, scale, 1);
-            return sprite;
-        };
+        const basisLabels = [this.options.basis.a.label, this.options.basis.b.label, this.options.basis.c.label];
+        const basisFonts = [];
+        basisFonts.push(this.options.basis.a.font === undefined ? this.options.basis.font : this.options.basis.a.font);
+        basisFonts.push(this.options.basis.b.font === undefined ? this.options.basis.font : this.options.basis.b.font);
+        basisFonts.push(this.options.basis.c.font === undefined ? this.options.basis.font : this.options.basis.c.font);
+        const basisFontSizes = [];
+        basisFontSizes.push(this.options.basis.a.size === undefined ? this.options.basis.size : this.options.basis.a.size);
+        basisFontSizes.push(this.options.basis.b.size === undefined ? this.options.basis.size : this.options.basis.b.size);
+        basisFontSizes.push(this.options.basis.c.size === undefined ? this.options.basis.size : this.options.basis.c.size);
+        const cellBasisColors = [];
+        cellBasisColors.push(this.options.basis.a.color === undefined ? this.options.basis.color : this.options.basis.a.color);
+        cellBasisColors.push(this.options.basis.b.color === undefined ? this.options.basis.color : this.options.basis.b.color);
+        cellBasisColors.push(this.options.basis.c.color === undefined ? this.options.basis.color : this.options.basis.c.color);
+        const strokeColors = [];
+        strokeColors.push(this.options.basis.a.stroke.color === undefined ? this.options.basis.stroke.color : this.options.basis.a.stroke.color);
+        strokeColors.push(this.options.basis.b.stroke.color === undefined ? this.options.basis.stroke.color : this.options.basis.b.stroke.color);
+        strokeColors.push(this.options.basis.c.stroke.color === undefined ? this.options.basis.stroke.color : this.options.basis.c.stroke.color);
+        const strokeWidths = [];
+        strokeWidths.push(this.options.basis.a.stroke.width === undefined ? this.options.basis.stroke.width : this.options.basis.a.stroke.width);
+        strokeWidths.push(this.options.basis.b.stroke.width === undefined ? this.options.basis.stroke.width : this.options.basis.b.stroke.width);
+        strokeWidths.push(this.options.basis.c.stroke.width === undefined ? this.options.basis.stroke.width : this.options.basis.c.stroke.width);
         for (let iBasis = 0; iBasis < 3; ++iBasis) {
-            let length = 0.7;
-            let basisVector = basis[iBasis];
-            let origin = new THREE.Vector3(0, 0, 0);
-            let dir = new THREE.Vector3()
+            const length = 0.7;
+            const basisVector = basis[iBasis];
+            const origin = new Vector3(0, 0, 0);
+            const dir = new Vector3()
                 .fromArray(basisVector)
                 .multiplyScalar(1E-10)
                 .multiplyScalar(length);
             // Add a dashed line
-            let lineGeometry = new THREE.Geometry();
+            const lineGeometry = new Geometry();
             lineGeometry.vertices.push(origin, dir);
-            let lineMaterial = new THREE.LineDashedMaterial({
-                color: 0x000000,
-                linewidth: 0.1,
-                dashSize: 0.005,
-                gapSize: 0.005
+            const lineMaterial = new MeshLineMaterial({
+                color: "#000",
+                lineWidth: 0.00075,
+                sizeAttenuation: true,
+                dashArray: 0.05,
+                transparent: true,
+                depthTest: false,
             });
-            let line = new THREE.Line(lineGeometry, lineMaterial);
-            line.computeLineDistances();
+            const kpathLine = new MeshLine();
+            kpathLine.setVertices(lineGeometry.vertices);
+            const line = new Mesh(kpathLine, lineMaterial);
             this.info.add(line);
             // Add an axis label
-            let textOffset = 0.020;
-            let textPos = new THREE.Vector3()
+            const textPos = new Vector3()
                 .copy(dir)
-                .multiplyScalar(1 + textOffset / dir.length());
-            let axisLabel;
-            switch (iBasis) {
-                case 0:
-                    axisLabel = "b₁";
-                    break;
-                case 1:
-                    axisLabel = "b₂";
-                    break;
-                case 2:
-                    axisLabel = "b₃";
-                    break;
-            }
-            axisLabel = createAxisLabel(textPos, axisLabel);
-            this.info.add(axisLabel);
+                .multiplyScalar(1 + this.options.basis.offset / dir.length());
+            const basisLabel = basisLabels[iBasis];
+            const basisColor = cellBasisColors[iBasis];
+            const basisFont = basisFonts[iBasis];
+            const basisFontSize = basisFontSizes[iBasis];
+            const strokeWidth = strokeWidths[iBasis];
+            const strokeColor = strokeColors[iBasis];
+            const basisSprite = this.createLabel(textPos, basisLabel, basisColor, basisFont, basisFontSize, new Vector2(0.0, 0.0), strokeWidth, strokeColor);
+            this.info.add(basisSprite);
             // Add axis arrow
-            let arrowGeometry = new THREE.CylinderGeometry(0, 0.003, 0.012, 12);
-            let arrowMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            let arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+            const arrowGeometry = new CylinderGeometry(0, 0.003, 0.012, 12);
+            const arrowMaterial = new MeshBasicMaterial({ color: 0x000000 });
+            const arrow = new Mesh(arrowGeometry, arrowMaterial);
             arrow.position.copy(dir);
-            arrow.lookAt(new THREE.Vector3());
+            arrow.lookAt(new Vector3());
             arrow.rotateX(-Math.PI / 2);
             this.info.add(arrow);
         }
         /*
          * For creating high symmetry points.
          */
-        let merged = [].concat.apply([], basis);
-        let basisMatrix = new THREE.Matrix3().fromArray(merged);
-        let labelMap = {};
-        let labelPositions = [];
-        let generateSymmPoint = (position, label) => {
+        const merged = [].concat.apply([], basis);
+        const basisMatrix = new Matrix3().fromArray(merged);
+        const labelMap = {};
+        const createCircle = (position, diameter, color) => {
             // Configure canvas
-            let canvas = document.createElement('canvas');
-            let size = 256;
+            const canvas = document.createElement('canvas');
+            const size = 256;
             canvas.width = size;
             canvas.height = size;
-            let ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d');
             // Draw circle
             ctx.beginPath();
-            ctx.arc(size / 2, size / 2, size / 15, 0, 2 * Math.PI);
-            ctx.fillStyle = this.options.segments.color;
+            ctx.arc(size / 2, size / 2, size / 2, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
             ctx.fill();
-            // Draw label
-            ctx.fillStyle = "#000000";
-            ctx.font = "100px " + this.options.labels.font;
-            ctx.textAlign = "center";
-            ctx.fillText(label, canvas.width / 2, 80);
-            let texture = new THREE.Texture(canvas);
+            const texture = new Texture(canvas);
             texture.needsUpdate = true;
-            let material = new THREE.SpriteMaterial({ map: texture });
-            let sprite = new THREE.Sprite(material);
-            sprite.position.copy(position);
-            let scale = 1 / 15;
-            sprite.scale.set(scale, scale, 1);
-            return sprite;
+            const material = new SpriteMaterial({ map: texture });
+            const sprite = new Sprite(material);
+            sprite.scale.set(diameter, diameter, 1);
+            const labelRoot = new Object3D();
+            labelRoot.position.copy(position);
+            labelRoot.add(sprite);
+            return labelRoot;
         };
         // Create the k-point path from the given segments. Currently assumes
         // that the segments are linear and the segment path is determined by
         // the start and end point.
-        let kpathMaterial = new THREE.LineBasicMaterial({
+        const kpathMaterial = new MeshLineMaterial({
             color: this.options.segments.color,
-            linewidth: 3,
+            lineWidth: this.options.segments.linewidth,
+            sizeAttenuation: true,
         });
-        let kpathGeometry = new THREE.Geometry();
+        const kpathGeometry = new Geometry();
         this.labelPoints = [];
         for (let iSegment = 0; iSegment < segments.length; ++iSegment) {
-            let segment = segments[iSegment];
-            let nKpoints = segment.length;
-            let kPointIndices = [0, nKpoints - 1];
-            for (let iKpoint of kPointIndices) {
-                let kpoint = new THREE.Vector3().fromArray(segment[iKpoint]).multiplyScalar(1E-10);
+            const segment = segments[iSegment];
+            const nKpoints = segment.length;
+            const kPointIndices = [0, nKpoints - 1];
+            for (const iKpoint of kPointIndices) {
+                const kpoint = new Vector3().fromArray(segment[iKpoint]).multiplyScalar(1E-10);
                 kpoint.applyMatrix3(basisMatrix);
                 kpathGeometry.vertices.push(kpoint);
                 // Create the label for the first point in the segment
@@ -300,8 +462,8 @@ export class BrillouinZoneViewer extends Viewer {
                         // Check if this position has alread been marked
                         let labelExists = false;
                         for (let iLabel = 0; iLabel < this.labelPoints.length; ++iLabel) {
-                            let testPos = this.labelPoints[iLabel].position;
-                            let delta = new THREE.Vector3()
+                            const testPos = this.labelPoints[iLabel].position;
+                            const delta = new Vector3()
                                 .copy(kpoint)
                                 .addScaledVector(testPos, -1.0)
                                 .length();
@@ -312,19 +474,110 @@ export class BrillouinZoneViewer extends Viewer {
                         // Add a label position if it wasn't marked already
                         if (!labelExists) {
                             labelMap[label] = true;
-                            let symmPoint = generateSymmPoint(kpoint, label);
-                            this.info.add(symmPoint);
-                            this.labelPoints.push(symmPoint);
+                            const kpointCircle = createCircle(kpoint, this.options.kpoints.point.size, this.options.kpoints.point.color);
+                            const kpointLabel = this.createLabel(kpoint, label, this.options.kpoints.label.color, this.options.kpoints.label.font, this.options.kpoints.label.size, new Vector2().fromArray(this.options.kpoints.label.offset2D), this.options.kpoints.label.stroke.width, this.options.kpoints.label.stroke.width);
+                            this.info.add(kpointCircle);
+                            this.info.add(kpointLabel);
+                            this.labelPoints.push(kpointLabel);
                         }
                     }
                 }
             }
         }
-        let kpath = new THREE.Line(kpathGeometry, kpathMaterial);
+        const kpathLine = new MeshLine();
+        kpathLine.setVertices(kpathGeometry.vertices);
+        const kpath = new Mesh(kpathLine, kpathMaterial);
         this.info.add(kpath);
-        let mesh = new THREE.Mesh(bzGeometry, bzMaterial);
-        this.zone.add(mesh);
-        this.cornerPoints = new THREE.Points(bzGeometry);
-        this.cornerPoints.visible = true;
+        this.zone.add(group);
+    }
+    /**
+     * @param rotations The rotations as a list. Each rotation should be an
+     * array containing four numbers: [x, y, z, angle]. The rotations are
+     * applied in the given order.
+     */
+    rotateView(rotations, render = true) {
+        if (rotations === undefined) {
+            return;
+        }
+        for (const r of rotations) {
+            const basis = new Vector3(r[0], r[1], r[2]);
+            basis.normalize();
+            const angle = r[3] / 180 * Math.PI;
+            this.rotateAroundWorldAxis(this.zone, basis, angle);
+            this.rotateAroundWorldAxis(this.info, basis, angle);
+        }
+        if (render) {
+            this.render();
+        }
+    }
+    alignView(up, segments, render = true) {
+        if (up === undefined) {
+            return;
+        }
+        // Determine the top direction
+        let topVector;
+        if (up === "c") {
+            topVector = this.basisVectors[2];
+        }
+        else if (up === "-c") {
+            topVector = this.basisVectors[2].negate();
+        }
+        else if (up === "b") {
+            topVector = this.basisVectors[1];
+        }
+        else if (up === "-b") {
+            topVector = this.basisVectors[1].negate();
+        }
+        else if (up === "a") {
+            topVector = this.basisVectors[0];
+        }
+        else if (up === "-a") {
+            topVector = this.basisVectors[0].negate();
+        }
+        // Determine the right direction
+        let segmentVector;
+        if (segments === "front") {
+            segmentVector = new Vector3(0, 0, 1);
+        }
+        else if (segments === "back") {
+            segmentVector = new Vector3(0, 0, -1);
+        }
+        else if (segments === "right") {
+            segmentVector = new Vector3(1, 0, 0);
+        }
+        else if (segments === "left") {
+            segmentVector = new Vector3(-1, 0, 0);
+        }
+        else if (segments === "up") {
+            segmentVector = new Vector3(0, 1, 0);
+        }
+        else if (segments === "down") {
+            segmentVector = new Vector3(0, -1, 0);
+        }
+        // Rotate the scene so that the first basis vector is pointing up.
+        const quaternion = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), topVector.clone().normalize());
+        quaternion.conjugate();
+        this.info.quaternion.copy(quaternion);
+        this.zone.quaternion.copy(quaternion);
+        // Rotate the scene so that the segments are shown properly
+        this.info.updateMatrixWorld(); // The positions are not otherwise updated properly
+        this.zone.updateMatrixWorld();
+        const average = new Vector3();
+        const nLabelPoints = this.labelPoints.length;
+        for (let iSegmentPoint = 0; iSegmentPoint < nLabelPoints; ++iSegmentPoint) {
+            const segmentPoint = this.labelPoints[iSegmentPoint];
+            average.add(segmentPoint.getWorldPosition(new Vector3()));
+        }
+        average.multiplyScalar(1 / nLabelPoints);
+        average.y = 0;
+        const segmentQ = new Quaternion().setFromUnitVectors(segmentVector, average.clone().normalize());
+        segmentQ.conjugate();
+        this.info.quaternion.premultiply(segmentQ);
+        this.zone.quaternion.premultiply(segmentQ);
+        this.info.updateMatrixWorld();
+        this.zone.updateMatrixWorld();
+        if (render) {
+            this.render();
+        }
     }
 }
