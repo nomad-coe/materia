@@ -1,0 +1,409 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Brillouin Zone Viewer &mdash; materia 0.0.5 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/style.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/style.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Structure Viewer" href="structureviewer.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> materia
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.5
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="viewers.html">Viewers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="structureviewer.html">Structure Viewer</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Brillouin Zone Viewer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-a-structure">Loading a structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#api">API</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">materia</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="viewers.html">Viewers</a> &raquo;</li>
+        
+      <li>Brillouin Zone Viewer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/viewers/brillouinzoneviewer.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="brillouin-zone-viewer">
+<h1>Brillouin Zone Viewer<a class="headerlink" href="#brillouin-zone-viewer" title="Permalink to this headline">¶</a></h1>
+<p>Try out the interactive visualizer below. Controls are as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Rotate: Drag with left mouse button held down</p></li>
+<li><p>Zoom: Mousewheel</p></li>
+</ul>
+</div></blockquote>
+<div>
+    <div id="canvas" style="width: 100%; height: 25rem"></div>
+    <script src="../_static/js/three.min.js" defer></script>
+    <script src="../_static/js/materia.min.js" defer></script>
+    <script src="../_static/js/brillouinzoneviewer.js" defer></script>
+</div><div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>This piece of Javascript code shows an example of loading the viewer into a an
+HTML element that has been given the id <code class="code docutils literal notranslate"><span class="pre">canvas</span></code>. This example assumes
+that the global variable installation has been used, but it can be very simply
+changed to also work with the module installation by adding the proper imports
+and changing the <code class="code docutils literal notranslate"><span class="pre">BrillouinZoneViewer</span></code> constructor call.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Find the element in which the visualizer will be embedded into. It</span>
+<span class="c1">// determines the visualization canvas size.</span>
+<span class="kd">let</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;canvas&quot;</span><span class="p">);</span>
+
+<span class="c1">// Viewer options</span>
+<span class="kd">let</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">controls</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">enablePan</span><span class="o">:</span> <span class="kc">false</span>
+  <span class="p">},</span>
+  <span class="nx">view</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">fitMargin</span><span class="o">:</span> <span class="mf">0.02</span><span class="p">,</span>
+  <span class="p">},</span>
+  <span class="nx">layout</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">viewRotation</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">align</span><span class="o">:</span> <span class="p">{</span>
+          <span class="nx">up</span><span class="o">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+          <span class="nx">segments</span><span class="o">:</span> <span class="s2">&quot;front&quot;</span><span class="p">,</span>
+      <span class="p">},</span>
+      <span class="nx">rotations</span><span class="o">:</span> <span class="p">[</span>
+          <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">45</span><span class="p">],</span>
+          <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">25</span><span class="p">],</span>
+      <span class="p">],</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="nx">basis</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">color</span><span class="o">:</span> <span class="s2">&quot;#fff&quot;</span><span class="p">,</span>
+  <span class="p">},</span>
+  <span class="nx">kpoints</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">label</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">color</span><span class="o">:</span> <span class="s2">&quot;#fff&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">// Initialize viewer</span>
+<span class="kd">let</span> <span class="nx">viewer</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">materia</span><span class="p">.</span><span class="nx">BrillouinZoneViewer</span><span class="p">(</span><span class="nx">canvas</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+
+<span class="c1">// Define structure and load into viewer</span>
+<span class="kd">let</span> <span class="nx">reciprocal</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">basis</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">[</span><span class="o">-</span><span class="mf">0.15735</span><span class="p">,</span> <span class="mf">0.15735</span><span class="p">,</span> <span class="mf">0.15735</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">0.15735</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.15735</span><span class="p">,</span> <span class="mf">0.15735</span><span class="p">],</span>
+    <span class="p">[</span><span class="mf">0.15735</span><span class="p">,</span> <span class="mf">0.15735</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.15735</span><span class="p">]</span>
+  <span class="p">],</span>
+  <span class="nx">segments</span><span class="o">:</span><span class="p">[</span>
+    <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
+    <span class="p">[[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
+    <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
+  <span class="p">],</span>
+  <span class="nx">kpoints</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;A&quot;</span><span class="o">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+    <span class="s2">&quot;B&quot;</span><span class="o">:</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+    <span class="s2">&quot;C&quot;</span><span class="o">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+    <span class="s2">&quot;D&quot;</span><span class="o">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+    <span class="s2">&quot;E&quot;</span><span class="o">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Load structure into viewer</span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">reciprocal</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="loading-a-structure">
+<h2>Loading a structure<a class="headerlink" href="#loading-a-structure" title="Permalink to this headline">¶</a></h2>
+<p>You can load data to the viewer by calling the <a class="reference internal" href="#BrillouinZoneViewer.load" title="BrillouinZoneViewer.load"><code class="xref js js-func docutils literal notranslate"><span class="pre">BrillouinZoneViewer.load()</span></code></a>
+method. Check the API for the supported parameters.</p>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<p>The options that are given in the constructor are passed to the
+<a class="reference internal" href="#BrillouinZoneViewer.setOptions" title="BrillouinZoneViewer.setOptions"><code class="xref js js-func docutils literal notranslate"><span class="pre">BrillouinZoneViewer.setOptions()</span></code></a> method. These options are provided as a
+nested Javascript object. Check the API for the supported parameters. At any
+time you can also manually call this method to change the options. You can also
+use this method to only update a subset of the options.</p>
+</div>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<dl class="js function">
+<dt id="BrillouinZoneViewer.load">
+<code class="sig-prename descclassname">BrillouinZoneViewer.</code><code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="headerlink" href="#BrillouinZoneViewer.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualizes the first Brillouin zone of the given reciprocal lattice and
+optional k-path segments and k-point labels within it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>object</em>) – A Javascript object containing the visualized structure. See below for the subparameters.</p></li>
+<li><p><strong>data.basis</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – The basis vectors of the reciprocal cell as rows of a 3x3 array.</p></li>
+<li><p><strong>data.segments</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – List of pairs of k-points indicating segments within the Brillouin zone.</p></li>
+<li><p><strong>data.kpoints</strong> (<em>object</em>) – Labels and reciprocal lattice coordinates of specific k-points that should be highlighted.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt id="BrillouinZoneViewer.setOptions">
+<code class="sig-prename descclassname">BrillouinZoneViewer.</code><code class="sig-name descname">setOptions</code><span class="sig-paren">(</span><em class="sig-param">options</em>, <em class="sig-param">render</em><span class="sig-paren">)</span><a class="headerlink" href="#BrillouinZoneViewer.setOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to setup the visualization options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>options</strong> (<em>object</em>) – A Javascript object containing the options. See below for the subparameters.</p></li>
+<li><p><strong>options.segments.color</strong> (<em>string</em>) – Segment color</p></li>
+<li><p><strong>options.segments.linewidth</strong> (<em>number</em>) – Segment linewidth</p></li>
+<li><p><strong>options.faces.color</strong> (<em>string</em>) – Face color</p></li>
+<li><p><strong>options.faces.opacity</strong> (<em>number</em>) – Face opacity</p></li>
+<li><p><strong>options.faces.outline.color</strong> (<em>string</em>) – Face outline color</p></li>
+<li><p><strong>options.faces.outline.width</strong> (<em>number</em>) – Face outline width</p></li>
+<li><p><strong>options.kpoints.label.color</strong> (<em>string</em>) – Label color</p></li>
+<li><p><strong>options.kpoints.label.size</strong> (<em>number</em>) – Label size</p></li>
+<li><p><strong>options.kpoints.label.font</strong> (<em>string</em>) – Label font</p></li>
+<li><p><strong>options.kpoints.label.offset2D</strong> (<em>boolean</em>) – Offset of the labels in the sprite’s 2D coordinate system. The offset is relative to the font size and the default [0, 0] corresponds to centered labels.</p></li>
+<li><p><strong>options.kpoints.point.color</strong> (<em>string</em>) – Point color</p></li>
+<li><p><strong>options.kpoints.point.size</strong> (<em>number</em>) – Point size</p></li>
+<li><p><strong>options.kpoints.stroke.width</strong> (<em>string</em>) – Label outline stroke width</p></li>
+<li><p><strong>options.kpoints.stroke.color</strong> (<em>string</em>) – Label outline stroke color</p></li>
+<li><p><strong>options.basis.color</strong> (<em>string</em>) – Font colour for basis labels. Applied as default to all labels, can be overridden individually for each basis.</p></li>
+<li><p><strong>options.basis.font</strong> (<em>number</em>) – Font size for basis labels. Applied as default to all labels, can be overridden individually for each basis.</p></li>
+<li><p><strong>options.basis.offset</strong> (<em>number</em>) – Offset for basis labels.</p></li>
+<li><p><strong>options.basis.stroke.width</strong> (<em>number</em>) – Label outline stroke width</p></li>
+<li><p><strong>options.basis.stroke.color</strong> (<em>string</em>) – Label outline stroke color</p></li>
+<li><p><strong>options.basis.a.color</strong> (<em>string</em>) – Color applied to the label of the first reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.a.font</strong> (<em>string</em>) – Font family applied to the label of the first reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.a.size</strong> (<em>number</em>) – Font size applied to the label of the first reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.a.stroke.width</strong> (<em>number</em>) – Outline stroke width applied to the label of the first reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.a.stroke.color</strong> (<em>string</em>) – Outline stroke color applied to the label of the first reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.b.color</strong> (<em>string</em>) – Color applied to the label of the second reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.b.font</strong> (<em>string</em>) – Font family applied to the label of the second reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.b.size</strong> (<em>number</em>) – Font size applied to the label of the second reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.b.stroke.width</strong> (<em>number</em>) – Outline stroke width applied to the label of the second reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.b.stroke.color</strong> (<em>string</em>) – Outline stroke color applied to the label of the second reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.c.color</strong> (<em>string</em>) – Color applied to the label of the third reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.c.font</strong> (<em>string</em>) – Font family applied to the label of the third reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.c.size</strong> (<em>number</em>) – Font size applied to the label of the third reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.c.stroke.width</strong> (<em>number</em>) – Outline stroke width applied to the label of the third reciprocal lattice vector.</p></li>
+<li><p><strong>options.basis.c.stroke.color</strong> (<em>string</em>) – Outline stroke color applied to the label of the third reciprocal lattice vector.</p></li>
+<li><p><strong>options.renderer.background.color</strong> (<em>string</em>) – Color of the background.</p></li>
+<li><p><strong>options.renderer.background.opacity</strong> (<em>number</em>) – Opacity of the background.</p></li>
+<li><p><strong>render</strong> (<em>boolean</em>) – Whether to perform a render after setting the options. Defaults to true. You should only disable this setting if you plan to do a render manually afterwards.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="structureviewer.html" class="btn btn-neutral float-left" title="Structure Viewer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Versions</span>
+      v: 0.0.5
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          <dd><a href="https://lauri-codes.github.io/materia">0.0.5 (latest stable)</a></dd>
+        
+      </dl>
+    </div>
+  </div>
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
