@@ -698,7 +698,7 @@ export class StructureViewer extends Viewer {
      *   options.bonds.enabled.
      */
     load(structure) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
         // Deep copy the structure for reloading
         this.structure = structure;
         // Clear all the old data
@@ -722,23 +722,6 @@ export class StructureViewer extends Viewer {
         }
         else if (Array.isArray(this.options.atoms.colors)) {
             this.elementColors = this.options.atoms.colors;
-        }
-        // Assign toneMap for toon shader (if both atoms.material.toon.tones and bonds.material.toon.tones are specified, the atoms-one determines toneMap)
-        if (((_d = (_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.atoms) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) === null || _d === void 0 ? void 0 : _d.tones) !== undefined || ((_g = (_f = (_e = this.options) === null || _e === void 0 ? void 0 : _e.bonds) === null || _f === void 0 ? void 0 : _f.material) === null || _g === void 0 ? void 0 : _g.phong) === undefined) {
-            if (((_l = (_k = (_j = (_h = this.options) === null || _h === void 0 ? void 0 : _h.atoms) === null || _j === void 0 ? void 0 : _j.material) === null || _k === void 0 ? void 0 : _k.toon) === null || _l === void 0 ? void 0 : _l.tones) === undefined) {
-                this.options.atoms.material.toon.tones = this.options.bonds.material.toon.tones;
-            }
-            if (this.options.atoms.material.toon.tones === 5) {
-                this.toneMap = new THREE.DataTexture(Uint8Array.from([0, 0, 0, 51, 51, 51, 102, 102, 102, 153, 153, 153, 204, 204, 204, 255, 255, 255]), 5, 1, THREE.RGBFormat);
-            }
-            else if (this.options.atoms.material.toon.tones === 1) {
-                this.toneMap = null;
-            }
-            else {
-                this.toneMap = new THREE.DataTexture(Uint8Array.from([0, 0, 0, 128, 128, 128, 255, 255, 255]), 3, 1, THREE.RGBFormat);
-            }
-            this.toneMap.minFilter = THREE.NearestFilter;
-            this.toneMap.magFilter = THREE.NearestFilter;
         }
         // Check that the received data is OK.
         let isFractional = structure["fractional"] === undefined ? false : structure["fractional"];
@@ -886,9 +869,9 @@ export class StructureViewer extends Viewer {
         this.setZoom(this.options.controls.zoomLevel);
         // Set view alignment and rotation
         if (this.B !== undefined) {
-            this.alignView((_q = (_p = (_o = (_m = this.options) === null || _m === void 0 ? void 0 : _m.layout) === null || _o === void 0 ? void 0 : _o.viewRotation) === null || _p === void 0 ? void 0 : _p.align) === null || _q === void 0 ? void 0 : _q.top, (_u = (_t = (_s = (_r = this.options) === null || _r === void 0 ? void 0 : _r.layout) === null || _s === void 0 ? void 0 : _s.viewRotation) === null || _t === void 0 ? void 0 : _t.align) === null || _u === void 0 ? void 0 : _u.right);
+            this.alignView((_d = (_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.layout) === null || _b === void 0 ? void 0 : _b.viewRotation) === null || _c === void 0 ? void 0 : _c.align) === null || _d === void 0 ? void 0 : _d.top, (_h = (_g = (_f = (_e = this.options) === null || _e === void 0 ? void 0 : _e.layout) === null || _f === void 0 ? void 0 : _f.viewRotation) === null || _g === void 0 ? void 0 : _g.align) === null || _h === void 0 ? void 0 : _h.right);
         }
-        this.rotateView((_x = (_w = (_v = this.options) === null || _v === void 0 ? void 0 : _v.layout) === null || _w === void 0 ? void 0 : _w.viewRotation) === null || _x === void 0 ? void 0 : _x.rotations);
+        this.rotateView((_l = (_k = (_j = this.options) === null || _j === void 0 ? void 0 : _j.layout) === null || _k === void 0 ? void 0 : _k.viewRotation) === null || _l === void 0 ? void 0 : _l.rotations);
         if (this.options.view.autoFit) {
             this.fitToCanvas();
         }
@@ -1011,19 +994,18 @@ export class StructureViewer extends Viewer {
         var _a, _b, _c, _d, _e, _f;
         this.lights = [];
         let shadowMapWidth = 2048;
+        let shadowBias = -0.001;
+        let shadowCutoff = 50;
         // Key light
         let keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
         keyLight.shadow.mapSize.width = shadowMapWidth;
         keyLight.shadow.mapSize.height = shadowMapWidth;
-        keyLight.shadow.bias = -0.001; //fixes self-shadowing artifacts
-        //Fixes an issue with some shadows being cutoff. Is there a more robust solution?
-        var d = 7;
-        keyLight.shadow.camera.left = -d;
-        keyLight.shadow.camera.right = d;
-        keyLight.shadow.camera.top = d;
-        keyLight.shadow.camera.bottom = -d;
-        //keyLight.shadow.camera.near = 1;
-        //keyLight.shadow.camera.far = 200;
+        keyLight.shadow.bias = shadowBias; //fixes self-shadowing artifacts
+        // Fixes an issue with some shadows being cutoff. Is there a more robust solution?
+        keyLight.shadow.camera.left = -shadowCutoff;
+        keyLight.shadow.camera.right = shadowCutoff;
+        keyLight.shadow.camera.top = shadowCutoff;
+        keyLight.shadow.camera.bottom = -shadowCutoff;
         keyLight.position.set(0, 0, 20);
         this.sceneStructure.add(keyLight);
         this.lights.push(keyLight);
@@ -1031,7 +1013,7 @@ export class StructureViewer extends Viewer {
         let fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
         fillLight.shadow.mapSize.width = shadowMapWidth;
         fillLight.shadow.mapSize.height = shadowMapWidth;
-        fillLight.shadow.bias = -0.001;
+        fillLight.shadow.bias = shadowBias;
         fillLight.position.set(-20, 0, -20);
         if (((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.atoms) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) === undefined) {
             this.sceneStructure.add(fillLight);
@@ -1041,9 +1023,8 @@ export class StructureViewer extends Viewer {
         let backLight = new THREE.DirectionalLight(0xffffff, 0.25);
         backLight.shadow.mapSize.width = shadowMapWidth;
         backLight.shadow.mapSize.height = shadowMapWidth;
-        backLight.shadow.bias = -0.001;
+        backLight.shadow.bias = shadowBias;
         backLight.position.set(20, 0, -20);
-        //backLight.position.set( 0, 0, -20 );
         if (((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.atoms) === null || _e === void 0 ? void 0 : _e.material) === null || _f === void 0 ? void 0 : _f.toon) === undefined) {
             this.sceneStructure.add(backLight);
             this.lights.push(backLight);
@@ -1738,6 +1719,7 @@ export class StructureViewer extends Viewer {
      *                you can use "auto" to automatically create the bonds.
      */
     createBonds(bonds = "auto") {
+        var _a, _b, _c, _d, _e, _f, _g;
         if (!this.options.bonds.enabled) {
             return;
         }
@@ -1750,6 +1732,26 @@ export class StructureViewer extends Viewer {
         this.bonds.remove(...this.bonds.children);
         // Get current positions
         let atomPos = this.getPositions();
+        // Create material once
+        let bondMaterial;
+        if ((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.bonds) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) {
+            const nTones = (_g = (_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.bonds) === null || _e === void 0 ? void 0 : _e.material) === null || _f === void 0 ? void 0 : _f.toon) === null || _g === void 0 ? void 0 : _g.tones;
+            const colors = new Uint8Array(nTones);
+            for (let c = 0; c <= nTones; c++) {
+                colors[c] = (c / nTones) * 256;
+            }
+            let gradientMap = new THREE.DataTexture(colors, colors.length, 1, THREE.LuminanceFormat);
+            gradientMap.minFilter = THREE.NearestFilter;
+            gradientMap.magFilter = THREE.NearestFilter;
+            gradientMap.generateMipmaps = false;
+            bondMaterial = new THREE.MeshToonMaterial({
+                color: this.options.bonds.color,
+                gradientMap: gradientMap
+            });
+        }
+        else {
+            bondMaterial = new THREE.MeshPhongMaterial({ color: this.options.bonds.color, shininess: this.options.bonds.material.phong.shininess });
+        }
         // Manual bonds
         if (Array.isArray(bonds)) {
             for (let bond of bonds) {
@@ -1757,7 +1759,7 @@ export class StructureViewer extends Viewer {
                 let j = bond[1];
                 let pos1 = atomPos[i];
                 let pos2 = atomPos[j];
-                this.addBond(i, j, pos1, pos2);
+                this.addBond(i, j, pos1, pos2, bondMaterial);
             }
             // Automatically detect bonds
         }
@@ -1774,7 +1776,7 @@ export class StructureViewer extends Viewer {
                         let radii1 = this.options.atoms.scale * this.atomicRadii[num1];
                         let radii2 = this.options.atoms.scale * this.atomicRadii[num2];
                         if (distance <= this.options.bonds.threshold * 1.1 * (radii1 + radii2)) {
-                            this.addBond(i, j, pos1, pos2);
+                            this.addBond(i, j, pos1, pos2, bondMaterial);
                         }
                     }
                 }
@@ -1803,19 +1805,11 @@ export class StructureViewer extends Viewer {
      * @param atomicNumber - The atomic number for the added atom
      * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
-    addBond(i, j, pos1, pos2) {
-        var _a, _b, _c;
+    addBond(i, j, pos1, pos2, bondMaterial) {
         // Bond
         let radius = this.options.bonds.radius;
         let targetAngle = this.options.bonds.smoothness;
         let nSegments = Math.ceil(360 / (180 - targetAngle));
-        let bondMaterial;
-        if (((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.bonds) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) !== undefined) {
-            bondMaterial = new THREE.MeshToonMaterial({ color: this.options.bonds.color, gradientMap: this.toneMap });
-        }
-        else {
-            bondMaterial = new THREE.MeshPhongMaterial({ color: this.options.bonds.color, shininess: this.options.bonds.material.shininess });
-        }
         let cylinder = this.createCylinder(pos1, pos2, radius, nSegments, bondMaterial);
         cylinder.name = "fill";
         this.bondFills.push(cylinder);
@@ -1842,7 +1836,7 @@ export class StructureViewer extends Viewer {
      * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
     addAtom(index, position, atomicNumber, mesh, fractional = true) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e, _f, _g;
         let exists = atomicNumber in mesh;
         if (!exists) {
             mesh[atomicNumber] = {};
@@ -1856,10 +1850,22 @@ export class StructureViewer extends Viewer {
             let atomGeometry = new THREE.SphereGeometry(radius, nSegments, nSegments);
             let atomMaterial;
             if (((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.atoms) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) !== undefined) {
-                atomMaterial = new THREE.MeshToonMaterial({ color: color, gradientMap: this.toneMap });
+                let nTones = (_g = (_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.atoms) === null || _e === void 0 ? void 0 : _e.material) === null || _f === void 0 ? void 0 : _f.toon) === null || _g === void 0 ? void 0 : _g.tones;
+                var colors = new Uint8Array(nTones);
+                for (var c = 0; c <= nTones; c++) {
+                    colors[c] = (c / nTones) * 256;
+                }
+                var gradientMap = new THREE.DataTexture(colors, colors.length, 1, THREE.LuminanceFormat);
+                gradientMap.minFilter = THREE.NearestFilter;
+                gradientMap.magFilter = THREE.NearestFilter;
+                gradientMap.generateMipmaps = false;
+                atomMaterial = new THREE.MeshToonMaterial({
+                    color: color,
+                    gradientMap: gradientMap
+                });
             }
             else {
-                atomMaterial = new THREE.MeshPhongMaterial({ color: color, shininess: this.options.atoms.material.shininess });
+                atomMaterial = new THREE.MeshPhongMaterial({ color: color, shininess: this.options.atoms.material.phong.shininess });
             }
             let atom = new THREE.Mesh(atomGeometry, atomMaterial);
             mesh[atomicNumber].atom = atom;

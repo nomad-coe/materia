@@ -28,7 +28,6 @@ export declare class StructureViewer extends Viewer {
     atomicRadii: Array<number>;
     elementColors: Array<string>;
     lights: Array<any>;
-    toneMap: THREE.DataTexture;
     bondFills: Array<any>;
     atomFills: Array<any>;
     atomOutlines: Array<any>;
@@ -344,7 +343,7 @@ export declare class StructureViewer extends Viewer {
      * @param atomicNumber - The atomic number for the added atom
      * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
-    addBond(i: any, j: any, pos1: any, pos2: any): void;
+    addBond(i: any, j: any, pos1: any, pos2: any, bondMaterial: any): void;
     /**
      * Creates atoms and directly adds themto the scene.
      *

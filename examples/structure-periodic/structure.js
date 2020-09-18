@@ -24,7 +24,7 @@ let options = {
   outline: {
     enabled: true,
     color: "#000000",
-    size: 0.055,
+    size: 0.025,
   },
   cell: {
     enabled: true,
@@ -55,8 +55,11 @@ let options = {
   bonds: {
     enabled: true,
     material: {
-        phong: {
-          shininess: 30,
+        //phong: {
+          //shininess: 30,
+        //}
+        toon: {
+          tones: 3
         }
     },
     radius: 0.08,
@@ -65,8 +68,11 @@ let options = {
   },
   atoms: {
     material: {
-        phong: {
-          shininess: 30,
+        //phong: {
+          //shininess: 30,
+        //}
+        toon: {
+          tones: 3
         }
     },
     colors: "Jmol",
