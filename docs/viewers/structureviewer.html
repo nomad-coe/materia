@@ -260,8 +260,8 @@ parameters.</p>
 <p>The options that are given in the constructor are passed to the
 <a class="reference internal" href="#StructureViewer.setOptions" title="StructureViewer.setOptions"><code class="xref js js-func docutils literal notranslate"><span class="pre">StructureViewer.setOptions()</span></code></a> method. These options are provided as a
 nested Javascript object. Check the API for the supported parameters. At any
-time you can also manually call this method to change the options. You can also
-use this method to only update a subset of the options.</p>
+time you can also manually call this method to change the options. Notice that
+you can also use this method to only update a subset of the options.</p>
 </div>
 <div class="section" id="api">
 <h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
@@ -336,7 +336,8 @@ use this method to only update a subset of the options.</p>
 <li><p><strong>options.atoms.radii</strong> (<em>string|Array.&lt;number&gt;</em>) – The radii to use for atoms. Defaults to covalent radii. Available options are: - “covalent”: Covalent radii from DOI:10.1039/B801115J. - Custom list of atomic radii. Provide an array of floating point numbers where the index corresponds to an atomic number.</p></li>
 <li><p><strong>options.atoms.colors</strong> (<em>string|Array.&lt;string&gt;</em>) – The colors to use for atoms. Available options are: - “Jmol” (default): Jmol colors. - Custom list of colors. Provide an array of hexadecimal colors where the index corresponds to an atomic number.</p></li>
 <li><p><strong>options.atoms.scale</strong> (<em>number</em>) – Scaling factor for the atomic radii.</p></li>
-<li><p><strong>options.renderer.backgroundColor</strong> (<em>*</em>) – Color of the background. Provide an array with two values, the first being the hexadecimal color value and the second the opacity. E.g. [“#ffffff”, 0] would produce a fully opaque background.</p></li>
+<li><p><strong>options.renderer.background.color</strong> (<em>string</em>) – Color of the background.</p></li>
+<li><p><strong>options.renderer.background.opacity</strong> (<em>number</em>) – Opacity of the background.</p></li>
 <li><p><strong>options.renderer.shadows.enabled</strong> (<em>boolean</em>) – Whether shows are cast by atoms onto others. Note that enabling this increases the computational cost for doing the visualization.</p></li>
 <li><p><strong>render</strong> (<em>boolean</em>) – Whether to perform a render after setting the options. Defaults to true. You should only disable this setting if you plan to do a render manually afterwards.</p></li>
 </ul>
