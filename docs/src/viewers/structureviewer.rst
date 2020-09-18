@@ -38,8 +38,8 @@ Options
 The options that are given in the constructor are passed to the
 :func:`StructureViewer.setOptions` method. These options are provided as a
 nested Javascript object. Check the API for the supported parameters. At any
-time you can also manually call this method to change the options. You can also
-use this method to only update a subset of the options.
+time you can also manually call this method to change the options. Notice that
+you can also use this method to only update a subset of the options.
 
 API
 ---

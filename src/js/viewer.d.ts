@@ -1,4 +1,4 @@
-import { Object3D, Vector2, Vector3 } from "three/build/three.module.js";
+import * as THREE from "three";
 /**
  * Abstract base class for visualizing 3D scenes with three.js.
  */
@@ -83,7 +83,7 @@ export declare abstract class Viewer {
      * @param origin - The origin of the cuboid.
      * @param basis - The vectors that define the cuboid.
      */
-    createCornerPoints(origin: any, basis: any): any;
+    createCornerPoints(origin: any, basis: any): THREE.Geometry;
     /**
      * This will automatically fit the structure to the given rendering area.
      * Will also leave a small margin.
@@ -107,7 +107,7 @@ export declare abstract class Viewer {
      * @param radius - Cylinder radius
      * @param material - Cylinder material
      */
-    createCylinder(pos1: any, pos2: any, radius: any, nSegments: any, material: any): any;
+    createCylinder(pos1: any, pos2: any, radius: any, nSegments: any, material: any): THREE.Mesh<THREE.CylinderGeometry, any>;
     /**
      * Helper function for creating a text sprite that lives in 3D space.
      *
@@ -116,7 +116,7 @@ export declare abstract class Viewer {
      * @param radius - Cylinder radius
      * @param material - Cylinder material
      */
-    createLabel(position: Vector3, label: string, color: string, fontFamily: string, fontSize: number, offset?: Vector2, strokeWidth?: number, strokeColor?: string): Object3D;
+    createLabel(position: THREE.Vector3, label: string, color: string, fontFamily: string, fontSize: number, offset?: THREE.Vector2, strokeWidth?: number, strokeColor?: string): THREE.Object3D;
     /**
      * Rotate an object around an arbitrary axis in world space
      * @param obj - The Object3D to rotate
@@ -124,4 +124,17 @@ export declare abstract class Viewer {
      * @param radians - The angle in radians
      */
     rotateAroundWorldAxis(obj: any, axis: any, radians: any): void;
+    /**
+     * Performs a coordinate transform:
+     *
+     * B*b = A*a
+     * b = Bi*A*a
+     *
+     * @param A - The original basis matrix
+     * @param a - Vector in original basis
+     * @param Bi - Inverse of target basis matrix
+     *
+     * @return b - The original vector a in the target basis
+     */
+    coordinateTransform(A: THREE.Matrix3, Bi: THREE.Matrix3, a: THREE.Vector3, copy?: boolean): THREE.Vector3;
 }

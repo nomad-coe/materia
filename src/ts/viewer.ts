@@ -1,23 +1,5 @@
 import { OrthographicControls } from "./orthographiccontrols"
-import {
-	Mesh,
-	Object3D,
-	WebGLRenderer,
-	PCFSoftShadowMap,
-	OrthographicCamera,
-	ArrowHelper,
-	Matrix4,
-	Vector2,
-	Vector3,
-	Texture,
-	CylinderGeometry,
-	Sprite,
-	SpriteMaterial,
-	Geometry,
-	Scene,
-} from "three/build/three.module.js";
-
-
+import * as THREE from "three"
 /**
  * Abstract base class for visualizing 3D scenes with three.js.
  */
@@ -134,7 +116,7 @@ export abstract class Viewer {
      */
     setupScenes(): void {
         this.scenes = [];
-        this.scene = new Scene();
+        this.scene = new THREE.Scene();
         this.scenes.push(this.scene);
     }
 
@@ -234,7 +216,7 @@ export abstract class Viewer {
     setupRenderer() {
         // Create the renderer. The "alpha: true" enables to set a background color.
         if ( this.webglAvailable()  ) {
-            this.renderer = new WebGLRenderer({
+            this.renderer = new THREE.WebGLRenderer({
                 alpha: true,
                 antialias: true,
             });
@@ -242,7 +224,7 @@ export abstract class Viewer {
             console.log("WebGL is not supported on this browser, cannot display structure.");
         }
         this.renderer.shadowMap.enabled = false;
-        this.renderer.shadowMap.type = PCFSoftShadowMap;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setSize(this.rootElement.clientWidth, this.rootElement.clientHeight);
         this.renderer.setClearColor(this.options.renderer.background.color, this.options.renderer.background.opacity);
         this.rootElement.appendChild(this.renderer.domElement);
@@ -268,7 +250,7 @@ export abstract class Viewer {
         let aspectRatio = this.rootElement.clientWidth/this.rootElement.clientHeight;
         let width = this.cameraWidth;
         let height = width/aspectRatio;
-        this.camera = new OrthographicCamera(width/-2, width/2, height/2, height/-2, -100, 1000 );
+        this.camera = new THREE.OrthographicCamera(width/-2, width/2, height/2, height/-2, -100, 1000 );
         this.camera.name = "camera";
         this.camera.position.z = 20;
     }
@@ -340,7 +322,7 @@ export abstract class Viewer {
     ) {
         let controls = new OrthographicControls(this.camera, this.rootElement);
         controls.rotateSpeed = this.options.controls.rotateSpeed;
-        controls.rotationCenter = new Vector3();
+        controls.rotationCenter = new THREE.Vector3();
         controls.zoomSpeed = this.options.controls.zoomSpeed;
         controls.panSpeed = this.options.controls.panSpeed;
 
@@ -363,7 +345,7 @@ export abstract class Viewer {
      */
     createCornerPoints(origin, basis) {
 
-        var geometry = new Geometry();
+        var geometry = new THREE.Geometry();
         geometry.vertices.push(origin);
         let opposite = origin.clone().add(basis[0]).add(basis[1]).add(basis[2]);
         geometry.vertices.push(opposite);
@@ -403,7 +385,7 @@ export abstract class Viewer {
         //console.log(canvas.clientHeight)
 
         // Figure out the center in order to add margins in right direction
-        let centerPos = new Vector3();
+        let centerPos = new THREE.Vector3();
         for (let len=this.cornerPoints.geometry.vertices.length, i=0; i<len; ++i) {
             let screenPos = this.cornerPoints.geometry.vertices[i].clone();
             this.cornerPoints.localToWorld(screenPos);
@@ -432,8 +414,8 @@ export abstract class Viewer {
 
             // Add a margin
             let margin = this.options.view.fitMargin;
-            let cameraUp = new Vector3( 0, margin, 0 );
-            let cameraRight = new Vector3( margin, 0, 0 );
+            let cameraUp = new THREE.Vector3( 0, margin, 0 );
+            let cameraRight = new THREE.Vector3( margin, 0, 0 );
             cameraUp.applyQuaternion( this.camera.quaternion );
             cameraRight.applyQuaternion( this.camera.quaternion );
 
@@ -561,15 +543,15 @@ export abstract class Viewer {
      * @param material - Cylinder material
      */
     createCylinder(pos1, pos2, radius, nSegments, material) {
-        var direction = new Vector3().subVectors( pos2, pos1 );
+        var direction = new THREE.Vector3().subVectors( pos2, pos1 );
         let dirLen = direction.length();
         let dirNorm = direction.clone().divideScalar(dirLen);
-        var arrow = new ArrowHelper( dirNorm, pos1 );
-        var edgeGeometry = new CylinderGeometry( radius, radius, dirLen, nSegments, 0 );
-        var edge = new Mesh( edgeGeometry, material);
+        var arrow = new THREE.ArrowHelper( dirNorm, pos1 );
+        var edgeGeometry = new THREE.CylinderGeometry( radius, radius, dirLen, nSegments, 0 );
+        var edge = new THREE.Mesh( edgeGeometry, material);
 
         edge.rotation.copy(arrow.rotation.clone());
-        edge.position.copy(new Vector3().addVectors( pos1, direction.multiplyScalar(0.5) ));
+        edge.position.copy(new THREE.Vector3().addVectors( pos1, direction.multiplyScalar(0.5) ));
 
         return edge;
     }
@@ -582,15 +564,15 @@ export abstract class Viewer {
      * @param material - Cylinder material
      */
     createLabel(
-        position:Vector3,
+        position:THREE.Vector3,
         label:string,
         color:string,
         fontFamily:string,
         fontSize:number,
-        offset:Vector2=undefined,
+        offset:THREE.Vector2=undefined,
         strokeWidth=0,
         strokeColor="#000",
-        ): Object3D {
+        ): THREE.Object3D {
 
         // Configure canvas
         const canvas = document.createElement( 'canvas' );
@@ -612,21 +594,21 @@ export abstract class Viewer {
         }
         ctx.fillText(label, size/2, size/2);
 
-        const texture = new Texture(canvas);
+        const texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
-        const material = new SpriteMaterial( { map: texture } );
-        const sprite = new Sprite( material );
+        const material = new THREE.SpriteMaterial( { map: texture } );
+        const sprite = new THREE.Sprite( material );
         sprite.scale.set(fontSize, fontSize, 1);
 
         // Apply offset
         if (offset === undefined) {
-            offset = new Vector2(0, 0);
+            offset = new THREE.Vector2(0, 0);
         }
-        const trueOffset = new Vector2();
-        trueOffset.addVectors(offset, new Vector2(0.5, 0.5));
+        const trueOffset = new THREE.Vector2();
+        trueOffset.addVectors(offset, new THREE.Vector2(0.5, 0.5));
         sprite.center.copy(trueOffset);
 
-        const labelRoot = new Object3D();
+        const labelRoot = new THREE.Object3D();
         labelRoot.position.copy(position);
         labelRoot.add(sprite);
 
@@ -639,11 +621,33 @@ export abstract class Viewer {
      * @param axis - The axis in world space
      * @param radians - The angle in radians
      */
-    rotateAroundWorldAxis(obj, axis, radians) {
-        let rotWorldMatrix = new Matrix4();
+    rotateAroundWorldAxis(obj, axis, radians): void {
+        const rotWorldMatrix = new THREE.Matrix4();
         rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
         rotWorldMatrix.multiply(obj.matrix);        // pre-multiply
         obj.matrix = rotWorldMatrix;
         obj.rotation.setFromRotationMatrix(obj.matrix);
+    }
+
+    /**
+     * Performs a coordinate transform:
+     *
+     * B*b = A*a
+     * b = Bi*A*a
+     *
+     * @param A - The original basis matrix
+     * @param a - Vector in original basis
+     * @param Bi - Inverse of target basis matrix
+     *
+     * @return b - The original vector a in the target basis
+     */
+    coordinateTransform(
+        A:THREE.Matrix3,
+        Bi:THREE.Matrix3,
+        a:THREE.Vector3,
+        copy = true): THREE.Vector3
+    {
+        const result = copy ? a.clone() : a
+        return result.applyMatrix3(A).applyMatrix3(Bi);
     }
 }

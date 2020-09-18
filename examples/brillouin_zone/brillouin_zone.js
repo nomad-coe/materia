@@ -1,5 +1,5 @@
 // Find the element in which the visualizer will be enbedded into
-let targetElem = document.getElementById("visualizationCanvas");
+let canvas = document.getElementById("visualizationCanvas");
 
 // Viewer options
 let options = {
@@ -13,7 +13,7 @@ let options = {
           segments: "front",
       },
       rotations: [
-          [0, 1, 0, 25],
+          [0, 1, 0, 45],
           [1, 0, 0, 25],
       ],
     }
@@ -21,6 +21,7 @@ let options = {
   basis: {
     font: "Ubuntu",
     offset: 0.02,
+    color: "#ffffff",
     a: {
       color: "#ff0000",
       size: 0.03,
@@ -44,7 +45,7 @@ let options = {
         width: 0.06,
         color: "#000000",
       },
-    }
+    },
   },
   renderer: {
     backgroundColor: ["#fff", 1]
@@ -52,24 +53,28 @@ let options = {
 };
 
 // Initialize viewer
-let viewer = new materia.BrillouinZoneViewer(targetElem, options);
+let viewer = new materia.BrillouinZoneViewer(canvas, options);
 
-// The reciprocal cell basis vectors
-let basis = [[-1573507798.3392656, 1573507798.3392656, 1573507798.3392656],
-  [1573507798.3392656, -1573507798.3392656, 1573507798.3392656],
-  [1573507798.3392656, 1573507798.3392656, -1573507798.3392656]
-]
-
-// k-path segments
-let segments = [
-  [[0.0,0.0,0.0], [0.5,0.0,0.5]],
-  [[0.5,0.0,0.5], [0.0,0.0,0.5]],
-];
-
-// Segment labels
-labels = [["A", "B"], ["B", "C"]];
+// Define structure and load into viewer
+let reciprocal = {
+  basis: [
+    [-0.15735, 0.15735, 0.15735],
+    [0.15735, -0.15735, 0.15735],
+    [0.15735, 0.15735, -0.15735]
+  ],
+  segments:[
+    [[0.0, 0.0, 0.0], [0.5, 0.0, 0.5]],
+    [[0.5, 0.0, 0.5], [0.0, 0.0, 0.5]],
+    [[0.0, 0.5, 0.0], [0.0, 0.5, 0.5]],
+  ],
+  kpoints: {
+    "A": [0.0, 0.0, 0.0],
+    "B": [0.5, 0.0, 0.5],
+    "C": [0.0, 0.0, 0.5],
+    "D": [0.0, 0.5, 0.0],
+    "E": [0.0, 0.5, 0.5],
+  }
+}
 
 // Load structure into viewer
-viewer.load({basis: basis, kpoints: labels, segments: segments});
-viewer.fitToCanvas();
-viewer.render();
+viewer.load(reciprocal);

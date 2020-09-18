@@ -1,23 +1,23 @@
 import { Viewer } from "./viewer";
-import { Object3D, Vector3, Matrix3 } from "three/build/three.module.js";
+import * as THREE from "three";
 /**
  * Class for visualizing an atomic structure.
  */
 export declare class StructureViewer extends Viewer {
     structure: Object;
-    root: Object3D;
-    atoms: Object3D;
-    convCell: Object3D;
-    primCell: Object3D;
-    bonds: Object3D;
+    root: THREE.Object3D;
+    atoms: THREE.Object3D;
+    convCell: THREE.Object3D;
+    primCell: THREE.Object3D;
+    bonds: THREE.Object3D;
     atomPos: any[];
     atomNumbers: any[];
     latticeConstants: any;
     container: any;
     infoContainer: any;
-    B: Matrix3;
-    Bi: Matrix3;
-    basisVectors: Vector3[];
+    B: THREE.Matrix3;
+    Bi: THREE.Matrix3;
+    basisVectors: THREE.Vector3[];
     primitiveVectors: any[];
     elements: Object;
     sceneStructure: any;
@@ -228,12 +228,12 @@ export declare class StructureViewer extends Viewer {
     /**
      *
      */
-    calculateCOP(positions: any): any;
+    calculateCOP(positions: any): THREE.Vector3;
     /**
      * Centers the visualization around a specific point.
      * @param centerPos - The center position as a cartesian vector.
      */
-    setViewCenter(centerPos: Vector3): void;
+    setViewCenter(centerPos: THREE.Vector3): void;
     /**
      * Translate the atoms.
      *
@@ -248,8 +248,8 @@ export declare class StructureViewer extends Viewer {
      * Set the position for atoms in the currently loaded structure.
      */
     getPositions(fractional?: boolean): any[];
-    toCartesian(position: Vector3): any;
-    toScaled(position: Vector3): any;
+    toCartesian(position: THREE.Vector3): THREE.Vector3;
+    toScaled(position: THREE.Vector3): THREE.Vector3;
     /**
      * Get a specific atom as defined by a js Group.
      *
@@ -258,7 +258,7 @@ export declare class StructureViewer extends Viewer {
      * @return js Group containing the visuals for the atom. The position
      * of the atom is determined by the position of the group.
      */
-    getAtom(index: number): any;
+    getAtom(index: number): THREE.Object3D;
     /**
      * Set the zoom level
      *
@@ -271,7 +271,7 @@ export declare class StructureViewer extends Viewer {
      */
     createLatticeConstants(basis: any, periodicity: any, periodicIndices: any): void;
     /**
-     * Creates a list of Vector3s from the given list of arrays.
+     * Creates a list of THREE.Vector3s from the given list of arrays.
      *
      * @param vectors - The positions from which to create vectors.
      */
@@ -292,7 +292,7 @@ export declare class StructureViewer extends Viewer {
      * @param linewidth - Line width fo the wireframe
      * @param dashed - Is wireframe dashed
      */
-    createCell(origin: any, basisVectors: any, periodicity: any, color: any, linewidth: number, dashSize: number, gapSize: number): any;
+    createCell(origin: any, basisVectors: any, periodicity: any, color: any, linewidth: number, dashSize: number, gapSize: number): THREE.Object3D;
     /**
      * @param rotations The rotations as a list. Each rotation should be an
      * array containing four numbers: [x, y, z, angle]. The rotations are

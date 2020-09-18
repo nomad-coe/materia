@@ -1,5 +1,5 @@
 import { Viewer } from "./viewer";
-import { MeshPhongMaterial, Line, LineBasicMaterial, LineDashedMaterial, SphereGeometry, EllipseCurve, Group, Mesh, Object3D, Vector3, Matrix3, Points, BackSide, CylinderGeometry, MeshBasicMaterial, Quaternion, Geometry, Scene, DirectionalLight, AmbientLight, } from "three/build/three.module.js";
+import * as THREE from "three";
 /**
  * Class for visualizing an atomic structure.
  */
@@ -279,9 +279,9 @@ export class StructureViewer extends Viewer {
      */
     setupScenes() {
         this.scenes = [];
-        this.sceneStructure = new Scene();
+        this.sceneStructure = new THREE.Scene();
         this.scenes.push(this.sceneStructure);
-        this.sceneInfo = new Scene();
+        this.sceneInfo = new THREE.Scene();
         this.scenes.push(this.sceneInfo);
     }
     /**
@@ -421,7 +421,7 @@ export class StructureViewer extends Viewer {
      */
     setOptions(options, render = true, reload = true) {
         var _a, _b, _c, _d, _e, _f, _g, _h;
-        let defaultOptions = {
+        const defaultOptions = {
             view: {
                 fitMargin: 0.5,
             },
@@ -743,18 +743,18 @@ export class StructureViewer extends Viewer {
         if ((periodicity == undefined) || (periodicity == null)) {
             periodicity = [false, false, false];
         }
-        this.root = new Object3D();
-        this.container = new Object3D();
-        this.infoContainer = new Object3D();
-        this.atoms = new Object3D();
-        this.bonds = new Object3D();
+        this.root = new THREE.Object3D();
+        this.container = new THREE.Object3D();
+        this.infoContainer = new THREE.Object3D();
+        this.atoms = new THREE.Object3D();
+        this.bonds = new THREE.Object3D();
         this.container.add(this.atoms);
         this.container.add(this.bonds);
-        this.angleArcs = new Object3D();
+        this.angleArcs = new THREE.Object3D();
         this.root.add(this.container);
         this.sceneStructure.add(this.root);
         this.sceneInfo.add(this.infoContainer);
-        this.latticeConstants = new Object3D();
+        this.latticeConstants = new THREE.Object3D();
         this.container.add(this.latticeConstants);
         // Create a set of fractional and cartesian positions
         this.createBasisVectors(cell);
@@ -764,7 +764,7 @@ export class StructureViewer extends Viewer {
         if (isFractional === true) {
             for (let i = 0; i < positions.length; ++i) {
                 let pos = positions[i];
-                let iFracPos = new Vector3().fromArray(pos);
+                let iFracPos = new THREE.Vector3().fromArray(pos);
                 fracPos.push(iFracPos);
                 cartPos.push(this.toCartesian(iFracPos));
             }
@@ -772,7 +772,7 @@ export class StructureViewer extends Viewer {
         else if (isFractional === false) {
             for (let i = 0; i < positions.length; ++i) {
                 let pos = positions[i];
-                let iCartPos = new Vector3().fromArray(pos);
+                let iCartPos = new THREE.Vector3().fromArray(pos);
                 cartPos.push(iCartPos);
             }
             if (this.B !== undefined) {
@@ -836,14 +836,14 @@ export class StructureViewer extends Viewer {
             centerPos = this.calculateCOP(atomPos);
         }
         else if (viewCenter === "COC") {
-            centerPos = new Vector3()
+            centerPos = new THREE.Vector3()
                 .add(this.basisVectors[0])
                 .add(this.basisVectors[1])
                 .add(this.basisVectors[2])
                 .multiplyScalar(0.5);
         }
         else if (Array.isArray(viewCenter)) {
-            centerPos = new Vector3().fromArray(viewCenter);
+            centerPos = new THREE.Vector3().fromArray(viewCenter);
         }
         this.setViewCenter(centerPos);
         // Translate the system according to given option
@@ -867,7 +867,7 @@ export class StructureViewer extends Viewer {
      */
     calculateCOP(positions) {
         let nPos = positions.length;
-        let sum = new Vector3();
+        let sum = new THREE.Vector3();
         for (let i = 0; i < nPos; ++i) {
             let pos = positions[i];
             sum.add(pos);
@@ -890,7 +890,7 @@ export class StructureViewer extends Viewer {
      * @param translation - Cartesian translation to apply.
      */
     translate(translation) {
-        let vec = new Vector3().fromArray(translation);
+        let vec = new THREE.Vector3().fromArray(translation);
         this.atoms.position.add(vec);
         this.bonds.position.add(vec);
         this.render();
@@ -907,14 +907,14 @@ export class StructureViewer extends Viewer {
         if (fractional) {
             for (let i = 0, size = positions.length; i < size; ++i) {
                 let atom = this.getAtom(i);
-                let position = this.toCartesian(new Vector3().fromArray(positions[i]));
+                let position = this.toCartesian(new THREE.Vector3().fromArray(positions[i]));
                 atom.position.copy(position);
             }
         }
         else {
             for (let i = 0, size = positions.length; i < size; ++i) {
                 let atom = this.getAtom(i);
-                let position = new Vector3().fromArray(positions[i]);
+                let position = new THREE.Vector3().fromArray(positions[i]);
                 atom.position.copy(position);
             }
         }
@@ -977,21 +977,21 @@ export class StructureViewer extends Viewer {
         this.lights = [];
         let shadowMapWidth = 2048;
         // Key light
-        let keyLight = new DirectionalLight(0xffffff, 0.45);
+        let keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
         keyLight.shadow.mapSize.width = shadowMapWidth;
         keyLight.shadow.mapSize.height = shadowMapWidth;
         keyLight.position.set(0, 0, 20);
         this.sceneStructure.add(keyLight);
         this.lights.push(keyLight);
         // Fill light
-        let fillLight = new DirectionalLight(0xffffff, 0.3);
+        let fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
         fillLight.shadow.mapSize.width = shadowMapWidth;
         fillLight.shadow.mapSize.height = shadowMapWidth;
         fillLight.position.set(-20, 0, -20);
         this.sceneStructure.add(fillLight);
         this.lights.push(fillLight);
         // Back light
-        let backLight = new DirectionalLight(0xffffff, 0.25);
+        let backLight = new THREE.DirectionalLight(0xffffff, 0.25);
         backLight.shadow.mapSize.width = shadowMapWidth;
         backLight.shadow.mapSize.height = shadowMapWidth;
         backLight.position.set(20, 0, -20);
@@ -999,7 +999,7 @@ export class StructureViewer extends Viewer {
         this.sceneStructure.add(backLight);
         this.lights.push(backLight);
         // White ambient light.
-        let ambientLight = new AmbientLight(0x404040, 1.7); // soft white light
+        let ambientLight = new THREE.AmbientLight(0x404040, 1.7); // soft white light
         this.sceneStructure.add(ambientLight);
     }
     /**
@@ -1013,7 +1013,7 @@ export class StructureViewer extends Viewer {
         this.infoContainer.add(this.latticeConstants);
         this.infoContainer.add(this.angleArcs);
         let infoColor = 0x000000;
-        let axisMaterial = new LineBasicMaterial({
+        let axisMaterial = new THREE.LineBasicMaterial({
             color: "#000000",
             linewidth: 1.5
         });
@@ -1070,7 +1070,7 @@ export class StructureViewer extends Viewer {
             let basisVec3 = basis[(iTrueBasis + 2) % 3].clone();
             if (axisEnabled) {
                 // Basis and angle label selection, same for all systems
-                let origin = new Vector3(0, 0, 0);
+                let origin = new THREE.Vector3(0, 0, 0);
                 let dir = basisVec1.clone();
                 // Add an axis label
                 let textPos = dir.clone()
@@ -1079,17 +1079,17 @@ export class StructureViewer extends Viewer {
                 let newBasis2;
                 let newBasis3;
                 if (basisVec2.length() == 0) {
-                    newBasis2 = new Vector3().crossVectors(basisVec1, basisVec3);
-                    labelOffset = new Vector3().crossVectors(basisVec1, newBasis2);
+                    newBasis2 = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
+                    labelOffset = new THREE.Vector3().crossVectors(basisVec1, newBasis2);
                 }
                 else if (basisVec3.length() == 0) {
-                    newBasis3 = new Vector3().crossVectors(basisVec1, basisVec2);
-                    labelOffset = new Vector3().crossVectors(basisVec1, basisVec3);
+                    newBasis3 = new THREE.Vector3().crossVectors(basisVec1, basisVec2);
+                    labelOffset = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
                 }
                 else {
-                    let labelOffset1 = new Vector3().crossVectors(basisVec1, basisVec2);
-                    let labelOffset2 = new Vector3().crossVectors(basisVec1, basisVec3);
-                    labelOffset = new Vector3().sub(labelOffset1).add(labelOffset2);
+                    let labelOffset1 = new THREE.Vector3().crossVectors(basisVec1, basisVec2);
+                    let labelOffset2 = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
+                    labelOffset = new THREE.Vector3().sub(labelOffset1).add(labelOffset2);
                 }
                 labelOffset.normalize();
                 labelOffset.multiplyScalar(0.8);
@@ -1098,7 +1098,7 @@ export class StructureViewer extends Viewer {
                 this.latticeConstants.add(axisLabelSprite);
                 this.axisLabels.push(axisLabelSprite);
                 // Add basis vector colored line
-                let cellVectorMaterial = new MeshBasicMaterial({
+                let cellVectorMaterial = new THREE.MeshBasicMaterial({
                     color: axisColor,
                     transparent: true,
                     opacity: 0.75
@@ -1107,7 +1107,7 @@ export class StructureViewer extends Viewer {
                 let cellVectorLine = this.createCylinder(origin.clone(), cellVector.clone().add(origin), 0.09, 10, cellVectorMaterial);
                 this.latticeConstants.add(cellVectorLine);
                 // Add basis vector axis line
-                let cellAxisMaterial = new MeshBasicMaterial({
+                let cellAxisMaterial = new THREE.MeshBasicMaterial({
                     color: "#000000",
                 });
                 let axisStart = this.basisVectors[iTrueBasis].clone();
@@ -1116,44 +1116,44 @@ export class StructureViewer extends Viewer {
                 let cellAxisVectorLine = this.createCylinder(origin.clone(), axisEnd, 0.02, 10, cellAxisMaterial);
                 this.latticeConstants.add(cellAxisVectorLine);
                 // Add axis arrow
-                let arrowGeometry = new CylinderGeometry(0, 0.10, 0.5, 12);
-                let arrowMaterial = new MeshBasicMaterial({
+                let arrowGeometry = new THREE.CylinderGeometry(0, 0.10, 0.5, 12);
+                let arrowMaterial = new THREE.MeshBasicMaterial({
                     color: infoColor,
                 });
-                let arrow = new Mesh(arrowGeometry, arrowMaterial);
+                let arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
                 arrow.position.copy(dir)
                     .multiplyScalar(1 + axisOffset / dir.length());
-                arrow.lookAt(new Vector3());
+                arrow.lookAt(new THREE.Vector3());
                 arrow.rotateX(-Math.PI / 2);
                 this.latticeConstants.add(arrow);
             }
             if (angleEnabled) {
                 // Add angle label and curve
-                let arcMaterial = new LineDashedMaterial({
+                let arcMaterial = new THREE.LineDashedMaterial({
                     color: infoColor,
                     linewidth: 2,
                     dashSize: 0.2,
                     gapSize: 0.1
                 });
-                let normal = new Vector3().crossVectors(basisVec1, basisVec2);
+                let normal = new THREE.Vector3().crossVectors(basisVec1, basisVec2);
                 let angle = basisVec1.angleTo(basisVec2);
                 let radius = Math.max(Math.min(1 / 4 * basisVec1.length(), 1 / 4 * basisVec2.length()), 1);
-                let curve = new EllipseCurve(0, 0, // ax, aY
+                let curve = new THREE.EllipseCurve(0, 0, // ax, aY
                 radius, radius, // xRadius, yRadius
                 0, angle, // aStartAngle, aEndAngle
                 false, // aClockwise
                 0 // aRotation
                 );
                 let points = curve.getSpacedPoints(20);
-                let arcGeometry = new Geometry().setFromPoints(points);
-                let arc = new Line(arcGeometry, arcMaterial);
+                let arcGeometry = new THREE.Geometry().setFromPoints(points);
+                let arc = new THREE.Line(arcGeometry, arcMaterial);
                 arc.computeLineDistances();
                 // First rotate the arc so that it's x-axis points towards the
                 // first basis vector that defines the arc
-                let yAxis = new Vector3(0, 1, 0);
-                let xAxis = new Vector3(1, 0, 0);
-                let zAxis = new Vector3(0, 0, 1);
-                let quaternion = new Quaternion().setFromUnitVectors(xAxis, basisVec1.clone().normalize());
+                let yAxis = new THREE.Vector3(0, 1, 0);
+                let xAxis = new THREE.Vector3(1, 0, 0);
+                let zAxis = new THREE.Vector3(0, 0, 1);
+                let quaternion = new THREE.Quaternion().setFromUnitVectors(xAxis, basisVec1.clone().normalize());
                 arc.quaternion.copy(quaternion);
                 // Then rotate the arc along it's x axis so that the xy-plane
                 // coincides with the plane defined by the the two basis vectors
@@ -1163,10 +1163,10 @@ export class StructureViewer extends Viewer {
                 let lastArcPointWorld = arc.localToWorld(lastArcPointLocal.clone());
                 // The angle direction is defined by the first basis vector
                 let axis = basisVec1;
-                let arcNormal = new Vector3()
+                let arcNormal = new THREE.Vector3()
                     .crossVectors(axis, lastArcPointWorld);
                 let planeAngle = normal.angleTo(arcNormal);
-                let planeCross = new Vector3()
+                let planeCross = new THREE.Vector3()
                     .crossVectors(basisVec2, lastArcPointWorld);
                 let directionValue = planeCross.dot(axis);
                 if (directionValue > 0) {
@@ -1187,7 +1187,7 @@ export class StructureViewer extends Viewer {
         }
     }
     /**
-     * Creates a list of Vector3s from the given list of arrays.
+     * Creates a list of THREE.Vector3s from the given list of arrays.
      *
      * @param vectors - The positions from which to create vectors.
      */
@@ -1196,14 +1196,14 @@ export class StructureViewer extends Viewer {
             return undefined;
         }
         // Create basis transformation matrices
-        let a = new Vector3().fromArray(basis[0]);
-        let b = new Vector3().fromArray(basis[1]);
-        let c = new Vector3().fromArray(basis[2]);
+        let a = new THREE.Vector3().fromArray(basis[0]);
+        let b = new THREE.Vector3().fromArray(basis[1]);
+        let c = new THREE.Vector3().fromArray(basis[2]);
         this.basisVectors = [a, b, c];
-        let B = new Matrix3();
+        let B = new THREE.Matrix3();
         B.set(a.x, b.x, c.x, a.y, b.y, c.y, a.z, b.z, c.z);
         this.B = B;
-        this.Bi = new Matrix3().getInverse(B);
+        this.Bi = new THREE.Matrix3().getInverse(B);
     }
     createVisualizationBoundaryPositions(positions, atomicNumbers) {
         // Determine the maximum and minimum values in all cartesian components
@@ -1245,14 +1245,14 @@ export class StructureViewer extends Viewer {
         }
         // Add max atomic radii to boundaries
         // Push the corners of the cuboid as cornerpoints
-        let origin = new Vector3(minX - maxRadii, minY - maxRadii, minZ - maxRadii);
-        let basisX = new Vector3(maxX - minX + 2 * maxRadii, 0, 0);
-        let basisY = new Vector3(0, maxY - minY + 2 * maxRadii, 0);
-        let basisZ = new Vector3(0, 0, maxZ - minZ + 2 * maxRadii);
+        let origin = new THREE.Vector3(minX - maxRadii, minY - maxRadii, minZ - maxRadii);
+        let basisX = new THREE.Vector3(maxX - minX + 2 * maxRadii, 0, 0);
+        let basisY = new THREE.Vector3(0, maxY - minY + 2 * maxRadii, 0);
+        let basisZ = new THREE.Vector3(0, 0, maxZ - minZ + 2 * maxRadii);
         let basis = [basisX, basisY, basisZ];
         // Get cuboid
         let pointGeometry = this.createCornerPoints(origin, basis);
-        let points = new Points(pointGeometry);
+        let points = new THREE.Points(pointGeometry);
         points.visible = false;
         this.cornerPoints = points;
         // Must add the point to root because otherwise they will not be
@@ -1262,7 +1262,7 @@ export class StructureViewer extends Viewer {
     createVisualizationBoundaryCell(origin, basis) {
         // Get cuboid
         let pointGeometry = this.createCornerPoints(origin, basis);
-        let points = new Points(pointGeometry);
+        let points = new THREE.Points(pointGeometry);
         points.visible = false;
         this.cornerPoints = points;
         // Must add the point to root because otherwise they will not be
@@ -1274,7 +1274,7 @@ export class StructureViewer extends Viewer {
      *
      */
     createConventionalCell(periodicity, visible) {
-        let cell = this.createCell(new Vector3(), this.basisVectors, periodicity, this.options.cell.color, this.options.cell.linewidth, this.options.cell.dashSize, this.options.cell.gapSize);
+        let cell = this.createCell(new THREE.Vector3(), this.basisVectors, periodicity, this.options.cell.color, this.options.cell.linewidth, this.options.cell.dashSize, this.options.cell.gapSize);
         cell.visible = visible;
         this.convCell = cell;
         this.container.add(this.convCell);
@@ -1290,10 +1290,10 @@ export class StructureViewer extends Viewer {
      */
     createCell(origin, basisVectors, periodicity, color, linewidth, dashSize, gapSize) {
         let nonPeriodic;
-        let cell = new Object3D();
+        let cell = new THREE.Object3D();
         let lineMaterial;
         if (!(dashSize === 0 && gapSize === 0)) {
-            lineMaterial = new LineDashedMaterial({
+            lineMaterial = new THREE.LineDashedMaterial({
                 color: color,
                 linewidth: linewidth,
                 dashSize: dashSize,
@@ -1301,13 +1301,13 @@ export class StructureViewer extends Viewer {
             });
         }
         else {
-            lineMaterial = new LineBasicMaterial({
+            lineMaterial = new THREE.LineBasicMaterial({
                 color: color,
                 linewidth: linewidth
             });
         }
         /*
-        let dimMaterial = new LineDashedMaterial({
+        let dimMaterial = new THREE.LineDashedMaterial({
             color: color,
             linewidth: linewidth,
             dashSize: dashSize,
@@ -1334,9 +1334,9 @@ export class StructureViewer extends Viewer {
                     line1Mat = dimMaterial.clone();
                 }
                 */
-                let lineGeometry = new Geometry();
+                let lineGeometry = new THREE.Geometry();
                 lineGeometry.vertices.push(origin.clone(), basisVector.clone().add(origin));
-                let line = new Line(lineGeometry, line1Mat);
+                let line = new THREE.Line(lineGeometry, line1Mat);
                 cell.add(line);
                 line.computeLineDistances();
             }
@@ -1351,9 +1351,9 @@ export class StructureViewer extends Viewer {
                     line2Mat = dimMaterial.clone();
                 }
                 */
-                let line2Geometry = new Geometry();
+                let line2Geometry = new THREE.Geometry();
                 line2Geometry.vertices.push(secondAddition.clone().add(origin), basisVector.clone().add(secondAddition).add(origin));
-                let line2 = new Line(line2Geometry, line2Mat);
+                let line2 = new THREE.Line(line2Geometry, line2Mat);
                 cell.add(line2);
                 line2.computeLineDistances();
             }
@@ -1368,9 +1368,9 @@ export class StructureViewer extends Viewer {
                     line3Mat = dimMaterial.clone();
                 }
                 */
-                let line3Geometry = new Geometry();
+                let line3Geometry = new THREE.Geometry();
                 line3Geometry.vertices.push(thirdAddition.clone().add(origin), basisVector.clone().add(thirdAddition).add(origin));
-                let line3 = new Line(line3Geometry, line3Mat);
+                let line3 = new THREE.Line(line3Geometry, line3Mat);
                 cell.add(line3);
                 line3.computeLineDistances();
             }
@@ -1383,9 +1383,9 @@ export class StructureViewer extends Viewer {
                     line4Mat = dimMaterial.clone();
                 }
                 */
-                let line4Geometry = new Geometry();
+                let line4Geometry = new THREE.Geometry();
                 line4Geometry.vertices.push(secondAddition.clone().add(thirdAddition).add(origin), basisVector.clone().add(secondAddition).add(thirdAddition).add(origin));
-                let line4 = new Line(line4Geometry, line4Mat);
+                let line4 = new THREE.Line(line4Geometry, line4Mat);
                 cell.add(line4);
                 line4.computeLineDistances();
             }
@@ -1402,7 +1402,7 @@ export class StructureViewer extends Viewer {
             return;
         }
         for (const r of rotations) {
-            const basis = new Vector3(r[0], r[1], r[2]);
+            const basis = new THREE.Vector3(r[0], r[1], r[2]);
             basis.normalize();
             const angle = r[3] / 180 * Math.PI;
             this.rotateAroundWorldAxis(this.root, basis, angle);
@@ -1458,8 +1458,8 @@ export class StructureViewer extends Viewer {
         }
         // Rotate so that the top vector points to top
         this.root.updateMatrixWorld(); // The positions are not otherwise updated properly
-        const finalCAxis = new Vector3(0, 1, 0);
-        const cQuaternion = new Quaternion().setFromUnitVectors(topVector.clone().normalize(), finalCAxis);
+        const finalCAxis = new THREE.Vector3(0, 1, 0);
+        const cQuaternion = new THREE.Quaternion().setFromUnitVectors(topVector.clone().normalize(), finalCAxis);
         this.root.quaternion.premultiply(cQuaternion);
         this.sceneInfo.quaternion.premultiply(cQuaternion);
         this.root.updateMatrixWorld();
@@ -1468,9 +1468,9 @@ export class StructureViewer extends Viewer {
         if (right !== undefined) {
             topVector = topVector.clone().applyQuaternion(cQuaternion);
             rightVector = rightVector.clone().applyQuaternion(cQuaternion);
-            const currentAAxis = new Vector3().crossVectors(topVector, rightVector);
-            const finalAAxis = new Vector3(0, 0, -1);
-            const aQuaternion = new Quaternion().setFromUnitVectors(currentAAxis.clone().normalize(), finalAAxis);
+            const currentAAxis = new THREE.Vector3().crossVectors(topVector, rightVector);
+            const finalAAxis = new THREE.Vector3(0, 0, -1);
+            const aQuaternion = new THREE.Quaternion().setFromUnitVectors(currentAAxis.clone().normalize(), finalAAxis);
             this.root.quaternion.premultiply(aQuaternion);
             this.sceneInfo.quaternion.premultiply(aQuaternion);
             this.root.updateMatrixWorld();
@@ -1484,9 +1484,9 @@ export class StructureViewer extends Viewer {
      * Used to add periodic repetitions of atoms.
      */
     repeat(multipliers, fracPos, labels) {
-        let a = new Vector3(1, 0, 0);
-        let b = new Vector3(0, 1, 0);
-        let c = new Vector3(0, 0, 1);
+        let a = new THREE.Vector3(1, 0, 0);
+        let b = new THREE.Vector3(0, 1, 0);
+        let c = new THREE.Vector3(0, 0, 1);
         let newPos = [];
         let newLabels = [];
         for (let i = 0; i < multipliers[0]; ++i) {
@@ -1499,7 +1499,7 @@ export class StructureViewer extends Viewer {
                         let cTranslation = c.clone().multiplyScalar(k);
                         // Add in front
                         for (let l = 0, size = fracPos.length; l < size; ++l) {
-                            let iPos = new Vector3().copy(fracPos[l]);
+                            let iPos = new THREE.Vector3().copy(fracPos[l]);
                             iPos.add(aTranslation);
                             iPos.add(bTranslation);
                             iPos.add(cTranslation);
@@ -1553,55 +1553,55 @@ export class StructureViewer extends Viewer {
             let yZero = this.almostEqual(0, y, this.basisVectors[1], this.options.layout.wrapTolerance);
             let zZero = this.almostEqual(0, z, this.basisVectors[2], this.options.layout.wrapTolerance);
             if (xZero && yZero && zZero) {
-                fracPos.push(new Vector3(1, 0, 0).add(iFracPos));
+                fracPos.push(new THREE.Vector3(1, 0, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(0, 1, 0).add(iFracPos));
+                fracPos.push(new THREE.Vector3(0, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(0, 0, 1).add(iFracPos));
+                fracPos.push(new THREE.Vector3(0, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(1, 1, 0).add(iFracPos));
+                fracPos.push(new THREE.Vector3(1, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(0, 1, 1).add(iFracPos));
+                fracPos.push(new THREE.Vector3(0, 1, 1).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(1, 0, 1).add(iFracPos));
+                fracPos.push(new THREE.Vector3(1, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(1, 1, 1).add(iFracPos));
+                fracPos.push(new THREE.Vector3(1, 1, 1).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (xZero && yZero && !zZero) {
-                fracPos.push(new Vector3(1, 0, 0).add(iFracPos));
+                fracPos.push(new THREE.Vector3(1, 0, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(0, 1, 0).add(iFracPos));
+                fracPos.push(new THREE.Vector3(0, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(1, 1, 0).add(iFracPos));
+                fracPos.push(new THREE.Vector3(1, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (!xZero && yZero && zZero) {
-                fracPos.push(new Vector3(0, 1, 0).add(iFracPos));
+                fracPos.push(new THREE.Vector3(0, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(0, 0, 1).add(iFracPos));
+                fracPos.push(new THREE.Vector3(0, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(0, 1, 1).add(iFracPos));
+                fracPos.push(new THREE.Vector3(0, 1, 1).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (xZero && !yZero && zZero) {
-                fracPos.push(new Vector3(1, 0, 0).add(iFracPos));
+                fracPos.push(new THREE.Vector3(1, 0, 0).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(0, 0, 1).add(iFracPos));
+                fracPos.push(new THREE.Vector3(0, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
-                fracPos.push(new Vector3(1, 0, 1).add(iFracPos));
+                fracPos.push(new THREE.Vector3(1, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (xZero && !yZero && !zZero) {
-                fracPos.push(new Vector3(1, 0, 0).add(iFracPos));
+                fracPos.push(new THREE.Vector3(1, 0, 0).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (!xZero && yZero && !zZero) {
-                fracPos.push(new Vector3(0, 1, 0).add(iFracPos));
+                fracPos.push(new THREE.Vector3(0, 1, 0).add(iFracPos));
                 labels.push(atomicNumber);
             }
             else if (!xZero && !yZero && zZero) {
-                fracPos.push(new Vector3(0, 0, 1).add(iFracPos));
+                fracPos.push(new THREE.Vector3(0, 0, 1).add(iFracPos));
                 labels.push(atomicNumber);
             }
         }
@@ -1729,19 +1729,19 @@ export class StructureViewer extends Viewer {
         let radius = this.options.bonds.radius;
         let targetAngle = this.options.bonds.smoothness;
         let nSegments = Math.ceil(360 / (180 - targetAngle));
-        let bondMaterial = new MeshPhongMaterial({ color: 0xFFFFFF, shininess: this.options.bonds.material.shininess });
+        let bondMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, shininess: this.options.bonds.material.shininess });
         let cylinder = this.createCylinder(pos1, pos2, radius, nSegments, bondMaterial);
         cylinder.name = "fill";
         this.bondFills.push(cylinder);
         // Put all bonds visuals inside a named group
-        let group = new Group();
+        let group = new THREE.Group();
         group.name = "bond" + i + "-" + j;
         group.add(cylinder);
         // Bond outline hack
         if (this.options.outline.enabled) {
             let addition = this.options.outline.size;
             let scale = addition / radius + 1;
-            let outlineMaterial = new MeshBasicMaterial({ color: this.options.outline.color, side: BackSide });
+            let outlineMaterial = new THREE.MeshBasicMaterial({ color: this.options.outline.color, side: THREE.BackSide });
             let outline = this.createCylinder(pos1, pos2, scale * radius, 10, outlineMaterial);
             outline.name = "outline";
             group.add(outline);
@@ -1766,22 +1766,22 @@ export class StructureViewer extends Viewer {
             let nSegments = Math.ceil(360 / (180 - targetAngle));
             // Atom
             let color = this.elementColors[atomicNumber];
-            let atomGeometry = new SphereGeometry(radius, nSegments, nSegments);
-            let atomMaterial = new MeshPhongMaterial({ color: color, shininess: this.options.atoms.material.shininess });
-            let atom = new Mesh(atomGeometry, atomMaterial);
+            let atomGeometry = new THREE.SphereGeometry(radius, nSegments, nSegments);
+            let atomMaterial = new THREE.MeshPhongMaterial({ color: color, shininess: this.options.atoms.material.shininess });
+            let atom = new THREE.Mesh(atomGeometry, atomMaterial);
             mesh[atomicNumber].atom = atom;
             // Atom outline hack
             if (this.options.outline.enabled) {
                 let addition = this.options.outline.size;
                 let scale = addition / radius + 1;
-                let outlineGeometry = new SphereGeometry(radius * scale, nSegments, nSegments);
-                let outlineMaterial = new MeshBasicMaterial({ color: this.options.outline.color, side: BackSide });
-                let outline = new Mesh(outlineGeometry, outlineMaterial);
+                let outlineGeometry = new THREE.SphereGeometry(radius * scale, nSegments, nSegments);
+                let outlineMaterial = new THREE.MeshBasicMaterial({ color: this.options.outline.color, side: THREE.BackSide });
+                let outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
                 mesh[atomicNumber].outline = outline;
             }
         }
         let imesh = mesh[atomicNumber];
-        let true_pos = new Vector3();
+        let true_pos = new THREE.Vector3();
         if (fractional) {
             true_pos.add(this.basisVectors[0].clone().multiplyScalar(position.x));
             true_pos.add(this.basisVectors[1].clone().multiplyScalar(position.y));
@@ -1791,7 +1791,7 @@ export class StructureViewer extends Viewer {
             true_pos.copy(position);
         }
         // Put all atoms visuals inside a named group
-        let group = new Group();
+        let group = new THREE.Group();
         group.name = "atom" + index;
         let atom = imesh["atom"].clone();
         atom.name = "fill";
@@ -1820,8 +1820,8 @@ export class StructureViewer extends Viewer {
         // Project a [1,0,0] vector in the camera space to the world space, and
         // then to the screen space. The length of this vector is then used to
         // scale the labels.
-        let x = new Vector3(1, 0, 0);
-        let origin = new Vector3(0, 0, 0);
+        let x = new THREE.Vector3(1, 0, 0);
+        let origin = new THREE.Vector3(0, 0, 0);
         let vectors = [x, origin];
         for (let i = 0; i < vectors.length; ++i) {
             let vec = vectors[i];
@@ -1830,7 +1830,7 @@ export class StructureViewer extends Viewer {
             vec.x = Math.round((vec.x + 1) * canvasWidth / 2);
             vec.y = Math.round((-vec.y + 1) * canvasHeight / 2);
         }
-        let displacement = new Vector3().subVectors(origin, x);
+        let displacement = new THREE.Vector3().subVectors(origin, x);
         let distance = displacement.length();
         let scale = 8 * 1 / Math.pow(distance, 0.5); // The sqrt makes the scaling behave nicer...
         if (this.axisLabels !== undefined) {
