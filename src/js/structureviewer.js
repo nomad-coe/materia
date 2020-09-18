@@ -971,8 +971,7 @@ export class StructureViewer extends Viewer {
      * Get a specific atom as defined by a js Group.
      *
      * @param index - Index of the atom.
-     *
-     * @return js Group containing the visuals for the atom. The position
+     * @return THREE.js Group containing the visuals for the atom. The position
      * of the atom is determined by the position of the group.
      */
     getAtom(index) {
