@@ -327,12 +327,15 @@ you can also use this method to only update a subset of the options.</p>
 <li><p><strong>options.cell.dashSize</strong> (<em>boolean</em>) – Unit cell wireframe dash size. Provide a value &gt; 0 for a dashed line.</p></li>
 <li><p><strong>options.cell.gapSize</strong> (<em>boolean</em>) – Unit cell wireframe dash size. Provide a value &gt; 0 for a dashed line.</p></li>
 <li><p><strong>options.bonds.enabled</strong> (<em>boolean</em>) – Show bonds.</p></li>
+<li><p><strong>options.bonds.color</strong> (<em>string</em>) – Color of bonds.</p></li>
 <li><p><strong>options.bonds.radius</strong> (<em>number</em>) – Bond radius.</p></li>
 <li><p><strong>options.bonds.smoothness</strong> (<em>number</em>) – A value between 0-180 that controls the number of polygons. Used as the angle between adjacent cylinder/sphere sectors that indirectly controls the number of polygons.</p></li>
-<li><p><strong>options.bonds.material.shininess</strong> (<em>number</em>) – Shininess of the bond material.</p></li>
+<li><p><strong>options.bonds.material.phong.shininess</strong> (<em>number</em>) – Shininess of the bond material (for phong material)</p></li>
+<li><p><strong>options.bonds.material.toon.tones</strong> (<em>number</em>) – Tone-steps for toon material.</p></li>
 <li><p><strong>options.bonds.threshold</strong> (<em>number</em>) – Controls the automatic detection of bonds between atoms. If custom bonds have not been specified for the structure, bonds will be detected automatically with the following criteria: distance &lt;= this.options.bonds.threshold * 1.1 * (radius1 + radius2)</p></li>
 <li><p><strong>options.atoms.smoothness</strong> (<em>number</em>) – A value between 0-180 that controls the number of polygons. Used as the angle between adjacent cylinder/sphere sectors that indirectly controls the number of polygons.</p></li>
-<li><p><strong>options.atoms.material.shininess</strong> (<em>number</em>) – Shininess of the atom material.</p></li>
+<li><p><strong>options.atoms.material.phong.shininess</strong> (<em>number</em>) – Shininess of the atom material (for phong material)</p></li>
+<li><p><strong>options.atoms.material.toon.tones</strong> (<em>number</em>) – Tone-steps for toon material</p></li>
 <li><p><strong>options.atoms.radii</strong> (<em>string|Array.&lt;number&gt;</em>) – The radii to use for atoms. Defaults to covalent radii. Available options are: - “covalent”: Covalent radii from DOI:10.1039/B801115J. - Custom list of atomic radii. Provide an array of floating point numbers where the index corresponds to an atomic number.</p></li>
 <li><p><strong>options.atoms.colors</strong> (<em>string|Array.&lt;string&gt;</em>) – The colors to use for atoms. Available options are: - “Jmol” (default): Jmol colors. - Custom list of colors. Provide an array of hexadecimal colors where the index corresponds to an atomic number.</p></li>
 <li><p><strong>options.atoms.scale</strong> (<em>number</em>) – Scaling factor for the atomic radii.</p></li>

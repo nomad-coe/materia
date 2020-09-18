@@ -373,8 +373,10 @@ export class StructureViewer extends Viewer {
      * @param {boolean} options.cell.enabled Show unit cell wireframe.
      * @param {boolean} options.cell.color Unit cell wireframe color.
      * @param {boolean} options.cell.linewidth Unit cell wireframe line width.
-     * @param {boolean} options.cell.dashSize Unit cell wireframe dash size. Provide a value > 0 for a dashed line.
-     * @param {boolean} options.cell.gapSize Unit cell wireframe dash size. Provide a value > 0 for a dashed line.
+     * @param {boolean} options.cell.dashSize Unit cell wireframe dash size.
+     * Provide a value > 0 for a dashed line.
+     * @param {boolean} options.cell.gapSize Unit cell wireframe dash size.
+     * Provide a value > 0 for a dashed line.
      *
      * @param {boolean} options.bonds.enabled Show bonds.
      * @param {string} options.bonds.color Color of bonds.
@@ -383,8 +385,10 @@ export class StructureViewer extends Viewer {
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
-     * @param {number} options.bonds.material.phong.shininess Shininess of the bond material (for phong material)
-     * @param {number} options.bonds.material.toon.tones Tone-steps for toon material (1, 3 [default], or 5)
+     * @param {number} options.bonds.material.phong.shininess Shininess of the
+     * bond material (for phong material)
+     * @param {number} options.bonds.material.toon.tones Tone-steps for toon
+     * material.
      * @param {number} options.bonds.threshold Controls the automatic
      *   detection of bonds between atoms. If custom bonds have not been
      *   specified for the structure, bonds will be detected automatically with
@@ -395,8 +399,10 @@ export class StructureViewer extends Viewer {
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
-     * @param {number} options.atoms.material.phong.shininess Shininess of the atom material (for phong material)
-     * @param {number} options.atoms.material.toon.tones Tone-steps for toon material (1, 3 [default], or 5)
+     * @param {number} options.atoms.material.phong.shininess Shininess of the
+     * atom material (for phong material)
+     * @param {number} options.atoms.material.toon.tones Tone-steps for toon
+     * material
      * @param {string|number[]} options.atoms.radii The radii to use for atoms.
      * Defaults to covalent radii. Available options are:
      *
