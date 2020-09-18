@@ -377,12 +377,14 @@ export class StructureViewer extends Viewer {
      * @param {boolean} options.cell.gapSize Unit cell wireframe dash size. Provide a value > 0 for a dashed line.
      *
      * @param {boolean} options.bonds.enabled Show bonds.
+     * @param {string} options.bonds.color Color of bonds.
      * @param {number} options.bonds.radius Bond radius.
      * @param {number} options.bonds.smoothness A value between 0-180 that
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
-     * @param {number} options.bonds.material.shininess Shininess of the bond material.
+     * @param {number} options.bonds.material.phong.shininess Shininess of the bond material (for phong material)
+     * @param {number} options.bonds.material.toon.tones Tone-steps for toon material (1, 3 [default], or 5)
      * @param {number} options.bonds.threshold Controls the automatic
      *   detection of bonds between atoms. If custom bonds have not been
      *   specified for the structure, bonds will be detected automatically with
@@ -393,7 +395,8 @@ export class StructureViewer extends Viewer {
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
-     * @param {number} options.atoms.material.shininess Shininess of the atom material.
+     * @param {number} options.atoms.material.phong.shininess Shininess of the atom material (for phong material)
+     * @param {number} options.atoms.material.toon.tones Tone-steps for toon material (1, 3 [default], or 5)
      * @param {string|number[]} options.atoms.radii The radii to use for atoms.
      * Defaults to covalent radii. Available options are:
      *
@@ -481,15 +484,20 @@ export class StructureViewer extends Viewer {
             bonds: {
                 enabled: true,
                 material: {
-                    shininess: 30,
+                    phong: {
+                        shininess: 30,
+                    }
                 },
+                color: "#ffffff",
                 radius: 0.08,
                 threshold: 1,
                 smoothness: 145,
             },
             atoms: {
                 material: {
-                    shininess: 30,
+                    phong: {
+                        shininess: 30,
+                    }
                 },
                 colors: "Jmol",
                 radii: "covalent",
@@ -637,6 +645,7 @@ export class StructureViewer extends Viewer {
      * Hides or shows the shadows.
      */
     toggleShadows(value) {
+        var _a, _b, _c;
         this.renderer.shadowMap.enabled = value;
         for (let i = 0; i < this.lights.length; ++i) {
             let light = this.lights[i];
@@ -651,7 +660,12 @@ export class StructureViewer extends Viewer {
         for (let i = 0; i < this.bondFills.length; ++i) {
             let bond = this.bondFills[i];
             bond.receiveShadow = value;
-            bond.castShadow = value;
+            if (((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.atoms) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) !== undefined) {
+                bond.castShadow = false;
+            }
+            else {
+                bond.castShadow = value;
+            }
             bond.material.needsUpdate = true;
         }
         // For some reason double rendering is required... Maybe delay()?
@@ -974,12 +988,21 @@ export class StructureViewer extends Viewer {
         this.render();
     }
     setupLights() {
+        var _a, _b, _c, _d, _e, _f;
         this.lights = [];
         let shadowMapWidth = 2048;
+        let shadowBias = -0.001;
+        let shadowCutoff = 50;
         // Key light
         let keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
         keyLight.shadow.mapSize.width = shadowMapWidth;
         keyLight.shadow.mapSize.height = shadowMapWidth;
+        keyLight.shadow.bias = shadowBias; //fixes self-shadowing artifacts
+        // Fixes an issue with some shadows being cutoff. Is there a more robust solution?
+        keyLight.shadow.camera.left = -shadowCutoff;
+        keyLight.shadow.camera.right = shadowCutoff;
+        keyLight.shadow.camera.top = shadowCutoff;
+        keyLight.shadow.camera.bottom = -shadowCutoff;
         keyLight.position.set(0, 0, 20);
         this.sceneStructure.add(keyLight);
         this.lights.push(keyLight);
@@ -987,17 +1010,22 @@ export class StructureViewer extends Viewer {
         let fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
         fillLight.shadow.mapSize.width = shadowMapWidth;
         fillLight.shadow.mapSize.height = shadowMapWidth;
+        fillLight.shadow.bias = shadowBias;
         fillLight.position.set(-20, 0, -20);
-        this.sceneStructure.add(fillLight);
-        this.lights.push(fillLight);
+        if (((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.atoms) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) === undefined) {
+            this.sceneStructure.add(fillLight);
+            this.lights.push(fillLight);
+        }
         // Back light
         let backLight = new THREE.DirectionalLight(0xffffff, 0.25);
         backLight.shadow.mapSize.width = shadowMapWidth;
         backLight.shadow.mapSize.height = shadowMapWidth;
+        backLight.shadow.bias = shadowBias;
         backLight.position.set(20, 0, -20);
-        //backLight.position.set( 0, 0, -20 );
-        this.sceneStructure.add(backLight);
-        this.lights.push(backLight);
+        if (((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.atoms) === null || _e === void 0 ? void 0 : _e.material) === null || _f === void 0 ? void 0 : _f.toon) === undefined) {
+            this.sceneStructure.add(backLight);
+            this.lights.push(backLight);
+        }
         // White ambient light.
         let ambientLight = new THREE.AmbientLight(0x404040, 1.7); // soft white light
         this.sceneStructure.add(ambientLight);
@@ -1659,6 +1687,7 @@ export class StructureViewer extends Viewer {
      *                you can use "auto" to automatically create the bonds.
      */
     createBonds(bonds = "auto") {
+        var _a, _b, _c, _d, _e, _f, _g;
         if (!this.options.bonds.enabled) {
             return;
         }
@@ -1671,6 +1700,26 @@ export class StructureViewer extends Viewer {
         this.bonds.remove(...this.bonds.children);
         // Get current positions
         let atomPos = this.getPositions();
+        // Create material once
+        let bondMaterial;
+        if ((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.bonds) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) {
+            const nTones = (_g = (_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.bonds) === null || _e === void 0 ? void 0 : _e.material) === null || _f === void 0 ? void 0 : _f.toon) === null || _g === void 0 ? void 0 : _g.tones;
+            const colors = new Uint8Array(nTones);
+            for (let c = 0; c <= nTones; c++) {
+                colors[c] = (c / nTones) * 256;
+            }
+            let gradientMap = new THREE.DataTexture(colors, colors.length, 1, THREE.LuminanceFormat);
+            gradientMap.minFilter = THREE.NearestFilter;
+            gradientMap.magFilter = THREE.NearestFilter;
+            gradientMap.generateMipmaps = false;
+            bondMaterial = new THREE.MeshToonMaterial({
+                color: this.options.bonds.color,
+                gradientMap: gradientMap
+            });
+        }
+        else {
+            bondMaterial = new THREE.MeshPhongMaterial({ color: this.options.bonds.color, shininess: this.options.bonds.material.phong.shininess });
+        }
         // Manual bonds
         if (Array.isArray(bonds)) {
             for (let bond of bonds) {
@@ -1678,7 +1727,7 @@ export class StructureViewer extends Viewer {
                 let j = bond[1];
                 let pos1 = atomPos[i];
                 let pos2 = atomPos[j];
-                this.addBond(i, j, pos1, pos2);
+                this.addBond(i, j, pos1, pos2, bondMaterial);
             }
             // Automatically detect bonds
         }
@@ -1695,7 +1744,7 @@ export class StructureViewer extends Viewer {
                         let radii1 = this.options.atoms.scale * this.atomicRadii[num1];
                         let radii2 = this.options.atoms.scale * this.atomicRadii[num2];
                         if (distance <= this.options.bonds.threshold * 1.1 * (radii1 + radii2)) {
-                            this.addBond(i, j, pos1, pos2);
+                            this.addBond(i, j, pos1, pos2, bondMaterial);
                         }
                     }
                 }
@@ -1724,12 +1773,11 @@ export class StructureViewer extends Viewer {
      * @param atomicNumber - The atomic number for the added atom
      * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
-    addBond(i, j, pos1, pos2) {
+    addBond(i, j, pos1, pos2, bondMaterial) {
         // Bond
         let radius = this.options.bonds.radius;
         let targetAngle = this.options.bonds.smoothness;
         let nSegments = Math.ceil(360 / (180 - targetAngle));
-        let bondMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, shininess: this.options.bonds.material.shininess });
         let cylinder = this.createCylinder(pos1, pos2, radius, nSegments, bondMaterial);
         cylinder.name = "fill";
         this.bondFills.push(cylinder);
@@ -1756,6 +1804,7 @@ export class StructureViewer extends Viewer {
      * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
     addAtom(index, position, atomicNumber, mesh, fractional = true) {
+        var _a, _b, _c, _d, _e, _f, _g;
         let exists = atomicNumber in mesh;
         if (!exists) {
             mesh[atomicNumber] = {};
@@ -1767,7 +1816,25 @@ export class StructureViewer extends Viewer {
             // Atom
             let color = this.elementColors[atomicNumber];
             let atomGeometry = new THREE.SphereGeometry(radius, nSegments, nSegments);
-            let atomMaterial = new THREE.MeshPhongMaterial({ color: color, shininess: this.options.atoms.material.shininess });
+            let atomMaterial;
+            if (((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.atoms) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) !== undefined) {
+                let nTones = (_g = (_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.atoms) === null || _e === void 0 ? void 0 : _e.material) === null || _f === void 0 ? void 0 : _f.toon) === null || _g === void 0 ? void 0 : _g.tones;
+                var colors = new Uint8Array(nTones);
+                for (var c = 0; c <= nTones; c++) {
+                    colors[c] = (c / nTones) * 256;
+                }
+                var gradientMap = new THREE.DataTexture(colors, colors.length, 1, THREE.LuminanceFormat);
+                gradientMap.minFilter = THREE.NearestFilter;
+                gradientMap.magFilter = THREE.NearestFilter;
+                gradientMap.generateMipmaps = false;
+                atomMaterial = new THREE.MeshToonMaterial({
+                    color: color,
+                    gradientMap: gradientMap
+                });
+            }
+            else {
+                atomMaterial = new THREE.MeshPhongMaterial({ color: color, shininess: this.options.atoms.material.phong.shininess });
+            }
             let atom = new THREE.Mesh(atomGeometry, atomMaterial);
             mesh[atomicNumber].atom = atom;
             // Atom outline hack

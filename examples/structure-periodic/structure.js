@@ -55,20 +55,35 @@ let options = {
   bonds: {
     enabled: true,
     material: {
-        shininess: 30,
+        //phong: {
+          //shininess: 30,
+        //}
+        toon: {
+          tones: 3
+        }
     },
     radius: 0.08,
     threshold: 1.5,
-    smoothness: 145,
-  }, 
+    smoothness: 155,
+  },
   atoms: {
     material: {
-        shininess: 30,
+        //phong: {
+          //shininess: 30,
+        //}
+        toon: {
+          tones: 3
+        }
     },
     colors: "Jmol",
     radii: "covalent",
     scale: 1,
-    smoothness: 165,
+    smoothness: 175,
+  },
+  renderer: {
+    shadows: {
+      enabled: true
+    }
   }
 };
 

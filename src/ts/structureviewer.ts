@@ -86,7 +86,7 @@ export class StructureViewer extends Viewer {
      * system of the structure. In this global coordinate system [1, 0, 0]
      * points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away
      * from the screen.
-     * 
+     *
      * @param {boolean} options.latticeConstants.enabled Show lattice parameters
      * @param {string} options.latticeConstants.font Font size for lattice
      *   constants. Applied as default to all labels, can be overridden
@@ -127,51 +127,54 @@ export class StructureViewer extends Viewer {
      *   angle between the first and second lattice vector.
      * @param {number} options.latticeConstants.gamma.size Font size applied to the
      *   angle between the first and second lattice vector.
-     * 
+     *
      * @param {boolean} options.outline.enabled Used to enable or disable a
      *   fixed color outline around atoms and bonds. Notice that enabling the
      *   outline incurs a performance penalty.
      * @param {string} options.outline.color Outline color.
      * @param {number} options.outline.size Outline size.
-     * 
+     *
      * @param {boolean} options.cell.enabled Show unit cell wireframe.
      * @param {boolean} options.cell.color Unit cell wireframe color.
      * @param {boolean} options.cell.linewidth Unit cell wireframe line width.
      * @param {boolean} options.cell.dashSize Unit cell wireframe dash size. Provide a value > 0 for a dashed line.
      * @param {boolean} options.cell.gapSize Unit cell wireframe dash size. Provide a value > 0 for a dashed line.
-     * 
+     *
      * @param {boolean} options.bonds.enabled Show bonds.
+     * @param {string} options.bonds.color Color of bonds.
      * @param {number} options.bonds.radius Bond radius.
      * @param {number} options.bonds.smoothness A value between 0-180 that
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
-     * @param {number} options.bonds.material.shininess Shininess of the bond material.
+     * @param {number} options.bonds.material.phong.shininess Shininess of the bond material (for phong material)
+     * @param {number} options.bonds.material.toon.tones Tone-steps for toon material (1, 3 [default], or 5)
      * @param {number} options.bonds.threshold Controls the automatic
      *   detection of bonds between atoms. If custom bonds have not been
      *   specified for the structure, bonds will be detected automatically with
      *   the following criteria: distance <=
      *   this.options.bonds.threshold * 1.1 * (radius1 + radius2)
-     * 
+     *
      * @param {number} options.atoms.smoothness A value between 0-180 that
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
-     * @param {number} options.atoms.material.shininess Shininess of the atom material.
+     * @param {number} options.atoms.material.phong.shininess Shininess of the atom material (for phong material)
+     * @param {number} options.atoms.material.toon.tones Tone-steps for toon material (1, 3 [default], or 5)
      * @param {string|number[]} options.atoms.radii The radii to use for atoms.
      * Defaults to covalent radii. Available options are:
-     * 
+     *
      *   - "covalent": Covalent radii from DOI:10.1039/B801115J.
      *   - Custom list of atomic radii. Provide an array of floating point
      *     numbers where the index corresponds to an atomic number.
-     * 
+     *
      * @param {string|string[]} options.atoms.colors The colors to use
      * for atoms. Available options are:
-     * 
+     *
      *   - "Jmol" (default): Jmol colors.
      *   - Custom list of colors. Provide an array of hexadecimal colors where
      *     the index corresponds to an atomic number.
-     * 
+     *
      * @param {number} options.atoms.scale Scaling factor for the atomic radii.
      * 
      * @param {string} options.renderer.background.color Color of the background.
@@ -244,15 +247,20 @@ export class StructureViewer extends Viewer {
             bonds: {
                 enabled: true,
                 material: {
-                    shininess: 30,
+                    phong: {
+                      shininess: 30,
+                    }
                 },
+                color: "#ffffff",
                 radius: 0.08,
                 threshold: 1,
                 smoothness: 145,
-            }, 
+            },
             atoms: {
                 material: {
-                    shininess: 30,
+                    phong: {
+                      shininess: 30,
+                    }
                 },
                 colors: "Jmol",
                 radii: "covalent",
@@ -290,6 +298,7 @@ export class StructureViewer extends Viewer {
                 this.render();
             }
         }
+
     }
 
     /**
@@ -410,7 +419,11 @@ export class StructureViewer extends Viewer {
         for (let i=0; i < this.bondFills.length; ++i) {
             let bond = this.bondFills[i];
             bond.receiveShadow = value;
+            if (this.options?.atoms?.material?.toon !== undefined) {
+                bond.castShadow = false;
+            } else {
             bond.castShadow = value;
+            }
             bond.material.needsUpdate = true;
         }
 
@@ -472,7 +485,7 @@ export class StructureViewer extends Viewer {
         // Check that the received data is OK.
         let isFractional = structure["fractional"] === undefined ? false : structure["fractional"];
         let positions = structure["positions"];
-        let species = structure["species"]
+        let species = structure["species"];
         let cell = structure["cell"];
         let periodicity = structure["pbc"];
         let bonds = structure["bonds"];
@@ -744,8 +757,7 @@ export class StructureViewer extends Viewer {
      * Get a specific atom as defined by a js Group.
      *
      * @param index - Index of the atom.
-     * 
-     * @return js Group containing the visuals for the atom. The position
+     * @return THREE.js Group containing the visuals for the atom. The position
      * of the atom is determined by the position of the group.
      */
     getAtom(index:number) {
@@ -765,12 +777,22 @@ export class StructureViewer extends Viewer {
     setupLights() {
         this.lights = [];
         let shadowMapWidth = 2048;
+        let shadowBias = -0.001;
+        let shadowCutoff = 50;
 
         // Key light
         let keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
         keyLight.shadow.mapSize.width = shadowMapWidth;
         keyLight.shadow.mapSize.height = shadowMapWidth;
-        keyLight.position.set(0, 0, 20)
+        keyLight.shadow.bias = shadowBias; //fixes self-shadowing artifacts
+
+        // Fixes an issue with some shadows being cutoff. Is there a more robust solution?
+        keyLight.shadow.camera.left = -shadowCutoff;
+        keyLight.shadow.camera.right = shadowCutoff;
+        keyLight.shadow.camera.top = shadowCutoff;
+        keyLight.shadow.camera.bottom = -shadowCutoff;
+
+        keyLight.position.set(0, 0, 20);
         this.sceneStructure.add( keyLight );
         this.lights.push(keyLight);
 
@@ -778,18 +800,23 @@ export class StructureViewer extends Viewer {
         let fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
         fillLight.shadow.mapSize.width = shadowMapWidth;
         fillLight.shadow.mapSize.height = shadowMapWidth;
-        fillLight.position.set(-20, 0, -20)
-        this.sceneStructure.add( fillLight );
-        this.lights.push(fillLight);
+        fillLight.shadow.bias = shadowBias;
+        fillLight.position.set(-20, 0, -20);
+        if (this.options?.atoms?.material?.toon === undefined){
+            this.sceneStructure.add( fillLight );
+            this.lights.push(fillLight);
+        }
 
         // Back light
         let backLight = new THREE.DirectionalLight(0xffffff, 0.25);
         backLight.shadow.mapSize.width = shadowMapWidth;
         backLight.shadow.mapSize.height = shadowMapWidth;
+        backLight.shadow.bias = shadowBias;
         backLight.position.set( 20, 0, -20 );
-        //backLight.position.set( 0, 0, -20 );
-        this.sceneStructure.add( backLight );
-        this.lights.push(backLight);
+        if (this.options?.atoms?.material?.toon === undefined){
+            this.sceneStructure.add( backLight );
+            this.lights.push(backLight);
+        }
 
         // White ambient light.
         let ambientLight = new THREE.AmbientLight( 0x404040, 1.7 ); // soft white light
@@ -1536,6 +1563,26 @@ export class StructureViewer extends Viewer {
         // Get current positions
         let atomPos = this.getPositions()
 
+        // Create material once
+        let bondMaterial
+        if (this.options?.bonds?.material?.toon) {
+            const nTones = this.options?.bonds?.material?.toon?.tones
+            const colors = new Uint8Array(nTones);
+            for ( let c = 0; c <= nTones; c ++ ) {
+                colors[c] = ( c / nTones ) * 256;
+            }
+            let gradientMap = new THREE.DataTexture( colors, colors.length, 1, THREE.LuminanceFormat );
+            gradientMap.minFilter = THREE.NearestFilter;
+            gradientMap.magFilter = THREE.NearestFilter;
+            gradientMap.generateMipmaps = false;
+            bondMaterial = new THREE.MeshToonMaterial({
+                color: this.options.bonds.color,
+                gradientMap: gradientMap
+            });
+        } else {
+            bondMaterial = new THREE.MeshPhongMaterial( { color: this.options.bonds.color, shininess: this.options.bonds.material.phong.shininess} );
+        }
+
         // Manual bonds
         if (Array.isArray(bonds)) {
             for (let bond of bonds) {
@@ -1543,7 +1590,7 @@ export class StructureViewer extends Viewer {
                 let j = bond[1];
                 let pos1 = atomPos[i];
                 let pos2 = atomPos[j];
-                this.addBond(i, j, pos1, pos2);
+                this.addBond(i, j, pos1, pos2, bondMaterial);
             }
         // Automatically detect bonds
         } else if (bonds === "auto") {
@@ -1559,7 +1606,7 @@ export class StructureViewer extends Viewer {
                         let radii1 = this.options.atoms.scale*this.atomicRadii[num1]
                         let radii2 = this.options.atoms.scale*this.atomicRadii[num2]
                         if (distance <= this.options.bonds.threshold*1.1*(radii1 + radii2)) {
-                            this.addBond(i, j, pos1, pos2);
+                            this.addBond(i, j, pos1, pos2, bondMaterial);
                         }
                     }
                 }
@@ -1590,16 +1637,14 @@ export class StructureViewer extends Viewer {
      * @param atomicNumber - The atomic number for the added atom
      * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
-    addBond(i, j, pos1, pos2) {
+    addBond(i, j, pos1, pos2, bondMaterial) {
         // Bond
         let radius = this.options.bonds.radius;
         let targetAngle = this.options.bonds.smoothness;
         let nSegments = Math.ceil(360/(180-targetAngle));
-        let bondMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFFFF, shininess: this.options.bonds.material.shininess} );
         let cylinder = this.createCylinder(pos1, pos2, radius, nSegments, bondMaterial);
         cylinder.name = "fill";
         this.bondFills.push(cylinder);
-
 
         // Put all bonds visuals inside a named group
         let group = new THREE.Group();
@@ -1638,7 +1683,24 @@ export class StructureViewer extends Viewer {
             // Atom
             let color = this.elementColors[atomicNumber];
             let atomGeometry = new THREE.SphereGeometry( radius, nSegments, nSegments );
-            let atomMaterial = new THREE.MeshPhongMaterial( { color: color, shininess: this.options.atoms.material.shininess } );
+            let atomMaterial;
+            if (this.options?.atoms?.material?.toon !== undefined) {
+                let nTones = this.options?.atoms?.material?.toon?.tones
+                var colors = new Uint8Array(nTones);
+                for ( var c = 0; c <= nTones; c ++ ) {
+                    colors[c] = ( c / nTones ) * 256;
+                }
+                var gradientMap = new THREE.DataTexture( colors, colors.length, 1, THREE.LuminanceFormat );
+                gradientMap.minFilter = THREE.NearestFilter;
+                gradientMap.magFilter = THREE.NearestFilter;
+                gradientMap.generateMipmaps = false;
+                atomMaterial = new THREE.MeshToonMaterial({
+                    color: color,
+                    gradientMap: gradientMap
+                });
+            } else {
+                atomMaterial = new THREE.MeshPhongMaterial( { color: color, shininess: this.options.atoms.material.phong.shininess } );
+            }
             let atom = new THREE.Mesh( atomGeometry, atomMaterial );
             mesh[atomicNumber].atom = atom;
 
@@ -1680,7 +1742,7 @@ export class StructureViewer extends Viewer {
         this.atoms.add(group)
         this.atomFills.push(atom);
         this.atomNumbers.push(atomicNumber);
-        
+
         // Always after adding an atom the bond information should be updated.
         this.updateBonds = true;
     }

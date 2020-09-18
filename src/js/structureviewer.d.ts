@@ -127,12 +127,14 @@ export declare class StructureViewer extends Viewer {
      * @param {boolean} options.cell.gapSize Unit cell wireframe dash size. Provide a value > 0 for a dashed line.
      *
      * @param {boolean} options.bonds.enabled Show bonds.
+     * @param {string} options.bonds.color Color of bonds.
      * @param {number} options.bonds.radius Bond radius.
      * @param {number} options.bonds.smoothness A value between 0-180 that
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
-     * @param {number} options.bonds.material.shininess Shininess of the bond material.
+     * @param {number} options.bonds.material.phong.shininess Shininess of the bond material (for phong material)
+     * @param {number} options.bonds.material.toon.tones Tone-steps for toon material (1, 3 [default], or 5)
      * @param {number} options.bonds.threshold Controls the automatic
      *   detection of bonds between atoms. If custom bonds have not been
      *   specified for the structure, bonds will be detected automatically with
@@ -143,7 +145,8 @@ export declare class StructureViewer extends Viewer {
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
-     * @param {number} options.atoms.material.shininess Shininess of the atom material.
+     * @param {number} options.atoms.material.phong.shininess Shininess of the atom material (for phong material)
+     * @param {number} options.atoms.material.toon.tones Tone-steps for toon material (1, 3 [default], or 5)
      * @param {string|number[]} options.atoms.radii The radii to use for atoms.
      * Defaults to covalent radii. Available options are:
      *
@@ -338,7 +341,7 @@ export declare class StructureViewer extends Viewer {
      * @param atomicNumber - The atomic number for the added atom
      * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
-    addBond(i: any, j: any, pos1: any, pos2: any): void;
+    addBond(i: any, j: any, pos1: any, pos2: any, bondMaterial: any): void;
     /**
      * Creates atoms and directly adds themto the scene.
      *
