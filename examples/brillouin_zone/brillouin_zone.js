@@ -1,10 +1,10 @@
-// Find the element in which the visualizer will be enbedded into
+// Find the element in which the visualizer will be embedded into
 let canvas = document.getElementById("visualizationCanvas");
 
 // Viewer options
 let options = {
   view: {
-    fitMargin: 0.02,
+    fitMargin: 0.025,
   },
   layout: {
     viewRotation: {
@@ -62,18 +62,32 @@ let reciprocal = {
     [0.15735, -0.15735, 0.15735],
     [0.15735, 0.15735, -0.15735]
   ],
-  segments:[
-    [[0.0, 0.0, 0.0], [0.5, 0.0, 0.5]],
-    [[0.5, 0.0, 0.5], [0.0, 0.0, 0.5]],
-    [[0.0, 0.5, 0.0], [0.0, 0.5, 0.5]],
+  segments: [
+    [
+      [0, 0, 0],
+      [0.5, 0, 0.5],
+      [0.5, 0.25, 0.75],
+      [0.375, 0.375, 0.75],
+      [0, 0, 0],
+      [0.5, 0.5, 0.5],
+      [0.625, 0.25, 0.625],
+      [0.5, 0.25, 0.75],
+      [0.5, 0.5, 0.5],
+      [0.375, 0.375, 0.75]
+    ],
+    [
+      [0.625, 0.25, 0.625],
+      [0.5, 0, 0.5]
+    ]
   ],
-  kpoints: {
-    "A": [0.0, 0.0, 0.0],
-    "B": [0.5, 0.0, 0.5],
-    "C": [0.0, 0.0, 0.5],
-    "D": [0.0, 0.5, 0.0],
-    "E": [0.0, 0.5, 0.5],
-  }
+  kpoints: [
+    ["A", [0.0, 0.0, 0.0]],
+    ["B", [0.5, 0.0, 0.5]],
+    ["C", [0.5, 0.25, 0.75]],
+    ["D", [0.375, 0.375, 0.75]],
+    ["E", [0.5, 0.5, 0.5]],
+    ["F", [0.625, 0.25, 0.625]],
+  ]
 }
 
 // Load structure into viewer

@@ -325,44 +325,47 @@ export class StructureViewer extends Viewer {
      *
      * @param {boolean} options.latticeConstants.enabled Show lattice parameters
      * @param {string} options.latticeConstants.font Font size for lattice
-     *   constants. Applied as default to all labels, can be overridden
-     *   individually for each lattice constant.
-     * @param {string} options.latticeConstants.a.color Color applied to the
-     *   lattice constant of the first lattice vector.
-     * @param {string} options.latticeConstants.a.font Font family applied to the
-     *   lattice constant of the first lattice vector.
-     * @param {number} options.latticeConstants.a.size Font size applied to the
-     *   lattice constant of the first lattice vector.
-     * @param {string} options.latticeConstants.b.color Color applied to the
-     *   lattice constant of the second lattice vector.
-     * @param {string} options.latticeConstants.b.font Font family applied to the
-     *   lattice constant of the second lattice vector.
-     * @param {number} options.latticeConstants.b.size Font size applied to the
-     *   lattice constant of the second lattice vector.
-     * @param {string} options.latticeConstants.c.color Color applied to the
-     *   lattice constant of the second lattice vector.
-     * @param {string} options.latticeConstants.c.font Font family applied to the
-     *   lattice constant of the third lattice vector.
-     * @param {number} options.latticeConstants.c.size Font size applied to the
-     *   lattice constant of the third lattice vector.
-     * @param {string} options.latticeConstants.alpha.color Color applied to the
-     *   angle between the second and third lattice vector.
-     * @param {string} options.latticeConstants.alpha.font Font family applied to the
-     *   angle between the second and third lattice vector.
-     * @param {number} options.latticeConstants.alpha.size Font size applied to the
-     *   lattice constant of the third lattice vector.
-     * @param {string} options.latticeConstants.beta.color Color applied to the
-     *   angle between the first and third lattice vector.
-     * @param {string} options.latticeConstants.beta.font Font family applied to the
-     *   angle between the first and third lattice vector.
-     * @param {number} options.latticeConstants.beta.size Font size applied to the
-     *   angle between the first and third lattice vector.
-     * @param {string} options.latticeConstants.gamma.color Color applied to the
-     *   angle between the first and second lattice vector.
-     * @param {string} options.latticeConstants.gamma.font Font family applied to the
-     *   angle between the first and second lattice vector.
-     * @param {number} options.latticeConstants.gamma.size Font size applied to the
-     *   angle between the first and second lattice vector.
+     * constants. Applied as default to all labels, can be overridden
+     * individually for each lattice constant.
+     * @param {string} options.latticeConstants.color Font color for lattice
+     * constants. Applied as default to all labels, can be overridden
+     * individually for each lattice constant.
+     * @param {string} options.latticeConstants.stroke.color Font stroke color
+     * for lattice constants. Applied as default to all labels, can be
+     * overridden individually for each lattice constant.
+     * @param {string} options.latticeConstants.stroke.width Font stroke width
+     * for lattice constants. Applied as default to all labels, can be
+     * overridden individually for each lattice constant.
+     * @param {string} options.latticeConstants.a.color Font color
+     * @param {string} options.latticeConstants.a.font Font family
+     * @param {number} options.latticeConstants.a.size Font size
+     * @param {number} options.latticeConstants.a.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.a.stroke.color Font stroke color
+     * @param {string} options.latticeConstants.b.color Font color
+     * @param {string} options.latticeConstants.b.font Font family
+     * @param {number} options.latticeConstants.b.size Font size
+     * @param {number} options.latticeConstants.b.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.b.stroke.color Font stroke color
+     * @param {string} options.latticeConstants.c.color Font color
+     * @param {string} options.latticeConstants.c.font Font family
+     * @param {number} options.latticeConstants.c.size Font size
+     * @param {number} options.latticeConstants.c.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.c.stroke.color Font stroke color
+     * @param {string} options.latticeConstants.alpha.color Font color
+     * @param {string} options.latticeConstants.alpha.font Font family
+     * @param {number} options.latticeConstants.alpha.size Font size
+     * @param {number} options.latticeConstants.alpha.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.alpha.stroke.color Font stroke color
+     * @param {string} options.latticeConstants.beta.color Font color
+     * @param {string} options.latticeConstants.beta.font Font family
+     * @param {number} options.latticeConstants.beta.size Font size
+     * @param {number} options.latticeConstants.beta.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.beta.stroke.color Font stroke color
+     * @param {string} options.latticeConstants.gamma.color Font color
+     * @param {string} options.latticeConstants.gamma.font Font family
+     * @param {number} options.latticeConstants.gamma.size Font size
+     * @param {number} options.latticeConstants.gamma.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.gamma.stroke.color Font stroke color
      *
      * @param {boolean} options.outline.enabled Used to enable or disable a
      *   fixed color outline around atoms and bonds. Notice that enabling the
@@ -456,6 +459,10 @@ export class StructureViewer extends Viewer {
                 enabled: true,
                 font: "Arial",
                 size: 0.7,
+                stroke: {
+                    width: 0.06,
+                    color: "#000",
+                },
                 a: {
                     enabled: true,
                     color: "#C52929",
@@ -1039,6 +1046,7 @@ export class StructureViewer extends Viewer {
      * Create the visuals to show the lattice parameter labels.
      */
     createLatticeConstants(basis, periodicity, periodicIndices) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z;
         if (!this.options.latticeConstants.enabled) {
             return;
         }
@@ -1056,10 +1064,18 @@ export class StructureViewer extends Viewer {
         cellBasisColors.push(this.options.latticeConstants.a.color);
         cellBasisColors.push(this.options.latticeConstants.b.color);
         cellBasisColors.push(this.options.latticeConstants.c.color);
-        let angleColors = [];
+        const angleColors = [];
         angleColors.push(this.options.latticeConstants.alpha.color);
         angleColors.push(this.options.latticeConstants.beta.color);
         angleColors.push(this.options.latticeConstants.gamma.color);
+        const angleStrokeColors = [];
+        angleStrokeColors.push(((_b = (_a = this.options.latticeConstants.alpha) === null || _a === void 0 ? void 0 : _a.stroke) === null || _b === void 0 ? void 0 : _b.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.alpha.stroke.color);
+        angleStrokeColors.push(((_d = (_c = this.options.latticeConstants.beta) === null || _c === void 0 ? void 0 : _c.stroke) === null || _d === void 0 ? void 0 : _d.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.beta.stroke.color);
+        angleStrokeColors.push(((_f = (_e = this.options.latticeConstants.gamma) === null || _e === void 0 ? void 0 : _e.stroke) === null || _f === void 0 ? void 0 : _f.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.gamma.stroke.color);
+        const angleStrokeWidths = [];
+        angleStrokeWidths.push(((_h = (_g = this.options.latticeConstants.alpha) === null || _g === void 0 ? void 0 : _g.stroke) === null || _h === void 0 ? void 0 : _h.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.alpha.stroke.width);
+        angleStrokeWidths.push(((_k = (_j = this.options.latticeConstants.beta) === null || _j === void 0 ? void 0 : _j.stroke) === null || _k === void 0 ? void 0 : _k.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.beta.stroke.width);
+        angleStrokeWidths.push(((_m = (_l = this.options.latticeConstants.gamma) === null || _l === void 0 ? void 0 : _l.stroke) === null || _m === void 0 ? void 0 : _m.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.gamma.stroke.width);
         let angleLabels = [this.options.latticeConstants.gamma.label, this.options.latticeConstants.alpha.label, this.options.latticeConstants.beta.label];
         let axisLabels = [this.options.latticeConstants.a.label, this.options.latticeConstants.b.label, this.options.latticeConstants.c.label];
         let angleEnableds = [this.options.latticeConstants.gamma.enabled, this.options.latticeConstants.alpha.enabled, this.options.latticeConstants.beta.enabled];
@@ -1068,15 +1084,23 @@ export class StructureViewer extends Viewer {
         axisFonts.push(this.options.latticeConstants.a.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.a.font);
         axisFonts.push(this.options.latticeConstants.b.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.b.font);
         axisFonts.push(this.options.latticeConstants.c.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.c.font);
-        let axisFontSizes = [];
+        const axisFontSizes = [];
         axisFontSizes.push(this.options.latticeConstants.a.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.a.size);
         axisFontSizes.push(this.options.latticeConstants.b.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.b.size);
         axisFontSizes.push(this.options.latticeConstants.c.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.c.size);
-        let angleFonts = [];
+        const strokeColors = [];
+        strokeColors.push(((_p = (_o = this.options.latticeConstants.a) === null || _o === void 0 ? void 0 : _o.stroke) === null || _p === void 0 ? void 0 : _p.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.a.stroke.color);
+        strokeColors.push(((_r = (_q = this.options.latticeConstants.b) === null || _q === void 0 ? void 0 : _q.stroke) === null || _r === void 0 ? void 0 : _r.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.b.stroke.color);
+        strokeColors.push(((_t = (_s = this.options.latticeConstants.c) === null || _s === void 0 ? void 0 : _s.stroke) === null || _t === void 0 ? void 0 : _t.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.c.stroke.color);
+        const strokeWidths = [];
+        strokeWidths.push(((_v = (_u = this.options.latticeConstants.a) === null || _u === void 0 ? void 0 : _u.stroke) === null || _v === void 0 ? void 0 : _v.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.a.stroke.width);
+        strokeWidths.push(((_x = (_w = this.options.latticeConstants.b) === null || _w === void 0 ? void 0 : _w.stroke) === null || _x === void 0 ? void 0 : _x.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.b.stroke.width);
+        strokeWidths.push(((_z = (_y = this.options.latticeConstants.c) === null || _y === void 0 ? void 0 : _y.stroke) === null || _z === void 0 ? void 0 : _z.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.c.stroke.width);
+        const angleFonts = [];
         angleFonts.push(this.options.latticeConstants.alpha.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.alpha.font);
         angleFonts.push(this.options.latticeConstants.beta.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.beta.font);
         angleFonts.push(this.options.latticeConstants.gamma.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.gamma.font);
-        let angleFontSizes = [];
+        const angleFontSizes = [];
         angleFontSizes.push(this.options.latticeConstants.alpha.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.alpha.size);
         angleFontSizes.push(this.options.latticeConstants.beta.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.beta.size);
         angleFontSizes.push(this.options.latticeConstants.gamma.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.gamma.size);
@@ -1093,9 +1117,13 @@ export class StructureViewer extends Viewer {
             let axisFont = axisFonts[iBasis];
             let axisFontSize = axisFontSizes[iBasis];
             let angleFontSize = angleFontSizes[iBasis];
+            let strokeWidth = strokeWidths[iBasis];
+            let strokeColor = strokeColors[iBasis];
             let angleFont = angleFonts[iBasis];
             let angleColor = angleColors[iBasis];
             let angleLabel = angleLabels[iBasis];
+            let angleStrokeColor = angleStrokeColors[iBasis];
+            let angleStrokeWidth = angleStrokeWidths[iBasis];
             let axisEnabled = axisEnableds[iBasis];
             let angleEnabled = angleEnableds[iBasis];
             let basisVec1 = basis[iTrueBasis];
@@ -1127,7 +1155,7 @@ export class StructureViewer extends Viewer {
                 labelOffset.normalize();
                 labelOffset.multiplyScalar(0.8);
                 textPos.add(labelOffset);
-                let axisLabelSprite = this.createLabel(textPos, axisLabel, axisColor, axisFont, axisFontSize);
+                let axisLabelSprite = this.createLabel(textPos, axisLabel, axisColor, axisFont, axisFontSize, new THREE.Vector2(0.0, 0.0), strokeWidth, strokeColor);
                 this.latticeConstants.add(axisLabelSprite);
                 this.axisLabels.push(axisLabelSprite);
                 // Add basis vector colored line
@@ -1212,7 +1240,7 @@ export class StructureViewer extends Viewer {
                 let angleLabelPos = arc.localToWorld(arcGeometry.vertices[9].clone());
                 let angleLabelLen = angleLabelPos.length();
                 angleLabelPos.multiplyScalar(1 + 0.3 / angleLabelLen);
-                let angleLabelObj = this.createLabel(angleLabelPos, angleLabel.toString(), angleColor, angleFont, angleFontSize);
+                let angleLabelObj = this.createLabel(angleLabelPos, angleLabel.toString(), angleColor, angleFont, angleFontSize, new THREE.Vector2(0.0, 0.0), angleStrokeWidth, angleStrokeColor);
                 this.latticeConstants.add(angleLabelObj);
                 this.axisLabels.push(angleLabelObj);
                 this.angleArcs.add(arc);

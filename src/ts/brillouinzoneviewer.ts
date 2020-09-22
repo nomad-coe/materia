@@ -59,10 +59,10 @@ export class BrillouinZoneViewer extends Viewer {
      * structure. See below for the subparameters.
      * @param {number[][]} data.basis The basis vectors of the reciprocal cell as
      *   rows of a 3x3 array.
-     * @param {number[][]} data.segments List of pairs of k-points indicating
-     * segments within the Brillouin zone.
-     * @param {object} data.kpoints Labels and reciprocal
-     * lattice coordinates of specific k-points that should be highlighted.
+     * @param {number[][]} data.segments List containing lists of k-points,
+     * each sublist indicating a continuous segment within the Brillouin zone.
+     * @param {*} data.kpoints List of pairs of labels and reciprocal
+     * lattice coordinates for specific k-points that should be shown.
      */
     load(data: object): boolean {
         // Deep copy the structure for reloading
@@ -185,7 +185,7 @@ export class BrillouinZoneViewer extends Viewer {
                 enablePan: false
             },
             view: {
-                fitMargin: 0.02,
+                fitMargin: 0.025,
             },
             basis: {
                 offset: 0.02,
@@ -218,7 +218,7 @@ export class BrillouinZoneViewer extends Viewer {
                 label: {
                     enabled: true,
                     font: "Arial",
-                    size: 0.03,
+                    size: 0.025,
                     color: "#E56400",
                     offset2D: [0, -0.75],
                     stroke: {
@@ -231,7 +231,7 @@ export class BrillouinZoneViewer extends Viewer {
                 color: "#ddd",
                 opacity: 0.7,
                 outline: {
-                    width: 0.0015,
+                    width: 0.002,
                     color: "#999",
                 },
             },
@@ -269,7 +269,7 @@ export class BrillouinZoneViewer extends Viewer {
     createBrillouinZone(
         basis:number[][],
         segments:number[][][],
-        kpoints:Record<string, any>): void {
+        kpoints:[string, number[]][]): void {
 
         // Create list of reciprocal lattice points
         const B = new THREE.Matrix3();
@@ -352,7 +352,7 @@ export class BrillouinZoneViewer extends Viewer {
         this.info = new THREE.Object3D();
         this.info.name = "info";
         this.sceneInfo.add(this.info);
-        this.sceneInfo.add(this.cornerPoints);
+        this.info.add(this.cornerPoints)
 
         // A customised THREE.Geometry object that will create the face
         // geometry and information about the face edges
@@ -374,6 +374,7 @@ export class BrillouinZoneViewer extends Viewer {
         mesh2.material.side = THREE.FrontSide; // front faces
         mesh2.renderOrder = 1;
         group.add( mesh2 );
+        this.zone.add(group);
 
         // Create edges as closed loops around each face
         const edgeWidth = this.options.faces.outline.width
@@ -487,64 +488,37 @@ export class BrillouinZoneViewer extends Viewer {
         });
         let kpathGeometry;
         const labelPoints = [];
-        let previousPoint
         for (let iSegment=0; iSegment<segments.length; ++iSegment) {
+            kpathGeometry = new THREE.Geometry();
             const segment = segments[iSegment];
-            const nKpoints = segment.length;
-            const startScaled = new THREE.Vector3().fromArray(segment[0])
-            const endScaled = new THREE.Vector3().fromArray(segment[nKpoints-1])
-            const startCart = this.coordinateTransform(this.B, I, startScaled, false)
-            const endCart = this.coordinateTransform(this.B, I, endScaled, false)
-
-            // If no previous point present, start new geometry
-            if (!previousPoint) {
-                kpathGeometry = new THREE.Geometry();
-                kpathGeometry.vertices.push(startCart);
-                kpathGeometry.vertices.push(endCart);
-                labelPoints.push(startCart)
-                labelPoints.push(endCart)
-            // If previous point has been set, either continue that segment or
-                // start new one
-            } else {
-                const distance = new THREE.Vector3().subVectors(startCart, previousPoint).length()
-                if (distance > 1e-7) {
-                    // Store old segment
-                    const kpathLine = new MeshLine();
-                    kpathLine.setVertices(kpathGeometry.vertices)
-                    const kpath = new THREE.Mesh(kpathLine, kpathMaterial);
-                    this.info.add(kpath);
-
-                    // Start new segment
-                    kpathGeometry = new THREE.Geometry();
-                    kpathGeometry.vertices.push(startCart);
-                    labelPoints.push(startCart)
-                }
-                kpathGeometry.vertices.push(startCart);
-                kpathGeometry.vertices.push(endCart);
-                labelPoints.push(endCart)
+            for (const kpoint of segment) {
+                const kpointScaled = new THREE.Vector3().fromArray(kpoint)
+                const kpointCart = this.coordinateTransform(this.B, I, kpointScaled, false)
+                kpathGeometry.vertices.push(kpointCart); // The point is pushed twice because it looks nicer that way for some reason...
+                kpathGeometry.vertices.push(kpointCart);
+                labelPoints.push(kpointCart)
             }
-            previousPoint = endCart.clone()
-
+            const kpathLine = new MeshLine();
+            kpathLine.setVertices(kpathGeometry.vertices)
+            const kpath = new THREE.Mesh(kpathLine, kpathMaterial);
+            this.info.add(kpath);
         }
-        // Push the last geometry at the end
-        const kpathLine = new MeshLine();
-        kpathLine.setVertices(kpathGeometry.vertices)
-        const kpath = new THREE.Mesh(kpathLine, kpathMaterial);
-        this.info.add(kpath);
 
         // Create dummy geometry that is used to orient the view to show the
         // segments nicely
-        this.labelPoints = labelPoints.map(p => {
-            const obj = new THREE.Object3D()
-            obj.position.copy(p)
-            return obj
-        })
-        //this.sceneInfo.add(this.labelPoints);
+        this.labelPoints = new THREE.Object3D()
+        for (const point of labelPoints) {
+            const labelObject = new THREE.Object3D()
+            labelObject.position.copy(point)
+            this.labelPoints.add(labelObject)
+        }
+        this.info.add(this.labelPoints)
 
-        // Add k-point labels
+        // Add k-point labels. Duplicate points are ignored.
         if (kpoints) {
-            for (const label in kpoints) {
-                const kpointScaled = new THREE.Vector3().fromArray(kpoints[label])
+            for (const kpoint of kpoints) {
+                const label = kpoint[0]
+                const kpointScaled = new THREE.Vector3().fromArray(kpoint[1])
                 const kpointCartesian = this.coordinateTransform(this.B, I, kpointScaled, false)
                 if (this.options.kpoints.point.enabled) {
                     const kpointCircle = this.createCircle(
@@ -569,8 +543,6 @@ export class BrillouinZoneViewer extends Viewer {
                 }
             }
         }
-
-        this.zone.add(group);
     }
 
     /**
@@ -639,18 +611,18 @@ export class BrillouinZoneViewer extends Viewer {
         quaternion.conjugate()
         this.info.quaternion.copy(quaternion);
         this.zone.quaternion.copy(quaternion);
-
-        // Rotate the scene so that the segments are shown properly
         this.info.updateMatrixWorld();  // The positions are not otherwise updated properly
         this.zone.updateMatrixWorld();
+
+        // Rotate the scene so that the segments are shown properly
         const average = new THREE.Vector3()
-        const nLabelPoints = this.labelPoints.length;
-        for (let iSegmentPoint=0; iSegmentPoint < nLabelPoints; ++iSegmentPoint) {
-            const segmentPoint = this.labelPoints[iSegmentPoint];
+        const nPoints = this.labelPoints.children.length;
+        for (let i=0; i < nPoints; ++i) {
+            const segmentPoint = this.labelPoints.children[i];
             average.add(segmentPoint.getWorldPosition(new THREE.Vector3()));
         }
         if (average.length() > 1e-8) {
-            average.multiplyScalar(1/nLabelPoints);
+            average.multiplyScalar(1/nPoints);
             average.y = 0
             const segmentQ = new THREE.Quaternion().setFromUnitVectors(
                 segmentVector,
@@ -659,10 +631,9 @@ export class BrillouinZoneViewer extends Viewer {
             segmentQ.conjugate()
             this.info.quaternion.premultiply(segmentQ);
             this.zone.quaternion.premultiply(segmentQ);
+            this.info.updateMatrixWorld();
+            this.zone.updateMatrixWorld();
         }
-
-        this.info.updateMatrixWorld();
-        this.zone.updateMatrixWorld();
 
         if (render) {
             this.render()

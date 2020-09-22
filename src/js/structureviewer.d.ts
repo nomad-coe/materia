@@ -75,44 +75,47 @@ export declare class StructureViewer extends Viewer {
      *
      * @param {boolean} options.latticeConstants.enabled Show lattice parameters
      * @param {string} options.latticeConstants.font Font size for lattice
-     *   constants. Applied as default to all labels, can be overridden
-     *   individually for each lattice constant.
-     * @param {string} options.latticeConstants.a.color Color applied to the
-     *   lattice constant of the first lattice vector.
-     * @param {string} options.latticeConstants.a.font Font family applied to the
-     *   lattice constant of the first lattice vector.
-     * @param {number} options.latticeConstants.a.size Font size applied to the
-     *   lattice constant of the first lattice vector.
-     * @param {string} options.latticeConstants.b.color Color applied to the
-     *   lattice constant of the second lattice vector.
-     * @param {string} options.latticeConstants.b.font Font family applied to the
-     *   lattice constant of the second lattice vector.
-     * @param {number} options.latticeConstants.b.size Font size applied to the
-     *   lattice constant of the second lattice vector.
-     * @param {string} options.latticeConstants.c.color Color applied to the
-     *   lattice constant of the second lattice vector.
-     * @param {string} options.latticeConstants.c.font Font family applied to the
-     *   lattice constant of the third lattice vector.
-     * @param {number} options.latticeConstants.c.size Font size applied to the
-     *   lattice constant of the third lattice vector.
-     * @param {string} options.latticeConstants.alpha.color Color applied to the
-     *   angle between the second and third lattice vector.
-     * @param {string} options.latticeConstants.alpha.font Font family applied to the
-     *   angle between the second and third lattice vector.
-     * @param {number} options.latticeConstants.alpha.size Font size applied to the
-     *   lattice constant of the third lattice vector.
-     * @param {string} options.latticeConstants.beta.color Color applied to the
-     *   angle between the first and third lattice vector.
-     * @param {string} options.latticeConstants.beta.font Font family applied to the
-     *   angle between the first and third lattice vector.
-     * @param {number} options.latticeConstants.beta.size Font size applied to the
-     *   angle between the first and third lattice vector.
-     * @param {string} options.latticeConstants.gamma.color Color applied to the
-     *   angle between the first and second lattice vector.
-     * @param {string} options.latticeConstants.gamma.font Font family applied to the
-     *   angle between the first and second lattice vector.
-     * @param {number} options.latticeConstants.gamma.size Font size applied to the
-     *   angle between the first and second lattice vector.
+     * constants. Applied as default to all labels, can be overridden
+     * individually for each lattice constant.
+     * @param {string} options.latticeConstants.color Font color for lattice
+     * constants. Applied as default to all labels, can be overridden
+     * individually for each lattice constant.
+     * @param {string} options.latticeConstants.stroke.color Font stroke color
+     * for lattice constants. Applied as default to all labels, can be
+     * overridden individually for each lattice constant.
+     * @param {string} options.latticeConstants.stroke.width Font stroke width
+     * for lattice constants. Applied as default to all labels, can be
+     * overridden individually for each lattice constant.
+     * @param {string} options.latticeConstants.a.color Font color
+     * @param {string} options.latticeConstants.a.font Font family
+     * @param {number} options.latticeConstants.a.size Font size
+     * @param {number} options.latticeConstants.a.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.a.stroke.color Font stroke color
+     * @param {string} options.latticeConstants.b.color Font color
+     * @param {string} options.latticeConstants.b.font Font family
+     * @param {number} options.latticeConstants.b.size Font size
+     * @param {number} options.latticeConstants.b.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.b.stroke.color Font stroke color
+     * @param {string} options.latticeConstants.c.color Font color
+     * @param {string} options.latticeConstants.c.font Font family
+     * @param {number} options.latticeConstants.c.size Font size
+     * @param {number} options.latticeConstants.c.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.c.stroke.color Font stroke color
+     * @param {string} options.latticeConstants.alpha.color Font color
+     * @param {string} options.latticeConstants.alpha.font Font family
+     * @param {number} options.latticeConstants.alpha.size Font size
+     * @param {number} options.latticeConstants.alpha.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.alpha.stroke.color Font stroke color
+     * @param {string} options.latticeConstants.beta.color Font color
+     * @param {string} options.latticeConstants.beta.font Font family
+     * @param {number} options.latticeConstants.beta.size Font size
+     * @param {number} options.latticeConstants.beta.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.beta.stroke.color Font stroke color
+     * @param {string} options.latticeConstants.gamma.color Font color
+     * @param {string} options.latticeConstants.gamma.font Font family
+     * @param {number} options.latticeConstants.gamma.size Font size
+     * @param {number} options.latticeConstants.gamma.stroke.width Font stroke width
+     * @param {string} options.latticeConstants.gamma.stroke.color Font stroke color
      *
      * @param {boolean} options.outline.enabled Used to enable or disable a
      *   fixed color outline around atoms and bonds. Notice that enabling the

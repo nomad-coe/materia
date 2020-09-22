@@ -26,3 +26,10 @@ The full source code with examples and regression tests can be explored at `gith
 
     install
     viewers/viewers
+
+Changelog
+=========
+ - 0.0.6:
+    - Added BrillouinZoneViewer.
+    - Added Toon material for StructureViewer.
+    - Fixed issues with shadows.

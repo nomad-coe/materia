@@ -20,10 +20,10 @@ export declare class BrillouinZoneViewer extends Viewer {
      * structure. See below for the subparameters.
      * @param {number[][]} data.basis The basis vectors of the reciprocal cell as
      *   rows of a 3x3 array.
-     * @param {number[][]} data.segments List of pairs of k-points indicating
-     * segments within the Brillouin zone.
-     * @param {object} data.kpoints Labels and reciprocal
-     * lattice coordinates of specific k-points that should be highlighted.
+     * @param {number[][]} data.segments List containing lists of k-points,
+     * each sublist indicating a continuous segment within the Brillouin zone.
+     * @param {*} data.kpoints List of pairs of labels and reciprocal
+     * lattice coordinates for specific k-points that should be shown.
      */
     load(data: object): boolean;
     /**
@@ -100,7 +100,7 @@ export declare class BrillouinZoneViewer extends Viewer {
      * plan to do a render manually afterwards.
      */
     setOptions(options: any, render?: boolean, reload?: boolean): void;
-    createBrillouinZone(basis: number[][], segments: number[][][], kpoints: Record<string, any>): void;
+    createBrillouinZone(basis: number[][], segments: number[][][], kpoints: [string, number[]][]): void;
     /**
      * @param rotations The rotations as a list. Each rotation should be an
      * array containing four numbers: [x, y, z, angle]. The rotations are
