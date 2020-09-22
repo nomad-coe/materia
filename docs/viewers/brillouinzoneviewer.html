@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Brillouin Zone Viewer &mdash; materia 0.0.5 documentation</title>
+  <title>Brillouin Zone Viewer &mdash; materia 0.0.6 documentation</title>
   
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.0.5
+                0.0.6
               </div>
             
           
@@ -198,7 +198,7 @@ and changing the <code class="code docutils literal notranslate"><span class="pr
       <span class="nx">enablePan</span><span class="o">:</span> <span class="kc">false</span>
   <span class="p">},</span>
   <span class="nx">view</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">fitMargin</span><span class="o">:</span> <span class="mf">0.02</span><span class="p">,</span>
+    <span class="nx">fitMargin</span><span class="o">:</span> <span class="mf">0.025</span><span class="p">,</span>
   <span class="p">},</span>
   <span class="nx">layout</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">viewRotation</span><span class="o">:</span> <span class="p">{</span>
@@ -232,18 +232,32 @@ and changing the <code class="code docutils literal notranslate"><span class="pr
     <span class="p">[</span><span class="mf">0.15735</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.15735</span><span class="p">,</span> <span class="mf">0.15735</span><span class="p">],</span>
     <span class="p">[</span><span class="mf">0.15735</span><span class="p">,</span> <span class="mf">0.15735</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.15735</span><span class="p">]</span>
   <span class="p">],</span>
-  <span class="nx">segments</span><span class="o">:</span><span class="p">[</span>
-    <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
-    <span class="p">[[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
-    <span class="p">[[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
+  <span class="nx">segments</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">[</span>
+      <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span>
+      <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.625</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.625</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">]</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+      <span class="p">[</span><span class="mf">0.625</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.625</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
+    <span class="p">]</span>
   <span class="p">],</span>
-  <span class="nx">kpoints</span><span class="o">:</span> <span class="p">{</span>
-    <span class="s2">&quot;A&quot;</span><span class="o">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-    <span class="s2">&quot;B&quot;</span><span class="o">:</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-    <span class="s2">&quot;C&quot;</span><span class="o">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-    <span class="s2">&quot;D&quot;</span><span class="o">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-    <span class="s2">&quot;E&quot;</span><span class="o">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-  <span class="p">}</span>
+  <span class="nx">kpoints</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+    <span class="p">[</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
+    <span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">]],</span>
+    <span class="p">[</span><span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">]],</span>
+    <span class="p">[</span><span class="s2">&quot;E&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]],</span>
+    <span class="p">[</span><span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.625</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.625</span><span class="p">]],</span>
+  <span class="p">]</span>
 <span class="p">}</span>
 
 <span class="c1">// Load structure into viewer</span>
@@ -276,8 +290,8 @@ optional k-path segments and k-point labels within it.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> (<em>object</em>) – A Javascript object containing the visualized structure. See below for the subparameters.</p></li>
 <li><p><strong>data.basis</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – The basis vectors of the reciprocal cell as rows of a 3x3 array.</p></li>
-<li><p><strong>data.segments</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – List of pairs of k-points indicating segments within the Brillouin zone.</p></li>
-<li><p><strong>data.kpoints</strong> (<em>object</em>) – Labels and reciprocal lattice coordinates of specific k-points that should be highlighted.</p></li>
+<li><p><strong>data.segments</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – List containing lists of k-points, each sublist indicating a continuous segment within the Brillouin zone.</p></li>
+<li><p><strong>data.kpoints</strong> (<em>*</em>) – List of pairs of labels and reciprocal lattice coordinates for specific k-points that should be shown.</p></li>
 </ul>
 </dd>
 </dl>
@@ -380,14 +394,14 @@ optional k-path segments and k-point labels within it.</p>
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Versions</span>
-      v: 0.0.5
+      v: 0.0.6
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
       <dl>
         <dt>Versions</dt>
         
-          <dd><a href="https://lauri-codes.github.io/materia">0.0.5 (latest stable)</a></dd>
+          <dd><a href="https://lauri-codes.github.io/materia">0.0.6 (latest stable)</a></dd>
         
       </dl>
     </div>

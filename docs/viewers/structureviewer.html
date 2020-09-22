@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Structure Viewer &mdash; materia 0.0.5 documentation</title>
+  <title>Structure Viewer &mdash; materia 0.0.6 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.0.5
+                0.0.6
               </div>
             
           
@@ -300,24 +300,39 @@ you can also use this method to only update a subset of the options.</p>
 <li><p><strong>options.layout.viewRotation.align.rotations</strong> (<em>Array.&lt;Array.&lt;number&gt;&gt;</em>) – Optional rotations that are applied after the alignment has been done (see options.layout.viewRotation.align). The rotations are given as a list of 4-element arrays containing the rotations axis and rotation angle in degrees. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with respect to the x-coordinate. If multiple rotations are specified, they will be applied in the given order. Notice that these rotations are applied with respect to a global coordinate system, not the coordinate system of the structure. In this global coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away from the screen.</p></li>
 <li><p><strong>options.latticeConstants.enabled</strong> (<em>boolean</em>) – Show lattice parameters</p></li>
 <li><p><strong>options.latticeConstants.font</strong> (<em>string</em>) – Font size for lattice constants. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
-<li><p><strong>options.latticeConstants.a.color</strong> (<em>string</em>) – Color applied to the lattice constant of the first lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.a.font</strong> (<em>string</em>) – Font family applied to the lattice constant of the first lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.a.size</strong> (<em>number</em>) – Font size applied to the lattice constant of the first lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.b.color</strong> (<em>string</em>) – Color applied to the lattice constant of the second lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.b.font</strong> (<em>string</em>) – Font family applied to the lattice constant of the second lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.b.size</strong> (<em>number</em>) – Font size applied to the lattice constant of the second lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.c.color</strong> (<em>string</em>) – Color applied to the lattice constant of the second lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.c.font</strong> (<em>string</em>) – Font family applied to the lattice constant of the third lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.c.size</strong> (<em>number</em>) – Font size applied to the lattice constant of the third lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.alpha.color</strong> (<em>string</em>) – Color applied to the angle between the second and third lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.alpha.font</strong> (<em>string</em>) – Font family applied to the angle between the second and third lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.alpha.size</strong> (<em>number</em>) – Font size applied to the lattice constant of the third lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.beta.color</strong> (<em>string</em>) – Color applied to the angle between the first and third lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.beta.font</strong> (<em>string</em>) – Font family applied to the angle between the first and third lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.beta.size</strong> (<em>number</em>) – Font size applied to the angle between the first and third lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.gamma.color</strong> (<em>string</em>) – Color applied to the angle between the first and second lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.gamma.font</strong> (<em>string</em>) – Font family applied to the angle between the first and second lattice vector.</p></li>
-<li><p><strong>options.latticeConstants.gamma.size</strong> (<em>number</em>) – Font size applied to the angle between the first and second lattice vector.</p></li>
+<li><p><strong>options.latticeConstants.color</strong> (<em>string</em>) – Font color for lattice constants. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
+<li><p><strong>options.latticeConstants.stroke.color</strong> (<em>string</em>) – Font stroke color for lattice constants. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
+<li><p><strong>options.latticeConstants.stroke.width</strong> (<em>string</em>) – Font stroke width for lattice constants. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
+<li><p><strong>options.latticeConstants.a.color</strong> (<em>string</em>) – Font color</p></li>
+<li><p><strong>options.latticeConstants.a.font</strong> (<em>string</em>) – Font family</p></li>
+<li><p><strong>options.latticeConstants.a.size</strong> (<em>number</em>) – Font size</p></li>
+<li><p><strong>options.latticeConstants.a.stroke.width</strong> (<em>number</em>) – Font stroke width</p></li>
+<li><p><strong>options.latticeConstants.a.stroke.color</strong> (<em>string</em>) – Font stroke color</p></li>
+<li><p><strong>options.latticeConstants.b.color</strong> (<em>string</em>) – Font color</p></li>
+<li><p><strong>options.latticeConstants.b.font</strong> (<em>string</em>) – Font family</p></li>
+<li><p><strong>options.latticeConstants.b.size</strong> (<em>number</em>) – Font size</p></li>
+<li><p><strong>options.latticeConstants.b.stroke.width</strong> (<em>number</em>) – Font stroke width</p></li>
+<li><p><strong>options.latticeConstants.b.stroke.color</strong> (<em>string</em>) – Font stroke color</p></li>
+<li><p><strong>options.latticeConstants.c.color</strong> (<em>string</em>) – Font color</p></li>
+<li><p><strong>options.latticeConstants.c.font</strong> (<em>string</em>) – Font family</p></li>
+<li><p><strong>options.latticeConstants.c.size</strong> (<em>number</em>) – Font size</p></li>
+<li><p><strong>options.latticeConstants.c.stroke.width</strong> (<em>number</em>) – Font stroke width</p></li>
+<li><p><strong>options.latticeConstants.c.stroke.color</strong> (<em>string</em>) – Font stroke color</p></li>
+<li><p><strong>options.latticeConstants.alpha.color</strong> (<em>string</em>) – Font color</p></li>
+<li><p><strong>options.latticeConstants.alpha.font</strong> (<em>string</em>) – Font family</p></li>
+<li><p><strong>options.latticeConstants.alpha.size</strong> (<em>number</em>) – Font size</p></li>
+<li><p><strong>options.latticeConstants.alpha.stroke.width</strong> (<em>number</em>) – Font stroke width</p></li>
+<li><p><strong>options.latticeConstants.alpha.stroke.color</strong> (<em>string</em>) – Font stroke color</p></li>
+<li><p><strong>options.latticeConstants.beta.color</strong> (<em>string</em>) – Font color</p></li>
+<li><p><strong>options.latticeConstants.beta.font</strong> (<em>string</em>) – Font family</p></li>
+<li><p><strong>options.latticeConstants.beta.size</strong> (<em>number</em>) – Font size</p></li>
+<li><p><strong>options.latticeConstants.beta.stroke.width</strong> (<em>number</em>) – Font stroke width</p></li>
+<li><p><strong>options.latticeConstants.beta.stroke.color</strong> (<em>string</em>) – Font stroke color</p></li>
+<li><p><strong>options.latticeConstants.gamma.color</strong> (<em>string</em>) – Font color</p></li>
+<li><p><strong>options.latticeConstants.gamma.font</strong> (<em>string</em>) – Font family</p></li>
+<li><p><strong>options.latticeConstants.gamma.size</strong> (<em>number</em>) – Font size</p></li>
+<li><p><strong>options.latticeConstants.gamma.stroke.width</strong> (<em>number</em>) – Font stroke width</p></li>
+<li><p><strong>options.latticeConstants.gamma.stroke.color</strong> (<em>string</em>) – Font stroke color</p></li>
 <li><p><strong>options.outline.enabled</strong> (<em>boolean</em>) – Used to enable or disable a fixed color outline around atoms and bonds. Notice that enabling the outline incurs a performance penalty.</p></li>
 <li><p><strong>options.outline.color</strong> (<em>string</em>) – Outline color.</p></li>
 <li><p><strong>options.outline.size</strong> (<em>number</em>) – Outline size.</p></li>
@@ -397,14 +412,14 @@ you can also use this method to only update a subset of the options.</p>
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Versions</span>
-      v: 0.0.5
+      v: 0.0.6
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
       <dl>
         <dt>Versions</dt>
         
-          <dd><a href="https://lauri-codes.github.io/materia">0.0.5 (latest stable)</a></dd>
+          <dd><a href="https://lauri-codes.github.io/materia">0.0.6 (latest stable)</a></dd>
         
       </dl>
     </div>

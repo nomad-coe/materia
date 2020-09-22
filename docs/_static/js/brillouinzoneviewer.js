@@ -8,7 +8,7 @@ let options = {
       enablePan: false
   },
   view: {
-    fitMargin: 0.02,
+    fitMargin: 0.025,
   },
   layout: {
     viewRotation: {
