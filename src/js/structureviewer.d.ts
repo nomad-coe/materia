@@ -25,6 +25,8 @@ export declare class StructureViewer extends Viewer {
     settings: Object;
     settingsHandler: any;
     updateBonds: boolean;
+    boundaryPoints: THREE.Points;
+    maxRadii: number;
     atomicRadii: Array<number>;
     elementColors: Array<string>;
     lights: Array<any>;
@@ -257,7 +259,7 @@ export declare class StructureViewer extends Viewer {
      */
     setPositions(positions: number[][], fractional?: boolean, render?: boolean): void;
     /**
-     * Set the position for atoms in the currently loaded structure.
+     * Gets the positions for atoms in the currently loaded structure.
      */
     getPositions(fractional?: boolean): any[];
     toCartesian(position: THREE.Vector3): THREE.Vector3;
@@ -287,8 +289,7 @@ export declare class StructureViewer extends Viewer {
      * @param vectors - The positions from which to create vectors.
      */
     createBasisVectors(basis: number[][]): any;
-    createVisualizationBoundaryPositions(positions: any, atomicNumbers: any): void;
-    createVisualizationBoundaryCell(origin: any, basis: any): void;
+    getCornerPoints(): (number | any[])[];
     /**
      * Create the conventional cell
      *

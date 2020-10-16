@@ -26,6 +26,8 @@ export class StructureViewer extends Viewer {
     settings:Object;
     settingsHandler:any
     updateBonds:boolean = false;
+    boundaryPoints: THREE.Points;
+    maxRadii: number;
     atomicRadii:Array<number> = [];       // Contains the atomic radii
     elementColors:Array<string> = [];     // Contains the element colors
 
@@ -513,9 +515,10 @@ export class StructureViewer extends Viewer {
         }
 
         // Determine the atomicNumbers if not given
-        let atomicNumbers = typeof species[0] === "number" ? species : species.map(symb => {
+        const atomicNumbers = typeof species[0] === "number" ? species : species.map(symb => {
             return this.elementNumbers[symb];
         });
+        this.maxRadii = Math.max(...atomicNumbers.map(Z => this.atomicRadii[Z]))
 
         // If bonds are not explicitly stated, determine them automatically.
         if (!bonds) {
@@ -621,7 +624,7 @@ export class StructureViewer extends Viewer {
         // Determine the corner points that are used to properly fit the
         // structure into the viewer. The fit takes also into account the
         // periodic duplicates and atoms created at the boundary.
-        this.createVisualizationBoundaryPositions(atomPos, atomicNumbers);
+        //this.createVisualizationBoundaryPositions(atomPos, atomicNumbers);
 
         // Create bonds
         this.createBonds(bonds);
@@ -661,8 +664,8 @@ export class StructureViewer extends Viewer {
         if (this.options.view.autoFit) {
             this.fitToCanvas();
         }
-        this.toggleShadows(this.options.renderer.shadows.enabled);
 
+        this.toggleShadows(this.options.renderer.shadows.enabled);
         this.render();
         return true;
     }
@@ -736,7 +739,7 @@ export class StructureViewer extends Viewer {
     }
 
     /**
-     * Set the position for atoms in the currently loaded structure.
+     * Gets the positions for atoms in the currently loaded structure.
      */
     getPositions(fractional=false) {
         let positions = [];
@@ -1106,76 +1109,21 @@ export class StructureViewer extends Viewer {
         this.Bi = new THREE.Matrix3().getInverse(B);
     }
 
-    createVisualizationBoundaryPositions(positions, atomicNumbers) {
-        // Determine the maximum and minimum values in all cartesian components
-        let maxX = -Infinity;
-        let maxY = -Infinity;
-        let maxZ = -Infinity;
-        let minX = Infinity;
-        let minY = Infinity;
-        let minZ = Infinity;
-        let maxRadii = 0;
-        for (let len=positions.length, i=0; i<len; ++i) {
-            let iPos = positions[i];
-            let iX = iPos.x;
-            if (iX > maxX) {
-                maxX = iX;
-            }
-            if (iX < minX) {
-                minX = iX;
-            }
-            let iY = iPos.y;
-            if (iY > maxY) {
-                maxY = iY;
-            }
-            if (iY < minY) {
-                minY = iY;
-            }
-            let iZ = iPos.z;
-            if (iZ > maxZ) {
-                maxZ = iZ;
-            }
-            if (iZ < minZ) {
-                minZ = iZ;
-            }
-
-            // Determine maximum radius that will be added to the visualization boundaries
-            let iRadius = this.atomicRadii[atomicNumbers[i]];
-            if (iRadius > maxRadii) {
-                maxRadii = iRadius;
-            }
+    getCornerPoints() {
+        this.root.updateMatrixWorld()
+        this.sceneStructure.updateMatrixWorld()
+        this.atoms.updateMatrixWorld()
+        const worldPos = [];
+        const atoms = this.atoms.children
+        const nAtoms = atoms.length
+        for (let i=0; i < nAtoms; ++i) {
+            const atom = atoms[i];
+            atom.updateMatrixWorld()
+            const wPos = new THREE.Vector3();
+            atom.getWorldPosition(wPos)
+            worldPos.push(wPos)
         }
-
-        // Add max atomic radii to boundaries
-
-        // Push the corners of the cuboid as cornerpoints
-        let origin = new THREE.Vector3(minX-maxRadii, minY-maxRadii, minZ-maxRadii);
-        let basisX = new THREE.Vector3(maxX-minX+2*maxRadii, 0, 0);
-        let basisY = new THREE.Vector3(0, maxY-minY+2*maxRadii, 0);
-        let basisZ = new THREE.Vector3(0, 0, maxZ-minZ+2*maxRadii);
-        let basis = [basisX, basisY, basisZ];
-
-        // Get cuboid
-        let pointGeometry = this.createCornerPoints(origin, basis);
-        let points = new THREE.Points(pointGeometry);
-        points.visible = false;
-        this.cornerPoints = points;
-
-        // Must add the point to root because otherwise they will not be
-        // included in the transforms.
-        this.container.add(this.cornerPoints);
-    }
-
-    createVisualizationBoundaryCell(origin, basis) {
-        // Get cuboid
-        let pointGeometry = this.createCornerPoints(origin, basis);
-        let points = new THREE.Points(pointGeometry);
-        points.visible = false;
-        this.cornerPoints = points;
-
-        // Must add the point to root because otherwise they will not be
-        // included in the transforms.
-        this.container.add(this.cornerPoints);
+        return [worldPos, this.maxRadii]
     }
 
     /**

@@ -16,6 +16,7 @@ export class BrillouinZoneViewer extends Viewer {
     private basis:any;         // The reciprocal cell basis
     private labelPoints:any;   // Contains the labels of special k-points
     private basisVectors:THREE.Vector3[];
+    private bzVertices;
     private B:THREE.Matrix3;
 
     /*
@@ -97,7 +98,7 @@ export class BrillouinZoneViewer extends Viewer {
         this.rotateView(this.options?.layout?.viewRotation?.rotations);
 
         if (this.options.view.autoFit) {
-            this.fitToCanvas();
+            super.fitToCanvas();
         }
 
         this.render();
@@ -185,7 +186,7 @@ export class BrillouinZoneViewer extends Viewer {
                 enablePan: false
             },
             view: {
-                fitMargin: 0.025,
+                fitMargin: 0.075,
             },
             basis: {
                 offset: 0.02,
@@ -340,8 +341,8 @@ export class BrillouinZoneViewer extends Viewer {
                 for (const vertex of vertices) {
                     pointGeometry.vertices.push(vertex)
                 }
-                this.cornerPoints = new THREE.Points(pointGeometry)
-                this.cornerPoints.visible = false;
+                this.bzVertices = new THREE.Points(pointGeometry)
+                this.bzVertices.visible = false;
                 break
             }
         }
@@ -352,11 +353,11 @@ export class BrillouinZoneViewer extends Viewer {
         this.info = new THREE.Object3D();
         this.info.name = "info";
         this.sceneInfo.add(this.info);
-        this.info.add(this.cornerPoints)
+        //this.info.add(this.bzVertices)
 
         // A customised THREE.Geometry object that will create the face
         // geometry and information about the face edges
-        const bzGeometry = new ConvexGeometry(this.cornerPoints.geometry.vertices);
+        const bzGeometry = new ConvexGeometry(this.bzVertices.geometry.vertices);
 
         // Weird hack for achieving translucent surfaces. Setting
         // side=DoubleSide on a single mesh will not do.
@@ -543,6 +544,17 @@ export class BrillouinZoneViewer extends Viewer {
                 }
             }
         }
+    }
+
+    getCornerPoints() {
+        const worldPos = [];
+        const vertices = this.bzVertices.geometry.vertices
+        const nPos = vertices.length
+        for (let i=0; i < nPos; ++i) {
+            const pos = vertices[i].clone();
+            worldPos.push(this.bzVertices.localToWorld(pos))
+        }
+        return [worldPos, 0]
     }
 
     /**

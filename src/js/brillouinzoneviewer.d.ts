@@ -9,6 +9,7 @@ export declare class BrillouinZoneViewer extends Viewer {
     private basis;
     private labelPoints;
     private basisVectors;
+    private bzVertices;
     private B;
     setupScenes(): void;
     setupLights(): void;
@@ -101,6 +102,7 @@ export declare class BrillouinZoneViewer extends Viewer {
      */
     setOptions(options: any, render?: boolean, reload?: boolean): void;
     createBrillouinZone(basis: number[][], segments: number[][][], kpoints: [string, number[]][]): void;
+    getCornerPoints(): (number | any[])[];
     /**
      * @param rotations The rotations as a list. Each rotation should be an
      * array containing four numbers: [x, y, z, angle]. The rotations are

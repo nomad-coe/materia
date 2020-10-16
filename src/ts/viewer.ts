@@ -9,7 +9,6 @@ export abstract class Viewer {
     controls:any;                         // Controller object for handling mouse interaction with the system
     scene:any;                            // The default scene
     scenes:any[] = [];                    // A list of scenes that are rendered
-    cornerPoints:any;                     // A list of 3D positions that are used to fit the scene within the window.
     cameraWidth:number = 10.0;            // The default "width" of the camera
     rootElement:any;                      // A root html element that contains all visualization components
     options:any = {};                     // Options for the viewer. Can be e.g. used to control which settings are enabled
@@ -108,6 +107,12 @@ export abstract class Viewer {
      */
     abstract setupLights(): void;
 
+    /*
+     * Used to query the corner points for the current view. This set of points
+     * determines the visualization boundary.
+     */
+    abstract getCornerPoints();
+
 
     /*
      * Used to setup the scenes. This default implementation will create a
@@ -128,7 +133,6 @@ export abstract class Viewer {
         this.scenes = null;
         this.controls = null;
         this.camera = null;
-        this.cornerPoints = null;
     }
     /*
      * This function will clear everything inside the scenes. This should
@@ -343,20 +347,20 @@ export abstract class Viewer {
      * @param origin - The origin of the cuboid.
      * @param basis - The vectors that define the cuboid.
      */
-    createCornerPoints(origin, basis) {
+    createCornerPoints(origin: THREE.Vector3, basis: THREE.Vector3[]): THREE.Geometry {
 
-        var geometry = new THREE.Geometry();
+        const geometry = new THREE.Geometry();
         geometry.vertices.push(origin);
-        let opposite = origin.clone().add(basis[0]).add(basis[1]).add(basis[2]);
+        const opposite = origin.clone().add(basis[0]).add(basis[1]).add(basis[2]);
         geometry.vertices.push(opposite);
 
         for (let len=basis.length, i=0; i<len; ++i) {
             // Corners close to origin
-            let position1 = origin.clone().add(basis[i].clone());
+            const position1 = origin.clone().add(basis[i].clone());
             geometry.vertices.push(position1);
 
             // Corners close to opposite point of origin
-            let position2 = opposite.clone().sub(basis[i].clone());
+            const position2 = opposite.clone().sub(basis[i].clone());
             geometry.vertices.push(position2);
         }
         return geometry;
@@ -366,56 +370,46 @@ export abstract class Viewer {
      * This will automatically fit the structure to the given rendering area.
      * Will also leave a small margin.
      */
-    fitToCanvas() {
-        // If cornerpoints have not yet been defined, do nothing
-        if (this.cornerPoints === undefined) {
-            return
-        }
+    fitToCanvas(): void {
+        // First get the corner points. They will change upon rotation etc. so
+        // they have to be recalculated.
+        const [cornerPoints, vizMargin] = this.getCornerPoints();
 
         // Make sure that all transforms are updated
         this.scenes.forEach((scene) => scene.updateMatrixWorld());
 
         // Project all 8 corners of the normalized cell into screen space and
         // see how the system should be scaled to fit into screen
-        let canvas = this.rootElement;
-        let canvasWidth = canvas.clientWidth;
-        let canvasHeight = canvas.clientHeight;
-        let cornerPos = [];
-        //console.log(canvas.clientWidth)
-        //console.log(canvas.clientHeight)
+        const canvas = this.rootElement;
+        const canvasWidth = canvas.clientWidth;
+        const canvasHeight = canvas.clientHeight;
+        const cornerPos = [];
 
         // Figure out the center in order to add margins in right direction
-        let centerPos = new THREE.Vector3();
-        for (let len=this.cornerPoints.geometry.vertices.length, i=0; i<len; ++i) {
-            let screenPos = this.cornerPoints.geometry.vertices[i].clone();
-            this.cornerPoints.localToWorld(screenPos);
-            centerPos.add(screenPos);
+        const nPos = cornerPoints.length
+        const centerPos = new THREE.Vector3();
+        for (let len=nPos, i=0; i<len; ++i) {
+            centerPos.add(cornerPoints[i].clone());
         }
+        centerPos.divideScalar(nPos)
 
-        for (let len=this.cornerPoints.geometry.vertices.length, i=0; i<len; ++i) {
-            let screenPos = this.cornerPoints.geometry.vertices[i].clone();
-            //console.log(screenPos)
-            this.cornerPoints.localToWorld(screenPos);
+        for (let i=0; i < nPos; ++i) {
+            const screenPos = cornerPoints[i].clone();
 
             // Default the zoom to 1 for the projection
-            let oldZoom = this.camera.zoom;
             this.camera.zoom = this.options.controls.zoomLevel;
             this.camera.updateProjectionMatrix();
 
             // Figure out the direction from center
-            let diff = centerPos.sub(screenPos);
+            const diff = centerPos.sub(screenPos);
             diff.project( this.camera );
-            let right = diff.x < 0 ? true : false;
-            let up = diff.y < 0 ? true : false;
-
-            // Map to corner coordinates to
-            screenPos.project( this.camera );
-            //console.log(screenPos)
+            const right = diff.x < 0 ? true : false;
+            const up = diff.y < 0 ? true : false;
 
             // Add a margin
-            let margin = this.options.view.fitMargin;
-            let cameraUp = new THREE.Vector3( 0, margin, 0 );
-            let cameraRight = new THREE.Vector3( margin, 0, 0 );
+            const margin = this.options.view.fitMargin + vizMargin;
+            const cameraUp = new THREE.Vector3( 0, margin, 0 );
+            const cameraRight = new THREE.Vector3( margin, 0, 0 );
             cameraUp.applyQuaternion( this.camera.quaternion );
             cameraRight.applyQuaternion( this.camera.quaternion );
 
@@ -429,6 +423,9 @@ export abstract class Viewer {
             } else {
                 screenPos.sub(cameraRight);
             }
+
+            // Map to corner coordinates to screen space
+            screenPos.project( this.camera );
 
             // Map to 2D screen space
             screenPos.x = Math.round( (   screenPos.x + 1 ) * canvasWidth  / 2 );
@@ -444,9 +441,9 @@ export abstract class Viewer {
         let minY = cornerPos[0].y;
         let maxY = cornerPos[0].y;
         for (let len=cornerPos.length, i=0; i<len; ++i) {
-            let pos = cornerPos[i];
-            let x =  pos.x;
-            let y =  pos.y;
+            const pos = cornerPos[i];
+            const x =  pos.x;
+            const y =  pos.y;
             if (x > maxX) {
                 maxX = x;
             } else if (x < minX) {
@@ -462,13 +459,13 @@ export abstract class Viewer {
         // Determine new zoom that will ensure that all cornerpositions are
         // visible on screen, assuming that the zoom center is set to view
         // center.
-        let centerX = (canvasWidth/2)
-        let centerY = (canvasHeight/2)
-        let zoomRight = centerX/Math.abs(maxX-centerX)
-        let zoomLeft = centerX/Math.abs(minX-centerX)
-        let zoomUp = centerY/Math.abs(minY-centerY)
-        let zoomDown = centerY/Math.abs(maxY-centerY)
-        let newZoom = Math.min(zoomRight, zoomLeft, zoomUp, zoomDown)
+        const centerX = (canvasWidth/2)
+        const centerY = (canvasHeight/2)
+        const zoomRight = centerX/Math.abs(maxX-centerX)
+        const zoomLeft = centerX/Math.abs(minX-centerX)
+        const zoomUp = centerY/Math.abs(minY-centerY)
+        const zoomDown = centerY/Math.abs(maxY-centerY)
+        const newZoom = Math.min(zoomRight, zoomLeft, zoomUp, zoomDown)
         this.camera.zoom = newZoom
         this.camera.updateProjectionMatrix();
     }

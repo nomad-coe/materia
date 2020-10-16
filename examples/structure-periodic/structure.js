@@ -4,12 +4,12 @@ let targetElem = document.getElementById("visualizationCanvas");
 // Viewer options
 let options = {
   view: {
-    fitMargin: 0.1,
+    fitMargin: 0.5,
   },
   layout: {
     periodicity: "none",
     translation: [0, 0, 0],
-    viewCenter: "COC",
+    viewCenter: "COP",
     viewRotation: {
       align: {
           top: "c",
@@ -104,9 +104,9 @@ let positions = [
 var bulk = {
     "species": [11, 17, 11, 17, 11, 17, 11, 17],
     "cell": [
-        [5.6402, 5.6402, 0.0],
-        [0.0, 5.6402, 5.6402],
-        [5.6402, 0.0, 5.6402]
+        [8, 0, 0.0],
+        [0.0, 8, 0],
+        [0, 0.0, 8]
     ],
     "positions": positions,
     "fractional": true,

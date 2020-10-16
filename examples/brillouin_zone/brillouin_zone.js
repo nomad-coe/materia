@@ -4,7 +4,7 @@ let canvas = document.getElementById("visualizationCanvas");
 // Viewer options
 let options = {
   view: {
-    fitMargin: 0.025,
+    fitMargin: 0.075,
   },
   layout: {
     viewRotation: {

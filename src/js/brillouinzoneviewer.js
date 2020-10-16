@@ -78,7 +78,7 @@ export class BrillouinZoneViewer extends Viewer {
         }
         this.rotateView((_l = (_k = (_j = this.options) === null || _j === void 0 ? void 0 : _j.layout) === null || _k === void 0 ? void 0 : _k.viewRotation) === null || _l === void 0 ? void 0 : _l.rotations);
         if (this.options.view.autoFit) {
-            this.fitToCanvas();
+            super.fitToCanvas();
         }
         this.render();
         return true;
@@ -165,7 +165,7 @@ export class BrillouinZoneViewer extends Viewer {
                 enablePan: false
             },
             view: {
-                fitMargin: 0.025,
+                fitMargin: 0.075,
             },
             basis: {
                 offset: 0.02,
@@ -306,8 +306,8 @@ export class BrillouinZoneViewer extends Viewer {
                 for (const vertex of vertices) {
                     pointGeometry.vertices.push(vertex);
                 }
-                this.cornerPoints = new THREE.Points(pointGeometry);
-                this.cornerPoints.visible = false;
+                this.bzVertices = new THREE.Points(pointGeometry);
+                this.bzVertices.visible = false;
                 break;
             }
         }
@@ -317,10 +317,10 @@ export class BrillouinZoneViewer extends Viewer {
         this.info = new THREE.Object3D();
         this.info.name = "info";
         this.sceneInfo.add(this.info);
-        this.info.add(this.cornerPoints);
+        //this.info.add(this.bzVertices)
         // A customised THREE.Geometry object that will create the face
         // geometry and information about the face edges
-        const bzGeometry = new ConvexGeometry(this.cornerPoints.geometry.vertices);
+        const bzGeometry = new ConvexGeometry(this.bzVertices.geometry.vertices);
         // Weird hack for achieving translucent surfaces. Setting
         // side=DoubleSide on a single mesh will not do.
         const group = new THREE.Group();
@@ -473,6 +473,16 @@ export class BrillouinZoneViewer extends Viewer {
                 }
             }
         }
+    }
+    getCornerPoints() {
+        const worldPos = [];
+        const vertices = this.bzVertices.geometry.vertices;
+        const nPos = vertices.length;
+        for (let i = 0; i < nPos; ++i) {
+            const pos = vertices[i].clone();
+            worldPos.push(this.bzVertices.localToWorld(pos));
+        }
+        return [worldPos, 0];
     }
     /**
      * @param rotations The rotations as a list. Each rotation should be an

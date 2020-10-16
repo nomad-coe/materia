@@ -9,7 +9,6 @@ export declare abstract class Viewer {
     controls: any;
     scene: any;
     scenes: any[];
-    cornerPoints: any;
     cameraWidth: number;
     rootElement: any;
     options: any;
@@ -31,6 +30,7 @@ export declare abstract class Viewer {
      */
     setup(): void;
     abstract setupLights(): void;
+    abstract getCornerPoints(): any;
     setupScenes(): void;
     clear(): void;
     clearScenes(): void;
@@ -83,7 +83,7 @@ export declare abstract class Viewer {
      * @param origin - The origin of the cuboid.
      * @param basis - The vectors that define the cuboid.
      */
-    createCornerPoints(origin: any, basis: any): THREE.Geometry;
+    createCornerPoints(origin: THREE.Vector3, basis: THREE.Vector3[]): THREE.Geometry;
     /**
      * This will automatically fit the structure to the given rendering area.
      * Will also leave a small margin.
