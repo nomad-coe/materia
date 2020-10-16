@@ -29,6 +29,9 @@ The full source code with examples and regression tests can be explored at `gith
 
 Changelog
 =========
+ - 0.0.7:
+    - Fixed issue with automatic fitting to canvas.
+
  - 0.0.6:
     - Added BrillouinZoneViewer.
     - Added Toon material for StructureViewer.

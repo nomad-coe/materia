@@ -21,7 +21,7 @@ let options = {
   view: {
     autoFit: false,
     autoResize: false,
-    fitMargin: 0.1
+    fitMargin: 0.7
   },
   controls: {
     enableZoom: false,
