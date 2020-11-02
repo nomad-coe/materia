@@ -7,9 +7,9 @@ let options = {
     fitMargin: 0.5,
   },
   layout: {
-    periodicity: "none",
+    periodicity: "boundary",
     translation: [0, 0, 0],
-    viewCenter: "COP",
+    viewCenter: "COC",
     viewRotation: {
       align: {
           top: "c",
@@ -30,7 +30,7 @@ let options = {
     enabled: true,
   },
   latticeConstants: {
-    enabled: true,
+    enabled: false,
     font: "Arial",
     size: 0.8,
     a: {
@@ -55,12 +55,12 @@ let options = {
   bonds: {
     enabled: true,
     material: {
-        //phong: {
-          //shininess: 30,
-        //}
-        toon: {
-          tones: 3
+        phong: {
+          shininess: 30,
         }
+        //toon: {
+          //tones: 3
+        //}
     },
     radius: 0.08,
     threshold: 1.5,
@@ -68,12 +68,12 @@ let options = {
   },
   atoms: {
     material: {
-        //phong: {
-          //shininess: 30,
-        //}
-        toon: {
-          tones: 3
+        phong: {
+          shininess: 30,
         }
+        //toon: {
+          //tones: 3
+        //}
     },
     colors: "Jmol",
     radii: "covalent",
@@ -113,66 +113,4 @@ var bulk = {
     "pbc": [true, true, true],
 };
 
-let system = {
-  "positions": [
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      1.232799,
-      -0.711757,
-      0
-    ]
-  ],
-  "species": [
-    6,
-    6
-  ],
-  "pbc": [
-    true,
-    true,
-    true
-  ],
-  "cell": [
-    [
-      1.232799,
-      -2.135271,
-      0
-    ],
-    [
-      1.232799,
-      2.135271,
-      0
-    ],
-    [
-      0,
-      0,
-      20
-    ]
-  ],
-}
-
 viewer.load(bulk);
-
-/* setInterval(() => {
-  positions[0][0] += 0.01
-  viewer.setPositions(positions, fractional=true)
-}, 100) */
-
-// Load finite molecule with cartesian positions and cell
-//var molecule = {
-    //"atomicNumbers": [8, 1],
-    //"cell": [
-        //[1, 0.0, 0.0],
-        //[0.0, 1, 0.0],
-        //[0.0, 0.0, 1]
-    //],
-    //"positions": [
-        //[0.0, 0.5, 0.0],
-        //[0.0, 1.5, 0.0],
-    //],
-    //"pbc": [false, false, false]
-//};
-//viewer.load(molecule);
