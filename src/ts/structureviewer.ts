@@ -6,36 +6,33 @@ import * as THREE from "three"
  */
 export class StructureViewer extends Viewer {
     structure:Object;                     // The visualized structure
+    atomPos:any[];                        // Contains the positions of the visualized atoms
+    atomNumbers:any[];                    // Contains the atomic numbers of the visualized atoms
+    B:THREE.Matrix3;
+    Bi:THREE.Matrix3;
+    basisVectors:THREE.Vector3[];
+    updateBonds:boolean = false;
+    maxRadii: number;
+    atomicRadii:Array<number> = [];       // Contains the atomic radii
+    elementColors:Array<string> = [];     // Contains the element colors
+
     root:THREE.Object3D;                  // three.js root object in the scene
     atoms:THREE.Object3D;                 // three.js object for storing the atoms
     convCell:THREE.Object3D;              // three.js object for storing the cell
     primCell:THREE.Object3D;              // three.js object for storing the primitive cell
     bonds:THREE.Object3D;                 // Contains the atomic bonds
-    atomPos:any[];                        // Contains the positions of the visualized atoms
-    atomNumbers:any[];                    // Contains the atomic numbers of the visualized atoms
     latticeConstants:any;                 // Contains visuals for lattice parameters
     container:any;                        // Contains visuals
     infoContainer:any;                    // Contains visuals
-    B:THREE.Matrix3;
-    Bi:THREE.Matrix3;
-    basisVectors:THREE.Vector3[];
-    primitiveVectors:any[];               // List of basis vectors for the primitive cell
     elements:Object;                      // Contains information about the elements included in the structure
     sceneStructure:any;
     sceneInfo:any;
-    settings:Object;
-    settingsHandler:any
-    updateBonds:boolean = false;
-    boundaryPoints: THREE.Points;
-    maxRadii: number;
-    atomicRadii:Array<number> = [];       // Contains the atomic radii
-    elementColors:Array<string> = [];     // Contains the element colors
 
     lights:Array<any> = [];               // Contains the lights in the scene
     bondFills:Array<any> = [];            // Contains the bulk of the bonds
     atomFills:Array<any> = [];            // Contains the bulk of the atoms
     atomOutlines:Array<any> = [];         // Contains the outlines of the atoms
-    angleArcs:any;
+    angleArcs:any;                        // Contains the arcs for the lattice angles
     axisLabels:Array<any> = [];           // List of all labels in the view.
 
     /*
@@ -447,6 +444,28 @@ export class StructureViewer extends Viewer {
         this.render();
     }
 
+    /*
+     * Clears current data and visualization.
+     */
+    clear(): void {
+        super.clear();
+        this.structure = undefined;
+        this.atoms = undefined;
+        this.convCell = undefined;
+        this.primCell = undefined;
+        this.bonds = undefined;
+        this.atomPos = undefined;
+        this.atomNumbers = undefined;
+        this.latticeConstants = undefined;
+        this.B = undefined;
+        this.Bi = undefined;
+        this.basisVectors = undefined;
+        this.elements = undefined;
+        this.maxRadii = undefined;
+        this.atomicRadii = undefined;
+        this.elementColors = undefined;
+    }
+
     /**
      * Visualizes the given atomic structure.
      *
@@ -470,12 +489,12 @@ export class StructureViewer extends Viewer {
      *   options.bonds.enabled.
      */
     load(structure): boolean {
-        // Deep copy the structure for reloading
-        this.structure = structure;
-
         // Clear all the old data
         this.clear();
         this.setup();
+
+        // Save the structure for reloading
+        this.structure = structure;
 
         // Reconstruct the visualization
         this.setupScenes();
@@ -1091,7 +1110,10 @@ export class StructureViewer extends Viewer {
      */
     createBasisVectors(basis:number[][]) {
         if (basis === undefined) {
-            return undefined;
+            this.basisVectors = undefined;
+            this.B = undefined;
+            this.Bi = undefined;
+            return;
         }
 
         // Create basis transformation matrices

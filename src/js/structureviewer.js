@@ -685,6 +685,27 @@ export class StructureViewer extends Viewer {
         this.render();
         this.render();
     }
+    /*
+     * Clears current data and visualization.
+     */
+    clear() {
+        super.clear();
+        this.structure = undefined;
+        this.atoms = undefined;
+        this.convCell = undefined;
+        this.primCell = undefined;
+        this.bonds = undefined;
+        this.atomPos = undefined;
+        this.atomNumbers = undefined;
+        this.latticeConstants = undefined;
+        this.B = undefined;
+        this.Bi = undefined;
+        this.basisVectors = undefined;
+        this.elements = undefined;
+        this.maxRadii = undefined;
+        this.atomicRadii = undefined;
+        this.elementColors = undefined;
+    }
     /**
      * Visualizes the given atomic structure.
      *
@@ -709,11 +730,11 @@ export class StructureViewer extends Viewer {
      */
     load(structure) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
-        // Deep copy the structure for reloading
-        this.structure = structure;
         // Clear all the old data
         this.clear();
         this.setup();
+        // Save the structure for reloading
+        this.structure = structure;
         // Reconstruct the visualization
         this.setupScenes();
         this.setupLights();
@@ -1255,7 +1276,10 @@ export class StructureViewer extends Viewer {
      */
     createBasisVectors(basis) {
         if (basis === undefined) {
-            return undefined;
+            this.basisVectors = undefined;
+            this.B = undefined;
+            this.Bi = undefined;
+            return;
         }
         // Create basis transformation matrices
         let a = new THREE.Vector3().fromArray(basis[0]);

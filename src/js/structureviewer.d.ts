@@ -5,30 +5,26 @@ import * as THREE from "three";
  */
 export declare class StructureViewer extends Viewer {
     structure: Object;
+    atomPos: any[];
+    atomNumbers: any[];
+    B: THREE.Matrix3;
+    Bi: THREE.Matrix3;
+    basisVectors: THREE.Vector3[];
+    updateBonds: boolean;
+    maxRadii: number;
+    atomicRadii: Array<number>;
+    elementColors: Array<string>;
     root: THREE.Object3D;
     atoms: THREE.Object3D;
     convCell: THREE.Object3D;
     primCell: THREE.Object3D;
     bonds: THREE.Object3D;
-    atomPos: any[];
-    atomNumbers: any[];
     latticeConstants: any;
     container: any;
     infoContainer: any;
-    B: THREE.Matrix3;
-    Bi: THREE.Matrix3;
-    basisVectors: THREE.Vector3[];
-    primitiveVectors: any[];
     elements: Object;
     sceneStructure: any;
     sceneInfo: any;
-    settings: Object;
-    settingsHandler: any;
-    updateBonds: boolean;
-    boundaryPoints: THREE.Points;
-    maxRadii: number;
-    atomicRadii: Array<number>;
-    elementColors: Array<string>;
     lights: Array<any>;
     bondFills: Array<any>;
     atomFills: Array<any>;
@@ -216,6 +212,7 @@ export declare class StructureViewer extends Viewer {
      * Hides or shows the shadows.
      */
     toggleShadows(value: boolean): void;
+    clear(): void;
     /**
      * Visualizes the given atomic structure.
      *
@@ -288,7 +285,7 @@ export declare class StructureViewer extends Viewer {
      *
      * @param vectors - The positions from which to create vectors.
      */
-    createBasisVectors(basis: number[][]): any;
+    createBasisVectors(basis: number[][]): void;
     getCornerPoints(): (number | any[])[];
     /**
      * Create the conventional cell
