@@ -29,6 +29,10 @@ The full source code with examples and regression tests can be explored at `gith
 
 Changelog
 =========
+ - 0.0.10:
+    - Fixed issue in the detection of the visualization boundary for the
+      BrillouinZoneViewer.
+
  - 0.0.7:
     - Fixed issue with automatic fitting to canvas.
 
