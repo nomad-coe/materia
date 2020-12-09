@@ -111,6 +111,6 @@ export declare class BrillouinZoneViewer extends Viewer {
      * applied in the given order.
      */
     rotateView(rotations: number[], render?: boolean): void;
-    alignView(up: string, front: string, render?: boolean): void;
+    alignView(alignments: string[][], render?: boolean): void;
     createCircle(position: THREE.Vector3, diameter: number, color: string): THREE.Object3D;
 }

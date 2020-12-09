@@ -729,7 +729,7 @@ export class StructureViewer extends Viewer {
      *   options.bonds.enabled.
      */
     load(structure) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        var _a, _b, _c, _d, _e, _f;
         // Clear all the old data
         this.clear();
         this.setup();
@@ -901,9 +901,9 @@ export class StructureViewer extends Viewer {
         this.setZoom(this.options.controls.zoomLevel);
         // Set view alignment and rotation
         if (this.B !== undefined) {
-            this.alignView((_d = (_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.layout) === null || _b === void 0 ? void 0 : _b.viewRotation) === null || _c === void 0 ? void 0 : _c.align) === null || _d === void 0 ? void 0 : _d.top, (_h = (_g = (_f = (_e = this.options) === null || _e === void 0 ? void 0 : _e.layout) === null || _f === void 0 ? void 0 : _f.viewRotation) === null || _g === void 0 ? void 0 : _g.align) === null || _h === void 0 ? void 0 : _h.right);
+            this.alignView((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.layout) === null || _b === void 0 ? void 0 : _b.viewRotation) === null || _c === void 0 ? void 0 : _c.alignments);
         }
-        this.rotateView((_l = (_k = (_j = this.options) === null || _j === void 0 ? void 0 : _j.layout) === null || _k === void 0 ? void 0 : _k.viewRotation) === null || _l === void 0 ? void 0 : _l.rotations);
+        this.rotateView((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.viewRotation) === null || _f === void 0 ? void 0 : _f.rotations);
         if (this.options.view.autoFit) {
             this.fitToCanvas();
         }
@@ -1452,73 +1452,20 @@ export class StructureViewer extends Viewer {
             this.render();
         }
     }
-    alignView(top, right, render = true) {
-        if (top === undefined) {
-            return;
-        }
-        // Determine the top direction
-        let topVector;
-        if (top === "c") {
-            topVector = this.basisVectors[2];
-        }
-        else if (top === "-c") {
-            topVector = this.basisVectors[2].negate();
-        }
-        else if (top === "b") {
-            topVector = this.basisVectors[1];
-        }
-        else if (top === "-b") {
-            topVector = this.basisVectors[1].negate();
-        }
-        else if (top === "a") {
-            topVector = this.basisVectors[0];
-        }
-        else if (top === "-a") {
-            topVector = this.basisVectors[0].negate();
-        }
-        // Determine the right direction
-        let rightVector;
-        if (right === "c") {
-            rightVector = this.basisVectors[2];
-        }
-        else if (right === "-c") {
-            rightVector = this.basisVectors[2].negate();
-        }
-        else if (right === "b") {
-            rightVector = this.basisVectors[1];
-        }
-        else if (right === "-b") {
-            rightVector = this.basisVectors[1].negate();
-        }
-        else if (right === "a") {
-            rightVector = this.basisVectors[0];
-        }
-        else if (right === "-a") {
-            rightVector = this.basisVectors[0].negate();
-        }
-        // Rotate so that the top vector points to top
-        this.root.updateMatrixWorld(); // The positions are not otherwise updated properly
-        const finalCAxis = new THREE.Vector3(0, 1, 0);
-        const cQuaternion = new THREE.Quaternion().setFromUnitVectors(topVector.clone().normalize(), finalCAxis);
-        this.root.quaternion.premultiply(cQuaternion);
-        this.sceneInfo.quaternion.premultiply(cQuaternion);
-        this.root.updateMatrixWorld();
-        this.sceneInfo.updateMatrixWorld();
-        // Rotate so that selected vector points to the right
-        if (right !== undefined) {
-            topVector = topVector.clone().applyQuaternion(cQuaternion);
-            rightVector = rightVector.clone().applyQuaternion(cQuaternion);
-            const currentAAxis = new THREE.Vector3().crossVectors(topVector, rightVector);
-            const finalAAxis = new THREE.Vector3(0, 0, -1);
-            const aQuaternion = new THREE.Quaternion().setFromUnitVectors(currentAAxis.clone().normalize(), finalAAxis);
-            this.root.quaternion.premultiply(aQuaternion);
-            this.sceneInfo.quaternion.premultiply(aQuaternion);
-            this.root.updateMatrixWorld();
-            this.sceneInfo.updateMatrixWorld();
-        }
-        if (render) {
-            this.render();
-        }
+    alignView(alignments, render = true) {
+        // Define available directions
+        const directions = {
+            "a": this.basisVectors[0].clone(),
+            "-a": this.basisVectors[0].clone().negate(),
+            "b": this.basisVectors[1].clone(),
+            "-b": this.basisVectors[1].clone().negate(),
+            "c": this.basisVectors[2].clone(),
+            "-c": this.basisVectors[2].clone().negate(),
+        };
+        // List the objects whose matrix needs to be updated
+        const objects = [this.root, this.sceneInfo];
+        // Rotate
+        super.alignView(alignments, directions, objects, render);
     }
     /**
      * Used to add periodic repetitions of atoms.

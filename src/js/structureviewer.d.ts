@@ -311,7 +311,7 @@ export declare class StructureViewer extends Viewer {
      * applied in the given order.
      */
     rotateView(rotations: number[], render?: boolean): void;
-    alignView(top: string, right: string, render?: boolean): void;
+    alignView(alignments: string[][], render?: boolean): void;
     /**
      * Used to add periodic repetitions of atoms.
      */

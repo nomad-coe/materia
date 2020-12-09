@@ -49,7 +49,7 @@ export class BrillouinZoneViewer extends Viewer {
      * lattice coordinates for specific k-points that should be shown.
      */
     load(data) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        var _a, _b, _c, _d, _e, _f;
         // Deep copy the structure for reloading
         this.data = data;
         // Clear all the old data
@@ -74,9 +74,9 @@ export class BrillouinZoneViewer extends Viewer {
         }
         // Set view alignment and rotation
         if (this.B !== undefined) {
-            this.alignView((_d = (_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.layout) === null || _b === void 0 ? void 0 : _b.viewRotation) === null || _c === void 0 ? void 0 : _c.align) === null || _d === void 0 ? void 0 : _d.up, (_h = (_g = (_f = (_e = this.options) === null || _e === void 0 ? void 0 : _e.layout) === null || _f === void 0 ? void 0 : _f.viewRotation) === null || _g === void 0 ? void 0 : _g.align) === null || _h === void 0 ? void 0 : _h.front);
+            this.alignView((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.layout) === null || _b === void 0 ? void 0 : _b.viewRotation) === null || _c === void 0 ? void 0 : _c.alignments);
         }
-        this.rotateView((_l = (_k = (_j = this.options) === null || _j === void 0 ? void 0 : _j.layout) === null || _k === void 0 ? void 0 : _k.viewRotation) === null || _l === void 0 ? void 0 : _l.rotations);
+        this.rotateView((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.viewRotation) === null || _f === void 0 ? void 0 : _f.rotations);
         if (this.options.view.autoFit) {
             super.fitToCanvas();
         }
@@ -514,70 +514,28 @@ export class BrillouinZoneViewer extends Viewer {
             this.render();
         }
     }
-    alignView(up, front, render = true) {
-        // Rotate the scene so that the segments are shown properly
-        let segmentVector = new THREE.Vector3();
+    alignView(alignments, render = true) {
+        // Determine segment direction
+        const segmentVector = new THREE.Vector3();
         const nPoints = this.labelPoints.children.length;
         for (let i = 0; i < nPoints; ++i) {
             const segmentPoint = this.labelPoints.children[i];
             segmentVector.add(segmentPoint.getWorldPosition(new THREE.Vector3()));
         }
-        const rotate = (direction, directionVector, upSet) => {
-            if (up !== undefined) {
-                // Determine the top direction
-                let finalVector;
-                switch (direction) {
-                    case "a":
-                        finalVector = this.basisVectors[0];
-                        break;
-                    case "-a":
-                        finalVector = this.basisVectors[0].negate();
-                        break;
-                    case "b":
-                        finalVector = this.basisVectors[1];
-                        break;
-                    case "-b":
-                        finalVector = this.basisVectors[1].negate();
-                        break;
-                    case "c":
-                        finalVector = this.basisVectors[2];
-                        break;
-                    case "-c":
-                        finalVector = this.basisVectors[2].negate();
-                        break;
-                    case "segments":
-                        finalVector = segmentVector;
-                        break;
-                }
-                if (upSet) {
-                    finalVector.y = 0;
-                }
-                // Rotate the scene according to the selected top direction
-                if (directionVector.length() > 1e-8) {
-                    const quaternion = new THREE.Quaternion().setFromUnitVectors(directionVector, finalVector.clone().normalize());
-                    quaternion.conjugate();
-                    segmentVector = segmentVector.clone().applyQuaternion(quaternion);
-                    this.basisVectors[0] = this.basisVectors[0].applyQuaternion(quaternion);
-                    this.basisVectors[1] = this.basisVectors[1].applyQuaternion(quaternion);
-                    this.basisVectors[2] = this.basisVectors[2].applyQuaternion(quaternion);
-                    this.info.applyQuaternion(quaternion);
-                    this.zone.applyQuaternion(quaternion);
-                    this.info.updateMatrixWorld(); // The positions are not otherwise updated properly
-                    this.zone.updateMatrixWorld();
-                }
-            }
+        // Define available directions
+        const directions = {
+            "a": this.basisVectors[0].clone(),
+            "-a": this.basisVectors[0].clone().negate(),
+            "b": this.basisVectors[1].clone(),
+            "-b": this.basisVectors[1].clone().negate(),
+            "c": this.basisVectors[2].clone(),
+            "-c": this.basisVectors[2].clone().negate(),
+            "segments": segmentVector,
         };
-        // The up direction is set first.
-        if (up !== undefined) {
-            rotate(up, new THREE.Vector3(0, 1, 0), false);
-        }
-        // The front direction is set aftwards without changing the top direction
-        if (front !== undefined) {
-            rotate(front, new THREE.Vector3(0, 0, 1), true);
-        }
-        if (render) {
-            this.render();
-        }
+        // List the objects whose matrix needs to be updated
+        const objects = [this.zone, this.info];
+        // Rotate
+        super.alignView(alignments, directions, objects, render);
     }
     createCircle(position, diameter, color) {
         // Configure canvas

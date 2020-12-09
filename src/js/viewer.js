@@ -559,4 +559,73 @@ export class Viewer {
         const result = copy ? a.clone() : a;
         return result.applyMatrix3(A).applyMatrix3(Bi);
     }
+    alignView(alignments, directions, objects, render = true) {
+        // Check alignment validity
+        if (alignments === undefined) {
+            return;
+        }
+        if (alignments.length > 2) {
+            throw "At most two alignments can be performed.";
+        }
+        const alignedDirections = [];
+        const rotate = (alignment) => {
+            const direction = alignment[0];
+            const target = alignment[1];
+            let targetVector;
+            switch (direction) {
+                case "up":
+                    targetVector = new THREE.Vector3(0, 1, 0);
+                    break;
+                case "down":
+                    targetVector = new THREE.Vector3(0, -1, 0);
+                    break;
+                case "right":
+                    targetVector = new THREE.Vector3(1, 0, 0);
+                    break;
+                case "left":
+                    targetVector = new THREE.Vector3(-1, 0, 0);
+                    break;
+                case "front":
+                    targetVector = new THREE.Vector3(0, 0, 1);
+                    break;
+                case "back":
+                    targetVector = new THREE.Vector3(0, 0, -1);
+                    break;
+            }
+            // Determine the top direction
+            const finalVector = directions[target];
+            for (const alignedDirection of alignedDirections) {
+                finalVector[alignedDirection] = 0;
+            }
+            // Rotate the scene according to the selected top direction
+            if (finalVector.length() > 1e-8) {
+                const quaternion = new THREE.Quaternion().setFromUnitVectors(finalVector.clone().normalize(), targetVector);
+                // Rotate the given directions so that their direction will be
+                // correct for the next aligment
+                for (const direction in directions) {
+                    directions[direction].applyQuaternion(quaternion);
+                }
+                // Rotate the given objects
+                for (const obj of objects) {
+                    obj.applyQuaternion(quaternion);
+                    obj.updateMatrixWorld();
+                }
+                if (direction == "right" || direction == "left") {
+                    alignedDirections.push("x");
+                }
+                else if (direction == "up" || direction == "down") {
+                    alignedDirections.push("y");
+                }
+                else if (direction == "front" || direction == "back") {
+                    alignedDirections.push("z");
+                }
+            }
+        };
+        for (const alignment of alignments) {
+            rotate(alignment);
+        }
+        if (render) {
+            this.render();
+        }
+    }
 }

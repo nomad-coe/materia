@@ -137,4 +137,5 @@ export declare abstract class Viewer {
      * @return b - The original vector a in the target basis
      */
     coordinateTransform(A: THREE.Matrix3, Bi: THREE.Matrix3, a: THREE.Vector3, copy?: boolean): THREE.Vector3;
+    alignView(alignments: string[][], directions: Object, objects: THREE.Object3D[], render?: boolean): void;
 }

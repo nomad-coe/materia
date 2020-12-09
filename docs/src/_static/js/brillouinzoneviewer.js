@@ -12,10 +12,10 @@ let options = {
   },
   layout: {
     viewRotation: {
-      align: {
-          up: "a",
-          front: "segments",
-      },
+      alignments: [
+          ["up", "a"],
+          ["front", "segments"],
+      ],
       rotations: [
           [0, 1, 0, 45],
           [1, 0, 0, 25],

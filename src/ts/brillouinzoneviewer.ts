@@ -92,7 +92,7 @@ export class BrillouinZoneViewer extends Viewer {
 
         // Set view alignment and rotation
         if (this.B !== undefined) {
-            this.alignView(this.options?.layout?.viewRotation?.align?.up, this.options?.layout?.viewRotation?.align?.front);
+            this.alignView(this.options?.layout?.viewRotation?.alignments);
         }
         this.rotateView(this.options?.layout?.viewRotation?.rotations);
 
@@ -589,77 +589,31 @@ export class BrillouinZoneViewer extends Viewer {
         }
     }
 
-    alignView(up: string, front: string, render = true): void {
-        // Rotate the scene so that the segments are shown properly
-        let segmentVector = new THREE.Vector3()
+    alignView(alignments: string[][], render = true): void {
+        // Determine segment direction
+        const segmentVector = new THREE.Vector3()
         const nPoints = this.labelPoints.children.length;
         for (let i=0; i < nPoints; ++i) {
             const segmentPoint = this.labelPoints.children[i];
             segmentVector.add(segmentPoint.getWorldPosition(new THREE.Vector3()));
         }
 
-        const rotate = (direction, directionVector, upSet) => {
-            if (up !== undefined) {
-                // Determine the top direction
-                let finalVector;
-                switch(direction) {
-                    case "a":
-                        finalVector = this.basisVectors[0]
-                        break
-                    case "-a":
-                        finalVector = this.basisVectors[0].negate()
-                        break
-                    case "b":
-                        finalVector = this.basisVectors[1]
-                        break
-                    case "-b":
-                        finalVector = this.basisVectors[1].negate()
-                        break
-                    case "c":
-                        finalVector = this.basisVectors[2]
-                        break
-                    case "-c":
-                        finalVector = this.basisVectors[2].negate()
-                        break
-                    case "segments":
-                        finalVector = segmentVector
-                        break
-                }
+        // Define available directions
+        const directions = {
+            "a": this.basisVectors[0].clone(),
+            "-a": this.basisVectors[0].clone().negate(),
+            "b": this.basisVectors[1].clone(),
+            "-b": this.basisVectors[1].clone().negate(),
+            "c": this.basisVectors[2].clone(),
+            "-c": this.basisVectors[2].clone().negate(),
+            "segments": segmentVector,
+        }
 
-                if (upSet) {
-                    finalVector.y = 0
-                }
+        // List the objects whose matrix needs to be updated
+        const objects = [this.zone, this.info]
 
-                // Rotate the scene according to the selected top direction
-                if (directionVector.length() > 1e-8) {
-                    const quaternion = new THREE.Quaternion().setFromUnitVectors(
-                        directionVector,
-                        finalVector.clone().normalize()
-                    );
-                    quaternion.conjugate()
-                    segmentVector = segmentVector.clone().applyQuaternion(quaternion);
-                    this.basisVectors[0] = this.basisVectors[0].applyQuaternion(quaternion);
-                    this.basisVectors[1] = this.basisVectors[1].applyQuaternion(quaternion);
-                    this.basisVectors[2] = this.basisVectors[2].applyQuaternion(quaternion);
-                    this.info.applyQuaternion(quaternion);
-                    this.zone.applyQuaternion(quaternion);
-                    this.info.updateMatrixWorld();  // The positions are not otherwise updated properly
-                    this.zone.updateMatrixWorld();
-                }
-            }
-        }
-        // The up direction is set first.
-        if (up !== undefined) {
-            rotate(up, new THREE.Vector3(0, 1, 0), false)
-        }
-        // The front direction is set aftwards without changing the top direction
-        if (front !== undefined) {
-            rotate(front, new THREE.Vector3(0, 0, 1), true)
-        }
-        
-        if (render) {
-            this.render()
-        }
+        // Rotate
+        super.alignView(alignments, directions, objects, render);
     }
 
     createCircle(position:THREE.Vector3, diameter:number, color:string): THREE.Object3D {

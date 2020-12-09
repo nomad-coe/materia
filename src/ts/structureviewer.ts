@@ -676,7 +676,7 @@ export class StructureViewer extends Viewer {
 
         // Set view alignment and rotation
         if (this.B !== undefined) {
-            this.alignView(this.options?.layout?.viewRotation?.align?.top, this.options?.layout?.viewRotation?.align?.right);
+            this.alignView(this.options?.layout?.viewRotation?.alignments);
         }
         this.rotateView(this.options?.layout?.viewRotation?.rotations);
 
@@ -1328,72 +1328,22 @@ export class StructureViewer extends Viewer {
         }
     }
 
-    alignView(top: string, right: string, render=true): void {
-        if (top === undefined) {
-            return;
-        }
-        // Determine the top direction
-        let topVector;
-        if (top === "c") {
-            topVector = this.basisVectors[2];
-        } else if (top === "-c") {
-            topVector = this.basisVectors[2].negate();
-        } else if (top === "b") {
-            topVector = this.basisVectors[1];
-        } else if (top === "-b") {
-            topVector = this.basisVectors[1].negate();
-        } else if (top === "a") {
-            topVector = this.basisVectors[0];
-        } else if (top === "-a") {
-            topVector = this.basisVectors[0].negate();
+    alignView(alignments: string[][], render = true): void {
+        // Define available directions
+        const directions = {
+            "a": this.basisVectors[0].clone(),
+            "-a": this.basisVectors[0].clone().negate(),
+            "b": this.basisVectors[1].clone(),
+            "-b": this.basisVectors[1].clone().negate(),
+            "c": this.basisVectors[2].clone(),
+            "-c": this.basisVectors[2].clone().negate(),
         }
 
-        // Determine the right direction
-        let rightVector;
-        if (right === "c") {
-            rightVector = this.basisVectors[2];
-        } else if (right === "-c") {
-            rightVector = this.basisVectors[2].negate();
-        } else if (right === "b") {
-            rightVector = this.basisVectors[1];
-        } else if (right === "-b") {
-            rightVector = this.basisVectors[1].negate();
-        } else if (right === "a") {
-            rightVector = this.basisVectors[0];
-        } else if (right === "-a") {
-            rightVector = this.basisVectors[0].negate();
-        }
+        // List the objects whose matrix needs to be updated
+        const objects = [this.root, this.sceneInfo]
 
-        // Rotate so that the top vector points to top
-        this.root.updateMatrixWorld();  // The positions are not otherwise updated properly
-        const finalCAxis = new THREE.Vector3(0, 1, 0);
-        const cQuaternion = new THREE.Quaternion().setFromUnitVectors(
-            topVector.clone().normalize(),
-            finalCAxis
-        );
-        this.root.quaternion.premultiply(cQuaternion);
-        this.sceneInfo.quaternion.premultiply(cQuaternion);
-        this.root.updateMatrixWorld();
-        this.sceneInfo.updateMatrixWorld();
-
-        // Rotate so that selected vector points to the right
-        if (right !== undefined) {
-            topVector = topVector.clone().applyQuaternion(cQuaternion);
-            rightVector = rightVector.clone().applyQuaternion(cQuaternion);
-            const currentAAxis = new THREE.Vector3().crossVectors(topVector, rightVector);
-            const finalAAxis = new THREE.Vector3(0, 0, -1);
-            const aQuaternion = new THREE.Quaternion().setFromUnitVectors(
-                currentAAxis.clone().normalize(),
-                finalAAxis
-            );
-            this.root.quaternion.premultiply(aQuaternion);
-            this.sceneInfo.quaternion.premultiply(aQuaternion);
-            this.root.updateMatrixWorld();
-            this.sceneInfo.updateMatrixWorld();
-        }
-        if (render) {
-            this.render();
-        }
+        // Rotate
+        super.alignView(alignments, directions, objects, render);
     }
 
     /**

@@ -11,10 +11,10 @@ let options = {
     translation: [0, 0, 0],
     viewCenter: "COP",
     viewRotation: {
-      //align: {
-          //top: "c",
-          //right: "b",
-      //},
+      alignments: [
+        ["up", "c"],
+        ["right", "b"],
+      ],
       rotations: [
           [0, 1, 0, 60],
           [1, 0, 0, 30],
@@ -30,7 +30,7 @@ let options = {
     enabled: true,
   },
   latticeConstants: {
-    enabled: false,
+    enabled: true,
     font: "Arial",
     size: 0.8,
     a: {
