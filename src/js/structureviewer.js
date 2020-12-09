@@ -1282,37 +1282,39 @@ export class StructureViewer extends Viewer {
             return;
         }
         // Create basis transformation matrices
-        let a = new THREE.Vector3().fromArray(basis[0]);
-        let b = new THREE.Vector3().fromArray(basis[1]);
-        let c = new THREE.Vector3().fromArray(basis[2]);
+        const a = new THREE.Vector3().fromArray(basis[0]);
+        const b = new THREE.Vector3().fromArray(basis[1]);
+        const c = new THREE.Vector3().fromArray(basis[2]);
         this.basisVectors = [a, b, c];
-        let B = new THREE.Matrix3();
+        const B = new THREE.Matrix3();
         B.set(a.x, b.x, c.x, a.y, b.y, c.y, a.z, b.z, c.z);
         this.B = B;
         this.Bi = new THREE.Matrix3().getInverse(B);
     }
     getCornerPoints() {
-        this.root.updateMatrixWorld();
-        this.sceneStructure.updateMatrixWorld();
+        // The atom positions will be used as visualization boundaries
         this.atoms.updateMatrixWorld();
-        const worldPos = [];
         const atoms = this.atoms.children;
+        // Transform positions to world coordinates
         const nAtoms = atoms.length;
+        const worldPos = [];
         for (let i = 0; i < nAtoms; ++i) {
             const atom = atoms[i];
-            atom.updateMatrixWorld();
             const wPos = new THREE.Vector3();
             atom.getWorldPosition(wPos);
             worldPos.push(wPos);
         }
-        return [worldPos, this.maxRadii];
+        return {
+            points: worldPos,
+            margin: this.maxRadii
+        };
     }
     /**
      * Create the conventional cell
      *
      */
     createConventionalCell(periodicity, visible) {
-        let cell = this.createCell(new THREE.Vector3(), this.basisVectors, periodicity, this.options.cell.color, this.options.cell.linewidth, this.options.cell.dashSize, this.options.cell.gapSize);
+        const cell = this.createCell(new THREE.Vector3(), this.basisVectors, periodicity, this.options.cell.color, this.options.cell.linewidth, this.options.cell.dashSize, this.options.cell.gapSize);
         cell.visible = visible;
         this.convCell = cell;
         this.container.add(this.convCell);

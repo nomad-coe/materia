@@ -16,7 +16,6 @@ export class BrillouinZoneViewer extends Viewer {
     private basis:any;         // The reciprocal cell basis
     private labelPoints:any;   // Contains the labels of special k-points
     private basisVectors:THREE.Vector3[];
-    private bzVertices;
     private B:THREE.Matrix3;
 
     /*
@@ -93,7 +92,7 @@ export class BrillouinZoneViewer extends Viewer {
 
         // Set view alignment and rotation
         if (this.B !== undefined) {
-            this.alignView(this.options?.layout?.viewRotation?.align?.up, this.options?.layout?.viewRotation?.align?.segments);
+            this.alignView(this.options?.layout?.viewRotation?.align?.up, this.options?.layout?.viewRotation?.align?.front);
         }
         this.rotateView(this.options?.layout?.viewRotation?.rotations);
 
@@ -302,6 +301,7 @@ export class BrillouinZoneViewer extends Viewer {
 
         // Find the finite cell with center at origin, i.e. the first Brillouin
         // Zone
+        let bzVertices
         for (const cell of res.cells) {
             
             // Check if cell is finite
@@ -341,8 +341,8 @@ export class BrillouinZoneViewer extends Viewer {
                 for (const vertex of vertices) {
                     pointGeometry.vertices.push(vertex)
                 }
-                this.bzVertices = new THREE.Points(pointGeometry)
-                this.bzVertices.visible = false;
+                bzVertices = new THREE.Points(pointGeometry)
+                bzVertices.visible = true;
                 break
             }
         }
@@ -353,25 +353,27 @@ export class BrillouinZoneViewer extends Viewer {
         this.info = new THREE.Object3D();
         this.info.name = "info";
         this.sceneInfo.add(this.info);
-        //this.info.add(this.bzVertices)
 
         // A customised THREE.Geometry object that will create the face
         // geometry and information about the face edges
-        const bzGeometry = new ConvexGeometry(this.bzVertices.geometry.vertices);
+        const bzGeometry = new ConvexGeometry(bzVertices.geometry.vertices);
 
         // Weird hack for achieving translucent surfaces. Setting
         // side=DoubleSide on a single mesh will not do.
         const group = new THREE.Group();
+        group.name = "group"
         const meshMaterial = new THREE.MeshPhongMaterial( {
             color : this.options.faces.color,
             opacity: this.options.faces.opacity,
             transparent: true
         } );
-        const mesh = new THREE.Mesh( bzGeometry, meshMaterial );
+        const mesh = new THREE.Mesh( bzGeometry, meshMaterial);
+        mesh.name = "innermesh"
         mesh.material.side = THREE.BackSide; // back faces
         mesh.renderOrder = 0;
         group.add( mesh );
-        const mesh2 = new THREE.Mesh( bzGeometry, meshMaterial.clone() );
+        const mesh2 = new THREE.Mesh( bzGeometry, meshMaterial.clone());
+        mesh2.name = "outermesh"
         mesh2.material.side = THREE.FrontSide; // front faces
         mesh2.renderOrder = 1;
         group.add( mesh2 );
@@ -547,14 +549,23 @@ export class BrillouinZoneViewer extends Viewer {
     }
 
     getCornerPoints() {
+        // The corners of the BZ will be used as visualization boundaries
+        const mesh = this.zone.getObjectByName("group").getObjectByName("outermesh")
+        mesh.updateMatrixWorld()
+        const vertices = mesh.geometry.vertices
+
+        // Transform positions to world coordinates
+        const nVertices = vertices.length
         const worldPos = [];
-        const vertices = this.bzVertices.geometry.vertices
-        const nPos = vertices.length
-        for (let i=0; i < nPos; ++i) {
-            const pos = vertices[i].clone();
-            worldPos.push(this.bzVertices.localToWorld(pos))
+        for (let i=0; i < nVertices; ++i) {
+            const pos = vertices[i].clone()
+            worldPos.push(mesh.localToWorld(pos))
         }
-        return [worldPos, 0]
+
+        return {
+            points: worldPos,
+            margin: 0,
+        }
     }
 
     /**
@@ -578,75 +589,74 @@ export class BrillouinZoneViewer extends Viewer {
         }
     }
 
-    alignView(up: string, segments: string, render = true): void {
-        if (up === undefined) {
-            return;
-        }
-        
-        // Determine the top direction
-        let topVector;
-        if (up === "c") {
-            topVector = this.basisVectors[2];
-        } else if (up === "-c") {
-            topVector = this.basisVectors[2].negate();
-        } else if (up === "b") {
-            topVector = this.basisVectors[1];
-        } else if (up === "-b") {
-            topVector = this.basisVectors[1].negate();
-        } else if (up === "a") {
-            topVector = this.basisVectors[0];
-        } else if (up === "-a") {
-            topVector = this.basisVectors[0].negate();
-        }
-
-        // Determine the right direction
-        let segmentVector;
-        if (segments === "front") {
-            segmentVector = new THREE.Vector3(0, 0, 1);
-        } else if (segments === "back") {
-            segmentVector = new THREE.Vector3(0, 0, -1);
-        } else if (segments === "right") {
-            segmentVector = new THREE.Vector3(1, 0, 0);
-        } else if (segments === "left") {
-            segmentVector = new THREE.Vector3(-1, 0, 0);
-        } else if (segments === "up") {
-            segmentVector = new THREE.Vector3(0, 1, 0);
-        } else if (segments === "down") {
-            segmentVector = new THREE.Vector3(0, -1, 0);
-        }
-
-        // Rotate the scene so that the first basis vector is pointing up.
-        const quaternion = new THREE.Quaternion().setFromUnitVectors(
-            new THREE.Vector3(0, 1, 0),
-            topVector.clone().normalize()
-        );
-        quaternion.conjugate()
-        this.info.quaternion.copy(quaternion);
-        this.zone.quaternion.copy(quaternion);
-        this.info.updateMatrixWorld();  // The positions are not otherwise updated properly
-        this.zone.updateMatrixWorld();
-
+    alignView(up: string, front: string, render = true): void {
         // Rotate the scene so that the segments are shown properly
-        const average = new THREE.Vector3()
+        let segmentVector = new THREE.Vector3()
         const nPoints = this.labelPoints.children.length;
         for (let i=0; i < nPoints; ++i) {
             const segmentPoint = this.labelPoints.children[i];
-            average.add(segmentPoint.getWorldPosition(new THREE.Vector3()));
-        }
-        if (average.length() > 1e-8) {
-            average.multiplyScalar(1/nPoints);
-            average.y = 0
-            const segmentQ = new THREE.Quaternion().setFromUnitVectors(
-                segmentVector,
-                average.clone().normalize()
-            );
-            segmentQ.conjugate()
-            this.info.quaternion.premultiply(segmentQ);
-            this.zone.quaternion.premultiply(segmentQ);
-            this.info.updateMatrixWorld();
-            this.zone.updateMatrixWorld();
+            segmentVector.add(segmentPoint.getWorldPosition(new THREE.Vector3()));
         }
 
+        const rotate = (direction, directionVector, upSet) => {
+            if (up !== undefined) {
+                // Determine the top direction
+                let finalVector;
+                switch(direction) {
+                    case "a":
+                        finalVector = this.basisVectors[0]
+                        break
+                    case "-a":
+                        finalVector = this.basisVectors[0].negate()
+                        break
+                    case "b":
+                        finalVector = this.basisVectors[1]
+                        break
+                    case "-b":
+                        finalVector = this.basisVectors[1].negate()
+                        break
+                    case "c":
+                        finalVector = this.basisVectors[2]
+                        break
+                    case "-c":
+                        finalVector = this.basisVectors[2].negate()
+                        break
+                    case "segments":
+                        finalVector = segmentVector
+                        break
+                }
+
+                if (upSet) {
+                    finalVector.y = 0
+                }
+
+                // Rotate the scene according to the selected top direction
+                if (directionVector.length() > 1e-8) {
+                    const quaternion = new THREE.Quaternion().setFromUnitVectors(
+                        directionVector,
+                        finalVector.clone().normalize()
+                    );
+                    quaternion.conjugate()
+                    segmentVector = segmentVector.clone().applyQuaternion(quaternion);
+                    this.basisVectors[0] = this.basisVectors[0].applyQuaternion(quaternion);
+                    this.basisVectors[1] = this.basisVectors[1].applyQuaternion(quaternion);
+                    this.basisVectors[2] = this.basisVectors[2].applyQuaternion(quaternion);
+                    this.info.applyQuaternion(quaternion);
+                    this.zone.applyQuaternion(quaternion);
+                    this.info.updateMatrixWorld();  // The positions are not otherwise updated properly
+                    this.zone.updateMatrixWorld();
+                }
+            }
+        }
+        // The up direction is set first.
+        if (up !== undefined) {
+            rotate(up, new THREE.Vector3(0, 1, 0), false)
+        }
+        // The front direction is set aftwards without changing the top direction
+        if (front !== undefined) {
+            rotate(front, new THREE.Vector3(0, 0, 1), true)
+        }
+        
         if (render) {
             this.render()
         }

@@ -9,7 +9,6 @@ export declare class BrillouinZoneViewer extends Viewer {
     private basis;
     private labelPoints;
     private basisVectors;
-    private bzVertices;
     private B;
     setupScenes(): void;
     setupLights(): void;
@@ -102,13 +101,16 @@ export declare class BrillouinZoneViewer extends Viewer {
      */
     setOptions(options: any, render?: boolean, reload?: boolean): void;
     createBrillouinZone(basis: number[][], segments: number[][][], kpoints: [string, number[]][]): void;
-    getCornerPoints(): (number | any[])[];
+    getCornerPoints(): {
+        points: any[];
+        margin: number;
+    };
     /**
      * @param rotations The rotations as a list. Each rotation should be an
      * array containing four numbers: [x, y, z, angle]. The rotations are
      * applied in the given order.
      */
     rotateView(rotations: number[], render?: boolean): void;
-    alignView(up: string, segments: string, render?: boolean): void;
+    alignView(up: string, front: string, render?: boolean): void;
     createCircle(position: THREE.Vector3, diameter: number, color: string): THREE.Object3D;
 }

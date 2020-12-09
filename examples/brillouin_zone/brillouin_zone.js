@@ -4,13 +4,13 @@ let canvas = document.getElementById("visualizationCanvas");
 // Viewer options
 let options = {
   view: {
-    fitMargin: 0.075,
+    fitMargin: 0.05,
   },
   layout: {
     viewRotation: {
       align: {
           up: "a",
-          segments: "front",
+          front: "segments",
       },
       rotations: [
           [0, 1, 0, 45],

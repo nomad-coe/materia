@@ -286,12 +286,15 @@ export declare class StructureViewer extends Viewer {
      * @param vectors - The positions from which to create vectors.
      */
     createBasisVectors(basis: number[][]): void;
-    getCornerPoints(): (number | any[])[];
+    getCornerPoints(): {
+        points: any[];
+        margin: number;
+    };
     /**
      * Create the conventional cell
      *
      */
-    createConventionalCell(periodicity: any, visible: any): void;
+    createConventionalCell(periodicity: boolean[], visible: boolean): void;
     /**
      * Creates outlines for a cell specified by the given basis vectors.
      * @param origin - The origin for the cell

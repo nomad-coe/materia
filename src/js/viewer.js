@@ -324,7 +324,7 @@ export class Viewer {
     fitToCanvas() {
         // First get the corner points. They will change upon rotation etc. so
         // they have to be recalculated.
-        const [cornerPoints, vizMargin] = this.getCornerPoints();
+        const { points, margin } = this.getCornerPoints();
         // Make sure that all transforms are updated
         this.scenes.forEach((scene) => scene.updateMatrixWorld());
         // Project all 8 corners of the normalized cell into screen space and
@@ -334,14 +334,14 @@ export class Viewer {
         const canvasHeight = canvas.clientHeight;
         const cornerPos = [];
         // Figure out the center in order to add margins in right direction
-        const nPos = cornerPoints.length;
+        const nPos = points.length;
         const centerPos = new THREE.Vector3();
         for (let len = nPos, i = 0; i < len; ++i) {
-            centerPos.add(cornerPoints[i].clone());
+            centerPos.add(points[i].clone());
         }
         centerPos.divideScalar(nPos);
         for (let i = 0; i < nPos; ++i) {
-            const screenPos = cornerPoints[i].clone();
+            const screenPos = points[i].clone();
             // Default the zoom to 1 for the projection
             this.camera.zoom = this.options.controls.zoomLevel;
             this.camera.updateProjectionMatrix();
@@ -351,9 +351,9 @@ export class Viewer {
             const right = diff.x < 0 ? true : false;
             const up = diff.y < 0 ? true : false;
             // Add a margin
-            const margin = this.options.view.fitMargin + vizMargin;
-            const cameraUp = new THREE.Vector3(0, margin, 0);
-            const cameraRight = new THREE.Vector3(margin, 0, 0);
+            const finalMargin = this.options.view.fitMargin + margin;
+            const cameraUp = new THREE.Vector3(0, finalMargin, 0);
+            const cameraRight = new THREE.Vector3(finalMargin, 0, 0);
             cameraUp.applyQuaternion(this.camera.quaternion);
             cameraRight.applyQuaternion(this.camera.quaternion);
             if (up) {

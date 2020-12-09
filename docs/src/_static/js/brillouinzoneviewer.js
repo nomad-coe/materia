@@ -14,7 +14,7 @@ let options = {
     viewRotation: {
       align: {
           up: "a",
-          segments: "front",
+          front: "segments",
       },
       rotations: [
           [0, 1, 0, 45],

@@ -1108,7 +1108,7 @@ export class StructureViewer extends Viewer {
      *
      * @param vectors - The positions from which to create vectors.
      */
-    createBasisVectors(basis:number[][]) {
+    createBasisVectors(basis:number[][]): void {
         if (basis === undefined) {
             this.basisVectors = undefined;
             this.B = undefined;
@@ -1117,11 +1117,11 @@ export class StructureViewer extends Viewer {
         }
 
         // Create basis transformation matrices
-        let a = new THREE.Vector3().fromArray(basis[0]);
-        let b = new THREE.Vector3().fromArray(basis[1]);
-        let c = new THREE.Vector3().fromArray(basis[2]);
+        const a = new THREE.Vector3().fromArray(basis[0]);
+        const b = new THREE.Vector3().fromArray(basis[1]);
+        const c = new THREE.Vector3().fromArray(basis[2]);
         this.basisVectors = [a, b, c];
-        let B = new THREE.Matrix3();
+        const B = new THREE.Matrix3();
         B.set(
             a.x, b.x, c.x,
             a.y, b.y, c.y,
@@ -1132,28 +1132,32 @@ export class StructureViewer extends Viewer {
     }
 
     getCornerPoints() {
-        this.root.updateMatrixWorld()
-        this.sceneStructure.updateMatrixWorld()
+        // The atom positions will be used as visualization boundaries
         this.atoms.updateMatrixWorld()
-        const worldPos = [];
         const atoms = this.atoms.children
+
+        // Transform positions to world coordinates
         const nAtoms = atoms.length
+        const worldPos = [];
         for (let i=0; i < nAtoms; ++i) {
             const atom = atoms[i];
-            atom.updateMatrixWorld()
             const wPos = new THREE.Vector3();
             atom.getWorldPosition(wPos)
             worldPos.push(wPos)
         }
-        return [worldPos, this.maxRadii]
+
+        return {
+            points: worldPos,
+            margin: this.maxRadii
+        }
     }
 
     /**
      * Create the conventional cell
      *
      */
-    createConventionalCell(periodicity, visible) {
-        let cell = this.createCell(
+    createConventionalCell(periodicity:boolean[], visible:boolean): void {
+        const cell = this.createCell(
             new THREE.Vector3(),
             this.basisVectors,
             periodicity,
