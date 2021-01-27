@@ -259,8 +259,9 @@ export declare class StructureViewer extends Viewer {
      * Gets the positions for atoms in the currently loaded structure.
      */
     getPositions(fractional?: boolean): any[];
-    toCartesian(position: THREE.Vector3): THREE.Vector3;
-    toScaled(position: THREE.Vector3): THREE.Vector3;
+    toVectors(positions: number[][], copy?: boolean): THREE.Vector3[];
+    toCartesian(positions: THREE.Vector3[], copy?: boolean): THREE.Vector3[];
+    toScaled(positions: THREE.Vector3[], copy?: boolean): THREE.Vector3[];
     /**
      * Get a specific atom as defined by a js Group.
      *
@@ -319,7 +320,7 @@ export declare class StructureViewer extends Viewer {
     /**
      * Wraps all atoms to be within the unit cell.
      */
-    wrap(fracPos: any, pbc: any): void;
+    wrap(positions: any, fractional?: boolean): void;
     /**
      * Used to add periodic repetitions of atoms at the unit cell boundary.
      */

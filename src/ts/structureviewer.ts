@@ -580,24 +580,28 @@ export class StructureViewer extends Viewer {
 
         // Create a set of fractional and cartesian positions
         if (isFractional === true) {
-            for (let i=0; i < positions.length; ++i) {
-                let pos = positions[i];
-                let iFracPos = new THREE.Vector3().fromArray(pos);
-                fracPos.push(iFracPos);
-                cartPos.push(this.toCartesian(iFracPos));
-            }
+            fracPos = this.toVectors(positions);
+            cartPos = this.toCartesian(fracPos, true);
+            //for (let i=0; i < positions.length; ++i) {
+                //let pos = positions[i];
+                //let iFracPos = new THREE.Vector3().fromArray(pos);
+                //fracPos.push(iFracPos);
+                //cartPos.push(this.toCartesian(iFracPos));
+            //}
         }
         else if (isFractional === false) {
-            for (let i=0; i < positions.length; ++i) {
-                let pos = positions[i];
-                let iCartPos = new THREE.Vector3().fromArray(pos);
-                cartPos.push(iCartPos);
-            }
+            cartPos = this.toVectors(positions);
+            //for (let i=0; i < positions.length; ++i) {
+                //let pos = positions[i];
+                //let iCartPos = new THREE.Vector3().fromArray(pos);
+                //cartPos.push(iCartPos);
+            //}
             if (this.B !== undefined) {
-                for (let i=0, size=cartPos.length; i < size; ++i) {
-                    let iFracPos = this.toScaled(cartPos[i]);
-                    fracPos.push(iFracPos);
-                }
+                fracPos = this.toScaled(cartPos, true);
+                //for (let i=0, size=cartPos.length; i < size; ++i) {
+                    //let iFracPos = this.toScaled(cartPos[i]);
+                    //fracPos.push(iFracPos);
+                //}
             }
         }
 
@@ -719,7 +723,7 @@ export class StructureViewer extends Viewer {
      * @param translation - Cartesian translation to apply.
      */
     translate(translation:number[]) {
-        let vec = new THREE.Vector3().fromArray(translation);
+        const vec = new THREE.Vector3().fromArray(translation);
         this.atoms.position.add(vec);
         this.bonds.position.add(vec);
         this.render();
@@ -732,22 +736,23 @@ export class StructureViewer extends Viewer {
 
         // Check the periodicity setting. You can only call this function if no
         // additional atoms need to be created through the periodicity setting.
-        if (this.options.layout.periodicity !== "none") {
-            throw "Setting new positions is only allowed if options.layout.periodicity = 'none'.";
+        if (this.options.layout.periodicity !== "none" && this.options.layout.periodicity !== "wrap") {
+            throw "Setting new positions is not allowed when options.layout.periodicity != 'none'/'wrap'.";
         }
 
+        // Convert to vectors
+        const vecPos = this.toVectors(positions);
+
+        if (this.options.layout.periodicity === "wrap") {
+            this.wrap(vecPos, fractional)
+        }
         if (fractional) {
-            for (let i=0, size=positions.length; i < size; ++i) {
-                let atom = this.getAtom(i);
-                let position = this.toCartesian(new THREE.Vector3().fromArray(positions[i]));
-                atom.position.copy(position);
-            }
-        } else {
-            for (let i=0, size=positions.length; i < size; ++i) {
-                let atom = this.getAtom(i);
-                let position = new THREE.Vector3().fromArray(positions[i]);
-                atom.position.copy(position);
-            }
+            this.toCartesian(vecPos, false)
+        }
+        for (let i=0, size=vecPos.length; i < size; ++i) {
+            const position = vecPos[i];
+            const atom = this.getAtom(i);
+            atom.position.copy(position);
         }
         this.updateBonds = true;
         this.createBonds();
@@ -765,11 +770,13 @@ export class StructureViewer extends Viewer {
         let atoms = this.atoms.children
         let nAtoms = atoms.length
         if (fractional) {
+            let cartPos = [];
             for (let i=0; i < nAtoms; ++i) {
                 let atom = atoms[i];
-                let position = this.toScaled(atom.position.clone());
-                positions.push(position)
+                let position = atom.position.clone();
+                cartPos.push(position)
             }
+            positions = this.toScaled(cartPos)
         } else {
             for (let i=0; i < nAtoms; ++i) {
                 let atom = atoms[i];
@@ -780,12 +787,44 @@ export class StructureViewer extends Viewer {
         return positions
     }
 
-    toCartesian(position:THREE.Vector3) {
-        return position.clone().applyMatrix3(this.B);
+    toVectors(positions:number[][], copy=true): THREE.Vector3[] {
+        // Convert to vectors
+        const vecPos = []
+        for (let i=0, size=positions.length; i < size; ++i) {
+            vecPos.push(new THREE.Vector3().fromArray(positions[i]));
+        }
+        if (copy) {
+            return vecPos
+        }
+        positions = vecPos
     }
 
-    toScaled(position:THREE.Vector3) {
-        return position.clone().applyMatrix3(this.Bi);
+    toCartesian(positions:THREE.Vector3[], copy=true): THREE.Vector3[] {
+        if (copy) {
+            const newPos = [];
+            for (let i=0, size=positions.length; i < size; ++i) {
+                newPos.push(positions[i].clone().applyMatrix3(this.B));
+            }
+            return newPos;
+        } else {
+            for (let i=0, size=positions.length; i < size; ++i) {
+                positions[i].applyMatrix3(this.B);
+            }
+        }
+    }
+
+    toScaled(positions:THREE.Vector3[], copy=true): THREE.Vector3[] {
+        if (copy) {
+            const newPos = [];
+            for (let i=0, size=positions.length; i < size; ++i) {
+                newPos.push(positions[i].clone().applyMatrix3(this.Bi));
+            }
+            return newPos;
+        } else {
+            for (let i=0, size=positions.length; i < size; ++i) {
+                positions[i].applyMatrix3(this.Bi);
+            }
+        }
     }
 
     /**
@@ -1388,22 +1427,18 @@ export class StructureViewer extends Viewer {
     /**
      * Wraps all atoms to be within the unit cell.
      */
-    wrap(fracPos, pbc) {
-        for (let len=fracPos.length, i=0; i<len; ++i) {
-            let iFracPos = fracPos[i];
-            // Wrap the positions
-            let x = iFracPos.x;
-            let y = iFracPos.y;
-            let z = iFracPos.z;
-            if (pbc[0] && this.almostEqual(1, x, this.basisVectors[0], this.options.layout.wrapTolerance)) {
-                x -= 1;
-            }
-            if (pbc[1] && this.almostEqual(1, y, this.basisVectors[1], this.options.layout.wrapTolerance)) {
-                y -= 1;
-            }
-            if (pbc[2] && this.almostEqual(1, z, this.basisVectors[2], this.options.layout.wrapTolerance)) {
-                z -= 1;
-            }
+    wrap(positions, fractional:boolean=true) {
+        if (!fractional) {
+            this.toScaled(positions, false)
+        }
+        for (let len=positions.length, i=0; i<len; ++i) {
+            const iFracPos = positions[i];
+            if (this.structure["pbc"][0]) iFracPos.x = iFracPos.x < 0 ? 1 + (iFracPos.x % 1) : iFracPos.x % 1;
+            if (this.structure["pbc"][1]) iFracPos.y = iFracPos.y < 0 ? 1 + (iFracPos.y % 1) : iFracPos.y % 1;
+            if (this.structure["pbc"][2]) iFracPos.z = iFracPos.z < 0 ? 1 + (iFracPos.z % 1) : iFracPos.z % 1;
+        }
+        if (!fractional) {
+            this.toCartesian(positions, false)
         }
     }
 
@@ -1461,7 +1496,7 @@ export class StructureViewer extends Viewer {
      * @param positions - Positions of the atoms
      * @param labels - The element numbers for the atoms
      */
-    createAtoms(positions, labels, pbc:Array<boolean>, fractional=true) {
+    createAtoms(positions, labels, pbc:Array<boolean>, fractional:boolean=true) {
         // Delete old atoms
         this.atoms.remove(...this.atoms.children);
         this.elements = {};
@@ -1469,23 +1504,16 @@ export class StructureViewer extends Viewer {
         this.atomFills = [];
         this.atomOutlines = [];
 
-        // Prepare variables
-        if (fractional) {
-            let basis1 = this.basisVectors[0];
-            let basis2 = this.basisVectors[1];
-            let basis3 = this.basisVectors[2];
-
-            // Determine the periodicity handling
-            if (pbc.some(a => {return a === true})) {
-                let periodicity = this.options.layout.periodicity;
-                if (periodicity === "none") {
-                } else if (periodicity === "wrap") {
-                    this.wrap(positions, pbc);
-                } else if (periodicity === "boundary") {
-                    this.addBoundaryAtoms(positions, labels);
-                } else if (Array.isArray(periodicity)) {
-                    this.repeat(periodicity, positions, labels);
-                }
+        // Determine the periodicity handling
+        if (pbc.some(a => {return a === true})) {
+            let periodicity = this.options.layout.periodicity;
+            if (periodicity === "wrap") {
+                console.log("wrapping")
+                this.wrap(positions, fractional);
+            } else if (fractional && periodicity === "boundary") {
+                this.addBoundaryAtoms(positions, labels);
+            } else if (fractional && Array.isArray(periodicity)) {
+                this.repeat(periodicity, positions, labels);
             }
         }
 
