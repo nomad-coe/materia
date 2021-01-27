@@ -8,7 +8,7 @@ let options = {
   },
   layout: {
     periodicity: "none",
-    translation: [0, 0, 0],
+    //translation: [0, 0, 0],
     viewCenter: "COC",
     viewRotation: {
       alignments: [
@@ -92,7 +92,7 @@ var viewer = new materia.StructureViewer(targetElem, options);
 
 // Define structure and load it into the viewer
 let positions = [
-    [0.5, 0, 0],
+    [0, 0, 0],
 ];
 let species = ["H"];
 var bulk = {

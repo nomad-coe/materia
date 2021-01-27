@@ -383,54 +383,35 @@ export abstract class Viewer {
         const canvasWidth = canvas.clientWidth;
         const canvasHeight = canvas.clientHeight;
         const cornerPos = [];
-
-        // Figure out the center in order to add margins in right direction
         const nPos = points.length
-        const centerPos = new THREE.Vector3();
-        for (let len=nPos, i=0; i<len; ++i) {
-            centerPos.add(points[i].clone());
-        }
-        centerPos.divideScalar(nPos)
 
+        // Default the zoom to 1 for the projection
+        this.camera.zoom = this.options.controls.zoomLevel;
+        this.camera.updateProjectionMatrix();
+
+        // Calculate margin size in screen space
+        const finalMargin = this.options.view.fitMargin + margin;
+        const screenOrigin = new THREE.Vector3(0, 0, 0);
+        screenOrigin.project( this.camera );
+        screenOrigin.x = Math.round( (   screenOrigin.x + 1 ) * canvasWidth  / 2 );
+        screenOrigin.y = Math.round( ( - screenOrigin.y + 1 ) * canvasHeight / 2 );
+        screenOrigin.z = 0;
+        const screenMargin = new THREE.Vector3(finalMargin, finalMargin, 0);
+        screenMargin.project( this.camera );
+        screenMargin.x = Math.round( (   screenMargin.x + 1 ) * canvasWidth  / 2 );
+        screenMargin.y = Math.round( ( - screenMargin.y + 1 ) * canvasHeight / 2 );
+        screenMargin.sub(screenOrigin)
+        screenMargin.x = Math.abs(screenMargin.x)
+        screenMargin.y = Math.abs(screenMargin.y)
+        screenMargin.z = 0;
+
+        // Calculate the boundary positions in screen space
         for (let i=0; i < nPos; ++i) {
             const screenPos = points[i].clone();
-
-            // Default the zoom to 1 for the projection
-            this.camera.zoom = this.options.controls.zoomLevel;
-            this.camera.updateProjectionMatrix();
-
-            // Figure out the direction from center
-            const diff = centerPos.sub(screenPos);
-            diff.project( this.camera );
-            const right = diff.x < 0 ? true : false;
-            const up = diff.y < 0 ? true : false;
-
-            // Add a margin
-            const finalMargin = this.options.view.fitMargin + margin;
-            const cameraUp = new THREE.Vector3( 0, finalMargin, 0 );
-            const cameraRight = new THREE.Vector3( finalMargin, 0, 0 );
-            cameraUp.applyQuaternion( this.camera.quaternion );
-            cameraRight.applyQuaternion( this.camera.quaternion );
-
-            if (up) {
-                screenPos.add(cameraUp);
-            } else {
-                screenPos.sub(cameraUp);
-            }
-            if (right) {
-                screenPos.add(cameraRight);
-            } else {
-                screenPos.sub(cameraRight);
-            }
-
-            // Map to corner coordinates to screen space
             screenPos.project( this.camera );
-
-            // Map to 2D screen space
             screenPos.x = Math.round( (   screenPos.x + 1 ) * canvasWidth  / 2 );
             screenPos.y = Math.round( ( - screenPos.y + 1 ) * canvasHeight / 2 );
             screenPos.z = 0;
-
             cornerPos.push(screenPos);
         }
 
@@ -454,6 +435,10 @@ export abstract class Viewer {
                 minY = y;
             }
         }
+        minX -= screenMargin.x;
+        maxX += screenMargin.x;
+        minY -= screenMargin.y;
+        maxY += screenMargin.y;
 
         // Determine new zoom that will ensure that all cornerpositions are
         // visible on screen, assuming that the zoom center is set to view

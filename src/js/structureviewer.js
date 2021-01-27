@@ -813,26 +813,11 @@ export class StructureViewer extends Viewer {
         if (isFractional === true) {
             fracPos = this.toVectors(positions);
             cartPos = this.toCartesian(fracPos, true);
-            //for (let i=0; i < positions.length; ++i) {
-            //let pos = positions[i];
-            //let iFracPos = new THREE.Vector3().fromArray(pos);
-            //fracPos.push(iFracPos);
-            //cartPos.push(this.toCartesian(iFracPos));
-            //}
         }
         else if (isFractional === false) {
             cartPos = this.toVectors(positions);
-            //for (let i=0; i < positions.length; ++i) {
-            //let pos = positions[i];
-            //let iCartPos = new THREE.Vector3().fromArray(pos);
-            //cartPos.push(iCartPos);
-            //}
             if (this.B !== undefined) {
                 fracPos = this.toScaled(cartPos, true);
-                //for (let i=0, size=cartPos.length; i < size; ++i) {
-                //let iFracPos = this.toScaled(cartPos[i]);
-                //fracPos.push(iFracPos);
-                //}
             }
         }
         // Determine the periodicity and setup the vizualization accordingly
@@ -874,10 +859,6 @@ export class StructureViewer extends Viewer {
             this.createAtoms(cartPos, atomicNumbers, periodicity, false);
         }
         let atomPos = this.getPositions();
-        // Determine the corner points that are used to properly fit the
-        // structure into the viewer. The fit takes also into account the
-        // periodic duplicates and atoms created at the boundary.
-        //this.createVisualizationBoundaryPositions(atomPos, atomicNumbers);
         // Create bonds
         this.createBonds(bonds);
         // Setup the view center
@@ -1384,14 +1365,6 @@ export class StructureViewer extends Viewer {
                 linewidth: linewidth
             });
         }
-        /*
-        let dimMaterial = new THREE.LineDashedMaterial({
-            color: color,
-            linewidth: linewidth,
-            dashSize: dashSize,
-            gapSize: gapSize
-        });
-        */
         // Determine the if one of the cell vectors is a zero vector
         let collapsed = true;
         for (let i = 0; i < 3; ++i) {
@@ -1424,11 +1397,6 @@ export class StructureViewer extends Viewer {
             let isDim2 = !periodicity[i] || !periodicity[(i + 1) % 3];
             if (!(isDim2 && collapsed)) {
                 let line2Mat = lineMaterial.clone();
-                /*
-                if (isDim2) {
-                    line2Mat = dimMaterial.clone();
-                }
-                */
                 let line2Geometry = new THREE.Geometry();
                 line2Geometry.vertices.push(secondAddition.clone().add(origin), basisVector.clone().add(secondAddition).add(origin));
                 let line2 = new THREE.Line(line2Geometry, line2Mat);
@@ -1441,11 +1409,6 @@ export class StructureViewer extends Viewer {
             let isDim3 = !periodicity[i] || !periodicity[(i + 2) % 3];
             if (!(isDim3 && collapsed)) {
                 let line3Mat = lineMaterial.clone();
-                /*
-                if (isDim3) {
-                    line3Mat = dimMaterial.clone();
-                }
-                */
                 let line3Geometry = new THREE.Geometry();
                 line3Geometry.vertices.push(thirdAddition.clone().add(origin), basisVector.clone().add(thirdAddition).add(origin));
                 let line3 = new THREE.Line(line3Geometry, line3Mat);
@@ -1456,11 +1419,6 @@ export class StructureViewer extends Viewer {
             let isDim4 = !periodicity[i] || !periodicity[(i + 2) % 3] || !periodicity[(i + 1) % 3];
             if (!(isDim4 && collapsed)) {
                 let line4Mat = lineMaterial.clone();
-                /*
-                if (isDim4) {
-                    line4Mat = dimMaterial.clone();
-                }
-                */
                 let line4Geometry = new THREE.Geometry();
                 line4Geometry.vertices.push(secondAddition.clone().add(thirdAddition).add(origin), basisVector.clone().add(secondAddition).add(thirdAddition).add(origin));
                 let line4 = new THREE.Line(line4Geometry, line4Mat);
