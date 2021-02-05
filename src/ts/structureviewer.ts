@@ -1465,7 +1465,6 @@ export class StructureViewer extends Viewer {
         if (pbc.some(a => {return a === true})) {
             let periodicity = this.options.layout.periodicity;
             if (periodicity === "wrap") {
-                console.log("wrapping")
                 this.wrap(positions, fractional);
             } else if (fractional && periodicity === "boundary") {
                 this.addBoundaryAtoms(positions, labels);
