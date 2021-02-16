@@ -313,8 +313,10 @@ export class OrthographicControls {
     mousemove(event) {
         if (this.enabled === false)
             return;
-        event.preventDefault();
-        event.stopPropagation();
+        if (this._state !== STATE.NONE) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
         if (this._state === STATE.ROTATE && this.enableRotate) {
             this._movePrev.copy(this._moveCurr);
             this._moveCurr.copy(this.getMouseOnCircle(event.pageX, event.pageY));
