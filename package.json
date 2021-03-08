@@ -13,7 +13,7 @@
     "brillouin-zone": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/brillouin_zone/brillouin_zone.html\"",
     "structure-periodic": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/structure-periodic/structure.html\"",
     "structure-finite": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/structure-finite/structure.html\"",
-    "build": "gulp"
+    "build": "gulp build"
   },
   "dependencies": {
     "three": "^0.119.1",

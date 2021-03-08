@@ -517,10 +517,10 @@ export class StructureViewer extends Viewer {
         }
 
         // Check that the received data is OK.
-        let isFractional = structure["fractional"] === undefined ? false : structure["fractional"];
-        let positions = structure["positions"];
-        let species = structure["species"];
-        let cell = structure["cell"];
+        const isFractional = structure["fractional"] === undefined ? false : structure["fractional"];
+        const positions = structure["positions"];
+        const species = structure["species"];
+        const cell = structure["cell"];
         let periodicity = structure["pbc"];
         let bonds = structure["bonds"];
 
