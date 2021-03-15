@@ -14,6 +14,10 @@ export class Viewer {
         this.scenes = []; // A list of scenes that are rendered
         this.cameraWidth = 10.0; // The default "width" of the camera
         this.options = {}; // Options for the viewer. Can be e.g. used to control which settings are enabled
+        // Check that OpenGL is available, otherwise throw an exception
+        if (!this.webglAvailable()) {
+            throw Error("WebGL is not supported on this browser, cannot display viewer.");
+        }
         this.setOptions(options);
         this.setupRootElement();
         this.setupRenderer();
@@ -189,15 +193,10 @@ export class Viewer {
      */
     setupRenderer() {
         // Create the renderer. The "alpha: true" enables to set a background color.
-        if (this.webglAvailable()) {
-            this.renderer = new THREE.WebGLRenderer({
-                alpha: true,
-                antialias: true,
-            });
-        }
-        else {
-            console.log("WebGL is not supported on this browser, cannot display structure.");
-        }
+        this.renderer = new THREE.WebGLRenderer({
+            alpha: true,
+            antialias: true,
+        });
         this.renderer.shadowMap.enabled = false;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setSize(this.rootElement.clientWidth, this.rootElement.clientHeight);
