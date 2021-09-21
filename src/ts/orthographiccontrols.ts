@@ -78,7 +78,6 @@ export class OrthographicControls {
         this.dynamicDampingFactor = 0.2;
         this.minDistance = 0;
         this.maxDistance = Infinity;
-        this.keys = [ 65 /*A*/, 83 /*S*/, 68 /*D*/ ];
 
         // Private
         this.rotationCenter = new THREE.Vector3();
@@ -114,11 +113,8 @@ export class OrthographicControls {
         this.domElement.addEventListener( 'touchend', this.touchend.bind(this), false );
         this.domElement.addEventListener( 'touchmove', this.touchmove.bind(this), false );
 
-        window.addEventListener( 'keydown', this.keydown.bind(this), false );
-        window.addEventListener( 'keyup', this.keyup.bind(this), false );
-        window.addEventListener( 'keydown', this.keydown.bind(this), false );
-        document.addEventListener( 'mousemove', this.mousemove.bind(this), false );
-        document.addEventListener( 'mouseup', this.mouseup.bind(this), false );
+        this.domElement.addEventListener( 'mousemove', this.mousemove.bind(this), false );
+        this.domElement.addEventListener( 'mouseup', this.mouseup.bind(this), false );
 
 
         this.handleResize();
@@ -354,35 +350,9 @@ export class OrthographicControls {
 		this.domElement.removeEventListener( 'touchstart', this.touchstart.bind(this), false );
 		this.domElement.removeEventListener( 'touchend', this.touchend.bind(this), false );
 		this.domElement.removeEventListener( 'touchmove', this.touchmove.bind(this), false );
-
-		document.removeEventListener( 'mousemove', this.mousemove.bind(this), false );
-		document.removeEventListener( 'mouseup', this.mouseup.bind(this), false );
-		window.removeEventListener( 'keydown', this.keydown.bind(this), false );
-		window.removeEventListener( 'keyup', this.keyup.bind(this), false );
+		this.domElement.removeEventListener( 'mousemove', this.mousemove.bind(this), false );
+		this.domElement.removeEventListener( 'mouseup', this.mouseup.bind(this), false );
 	};
-
-    keydown( event ) {
-        if ( this.enabled === false ) return;
-
-        window.removeEventListener( 'keydown', this.keydown.bind(this) );
-
-        this._prevState = this._state;
-
-        if ( this._state !== STATE.NONE ) {
-            return;
-        } else if ( event.keyCode === this.keys[ STATE.ROTATE ] && this.enableRotate ) {
-            this._state = STATE.ROTATE;
-        } else if ( event.keyCode === this.keys[ STATE.ZOOM ] && this.enableZoom ) {
-            this._state = STATE.ZOOM;
-        } else if ( event.keyCode === this.keys[ STATE.PAN ] && this.enablePan ) {
-            this._state = STATE.PAN;
-        }
-    }
-
-    keyup(event) {
-        if ( this.enabled === false ) return;
-        this._state = this._prevState;
-    }
 
     mousedown( event ) {
         if ( this.enabled === false ) return;

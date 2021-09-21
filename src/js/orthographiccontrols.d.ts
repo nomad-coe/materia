@@ -64,8 +64,6 @@ export declare class OrthographicControls {
     saveReset(): void;
     reset(): void;
     dispose(): void;
-    keydown(event: any): void;
-    keyup(event: any): void;
     mousedown(event: any): void;
     mousemove(event: any): void;
     mouseup(event: any): void;
