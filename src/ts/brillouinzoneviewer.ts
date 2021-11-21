@@ -1,6 +1,6 @@
 import { Viewer } from "./viewer"
 import * as THREE from "three"
-import { ConvexGeometry } from './convexgeometry';
+import { getConvexGeometry } from './convexgeometry'
 import { MeshLine, MeshLineMaterial } from 'threejs-meshline'
 import voronoi from 'voronoi-diagram'
 
@@ -8,15 +8,15 @@ import voronoi from 'voronoi-diagram'
  * A 3D visualizer for the Brillouin Zone and the k-point path within it.
  */
 export class BrillouinZoneViewer extends Viewer {
-    private data:Object;       // The visualized structure
-    private info:any;          // Object3D containing the information visuals
-    private zone:any;          // Object3D containing the BZ mesh
-    private sceneZone:any;     // The scene containing the Brillouin zone mesh
-    private sceneInfo:any;     // The scene containing the information that is overlayed on top of the BZ
-    private basis:any;         // The reciprocal cell basis
-    private labelPoints:any;   // Contains the labels of special k-points
-    private basisVectors:THREE.Vector3[];
-    private B:THREE.Matrix3;
+    private data:any          // The visualized structure
+    private info:any          // Object3D containing the information visuals
+    private zone:any          // Object3D containing the BZ mesh
+    private sceneZone:any     // The scene containing the Brillouin zone mesh
+    private sceneInfo:any     // The scene containing the information that is overlayed on top of the BZ
+    private basis:any         // The reciprocal cell basis
+    private labelPoints:any   // Contains the labels of special k-points
+    private basisVectors:THREE.Vector3[]
+    private B:THREE.Matrix3
 
     /*
      * Overrides the implementation from the base class, as we need two scenes:
@@ -32,17 +32,17 @@ export class BrillouinZoneViewer extends Viewer {
 
     setupLights(): void {
         // Key light
-        let keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
+        const keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
         keyLight.position.set(0, 0, 20)
         this.sceneZone.add( keyLight );
 
         // Fill light
-        let fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
         fillLight.position.set(-20, 0, -20)
         this.sceneZone.add( fillLight );
 
         // Back light
-        let backLight = new THREE.DirectionalLight(0xffffff, 0.25);
+        const backLight = new THREE.DirectionalLight(0xffffff, 0.25);
         backLight.position.set( 20, 0, -20 );
         this.sceneZone.add( backLight );
 
@@ -337,47 +337,42 @@ export class BrillouinZoneViewer extends Viewer {
             center.divideScalar(vertices.length)
 
             if (center.length() < 1e-7) {
-                const pointGeometry = new THREE.Geometry();
-                for (const vertex of vertices) {
-                    pointGeometry.vertices.push(vertex)
-                }
-                bzVertices = new THREE.Points(pointGeometry)
-                bzVertices.visible = true;
+                bzVertices = vertices
                 break
             }
         }
 
-        this.zone = new THREE.Object3D();
-        this.zone.name = "zone";
-        this.sceneZone.add(this.zone);
-        this.info = new THREE.Object3D();
-        this.info.name = "info";
-        this.sceneInfo.add(this.info);
+        this.zone = new THREE.Object3D()
+        this.zone.name = "zone"
+        this.sceneZone.add(this.zone)
+        this.info = new THREE.Object3D()
+        this.info.name = "info"
+        this.sceneInfo.add(this.info)
 
-        // A customised THREE.Geometry object that will create the face
+        // A customised THREE.BufferGeometry object that will create the face
         // geometry and information about the face edges
-        const bzGeometry = new ConvexGeometry(bzVertices.geometry.vertices);
+        const {geometry, faces} = getConvexGeometry(bzVertices)
 
         // Weird hack for achieving translucent surfaces. Setting
         // side=DoubleSide on a single mesh will not do.
-        const group = new THREE.Group();
+        const group = new THREE.Group()
         group.name = "group"
         const meshMaterial = new THREE.MeshPhongMaterial( {
             color : this.options.faces.color,
             opacity: this.options.faces.opacity,
             transparent: true
         } );
-        const mesh = new THREE.Mesh( bzGeometry, meshMaterial);
+        const mesh = new THREE.Mesh(geometry, meshMaterial);
         mesh.name = "innermesh"
-        mesh.material.side = THREE.BackSide; // back faces
-        mesh.renderOrder = 0;
-        group.add( mesh );
-        const mesh2 = new THREE.Mesh( bzGeometry, meshMaterial.clone());
+        mesh.material.side = THREE.BackSide // back faces
+        mesh.renderOrder = 0
+        group.add( mesh )
+        const mesh2 = new THREE.Mesh(geometry, meshMaterial.clone())
         mesh2.name = "outermesh"
         mesh2.material.side = THREE.FrontSide; // front faces
-        mesh2.renderOrder = 1;
-        group.add( mesh2 );
-        this.zone.add(group);
+        mesh2.renderOrder = 1
+        group.add( mesh2 )
+        this.zone.add(group)
 
         // Create edges as closed loops around each face
         const edgeWidth = this.options.faces.outline.width
@@ -386,16 +381,17 @@ export class BrillouinZoneViewer extends Viewer {
             lineWidth: edgeWidth,
             sizeAttenuation: true,
         });
-        for (const face of bzGeometry.faceEdges) {
-            const edgeGeometry = new THREE.Geometry();
+        for (const face of faces) {
+            const edgeVertices = []
             for (const vertex of face) {
                 let scaledVertex = vertex.clone()
                 const length = scaledVertex.length();
                 scaledVertex = scaledVertex.multiplyScalar(1+0.5*edgeWidth/length);
-                edgeGeometry.vertices.push(scaledVertex)
+                edgeVertices.push(scaledVertex)
             }
+            //const edgeGeometry = new THREE.BufferGeometry().setFromPoints(edgeVertices);
             const edgeLine = new MeshLine();
-            edgeLine.setVertices(edgeGeometry.vertices)
+            edgeLine.setVertices(edgeVertices)
             const edgeMesh = new THREE.Mesh(edgeLine, edgeMaterial);
             this.zone.add(edgeMesh);
         }
@@ -431,11 +427,7 @@ export class BrillouinZoneViewer extends Viewer {
                 .multiplyScalar(length);
 
             // Add a dashed line
-            const lineGeometry = new THREE.Geometry();
-            lineGeometry.vertices.push(
-                origin,
-                dir
-            );
+            const lineVertices = [origin, dir]
             const lineMaterial = new MeshLineMaterial({
                 color: "#000",
                 lineWidth: 0.00075,
@@ -445,9 +437,9 @@ export class BrillouinZoneViewer extends Viewer {
                 depthTest: false,
             });
             const kpathLine = new MeshLine();
-            kpathLine.setVertices(lineGeometry.vertices)
+            kpathLine.setVertices(lineVertices)
             const line = new THREE.Mesh(kpathLine, lineMaterial);
-            this.info.add( line );
+            this.info.add(line);
 
             // Add an axis label
             const textPos = new THREE.Vector3()
@@ -489,20 +481,21 @@ export class BrillouinZoneViewer extends Viewer {
             lineWidth: this.options.segments.linewidth,
             sizeAttenuation: true,
         });
-        let kpathGeometry;
+        //let kpathGeometry;
         const labelPoints = [];
         for (let iSegment=0; iSegment<segments.length; ++iSegment) {
-            kpathGeometry = new THREE.Geometry();
+            //kpathGeometry = new THREE.BufferGeometry();
+            const kpathVertices = []
             const segment = segments[iSegment];
             for (const kpoint of segment) {
                 const kpointScaled = new THREE.Vector3().fromArray(kpoint)
                 const kpointCart = this.coordinateTransform(this.B, I, kpointScaled, false)
-                kpathGeometry.vertices.push(kpointCart); // The point is pushed twice because it looks nicer that way for some reason...
-                kpathGeometry.vertices.push(kpointCart);
+                kpathVertices.push(kpointCart); // The point is pushed twice because it looks nicer that way for some reason...
+                kpathVertices.push(kpointCart);
                 labelPoints.push(kpointCart)
             }
             const kpathLine = new MeshLine();
-            kpathLine.setVertices(kpathGeometry.vertices)
+            kpathLine.setVertices(kpathVertices)
             const kpath = new THREE.Mesh(kpathLine, kpathMaterial);
             this.info.add(kpath);
         }
@@ -552,13 +545,17 @@ export class BrillouinZoneViewer extends Viewer {
         // The corners of the BZ will be used as visualization boundaries
         const mesh = this.zone.getObjectByName("group").getObjectByName("outermesh")
         mesh.updateMatrixWorld()
-        const vertices = mesh.geometry.vertices
+        const vertices = []
+        const verticesArray = mesh.geometry.attributes.position.array
+        const nVertices = verticesArray.length / 3
+        for (let i = 0; i < nVertices; ++i) {
+            vertices.push(new THREE.Vector3().fromArray(verticesArray, i * 3))
+        }
 
         // Transform positions to world coordinates
-        const nVertices = vertices.length
         const worldPos = [];
         for (let i=0; i < nVertices; ++i) {
-            const pos = vertices[i].clone()
+            const pos = vertices[i]
             worldPos.push(mesh.localToWorld(pos))
         }
 

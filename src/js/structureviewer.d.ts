@@ -51,7 +51,7 @@ export declare class StructureViewer extends Viewer {
      *   initially centered. Available options are:
      *    - "COC": Center of cell.
      *    - "COP": Center of atom positions.
-     * @param {string} options.layout.viewRotation.align.top Optional alignment
+     * @param {string} options.layout.viewRotation.alignment.top Optional alignment
      * indicating which lattice basis vector should point upwards. Possible
      * values are: "a", "b", "c", "-a", "-b", "-c".
      * @param {string} options.layout.viewRotation.align.right Optional alignment
@@ -59,9 +59,14 @@ export declare class StructureViewer extends Viewer {
      * precisely: the cross-product of options.layout.viewRotation.align.top
      * and options.layout.viewRotation.align.right will point away from the
      * screen.). Possible values are: "a", "b", "c", "-a", "-b", "-c".
-     * @param {number[][]} options.layout.viewRotation.align.rotations Optional
-     * rotations that are applied after the alignment has been done (see
-     * options.layout.viewRotation.align). The rotations are given as a list of
+     * @param {string[][]} options.layout.viewRotation.alignments Optional
+     * alignments for the basis vectors. You can define two alignments for any two
+     * axis vectors. E.g. [["up", "c"], ["right", "b"]] will force the third basis
+     * vector to point exactly up, and the second basis vector to as close to right
+     * as possible.
+     * @param {number[][]} options.layout.viewRotation.rotations Optional
+     * rotations that are applied after the alignments have been done (see
+     * options.layout.viewRotation.alignments). The rotations are given as a list of
      * 4-element arrays containing the rotations axis and rotation angle in
      * degrees. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with
      * respect to the x-coordinate. If multiple rotations are specified, they
@@ -70,7 +75,6 @@ export declare class StructureViewer extends Viewer {
      * system of the structure. In this global coordinate system [1, 0, 0]
      * points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away
      * from the screen.
-     *
      * @param {boolean} options.latticeConstants.enabled Show lattice parameters
      * @param {string} options.latticeConstants.font Font size for lattice
      * constants. Applied as default to all labels, can be overridden

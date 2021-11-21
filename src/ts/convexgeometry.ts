@@ -1,31 +1,21 @@
 import * as THREE from "three"
+import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ConvexHull } from './convexhull';
 
-
-/**
- * Customized version of the three.js ConvexGeometry that additionally stores
- * the face edges.
- */
-const ConvexGeometry = function(points: THREE.Vector3[]): void {
-	THREE.Geometry.call( this );
-    const bufferGeometry = new ConvexBufferGeometry(points) 
-    this.faceEdges = bufferGeometry.faceEdges
-    this.fromBufferGeometry(bufferGeometry);
-    this.mergeVertices();
-};
-
-ConvexGeometry.prototype = Object.create( THREE.Geometry.prototype );
-ConvexGeometry.prototype.constructor = ConvexGeometry;
+type ConvexGeometry = {
+    geometry: THREE.BufferGeometry,
+    faces: THREE.Vector3[][]
+}
 
 /**
  * Customized version of the three.js ConvexBufferGeometry that additionally
  * identifies and stores the face edges.
  */
-const ConvexBufferGeometry = function(points: THREE.Vector3[]): void {
-	THREE.BufferGeometry.call( this );
+const getConvexGeometry = function(points: THREE.Vector3[]): ConvexGeometry {
+    let bufferGeometry = new THREE.BufferGeometry()
 
 	// Calculate convex hull from given points
-	const convexHull = new ConvexHull().setFromPoints( points );
+	const convexHull = new ConvexHull().setFromPoints(points);
 
 	// Generate vertices and normals
 	const vertices = [];
@@ -42,8 +32,8 @@ const ConvexBufferGeometry = function(points: THREE.Vector3[]): void {
 			edge = edge.next;
 		} while ( edge !== face.edge );
 	}
-	this.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-	this.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+	bufferGeometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+	bufferGeometry.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
 
     // Identify the edges: loop through the triangle edges, add points that are
     // on the edge by checking if the 'twin' edge is coplanar.
@@ -70,10 +60,8 @@ const ConvexBufferGeometry = function(points: THREE.Vector3[]): void {
         } while (currentEdge !== startEdge)
         faceEdges.push(faceEdge)
     }
-    this.faceEdges = faceEdges
+    bufferGeometry = BufferGeometryUtils.mergeVertices(bufferGeometry);
+    return {geometry: bufferGeometry, faces: faceEdges}
 };
 
-ConvexBufferGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
-ConvexBufferGeometry.prototype.constructor = ConvexBufferGeometry;
-
-export { ConvexGeometry };
+export { getConvexGeometry };

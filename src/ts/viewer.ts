@@ -346,23 +346,20 @@ export abstract class Viewer {
      * @param origin - The origin of the cuboid.
      * @param basis - The vectors that define the cuboid.
      */
-    createCornerPoints(origin: THREE.Vector3, basis: THREE.Vector3[]): THREE.Geometry {
-
-        const geometry = new THREE.Geometry();
-        geometry.vertices.push(origin);
-        const opposite = origin.clone().add(basis[0]).add(basis[1]).add(basis[2]);
-        geometry.vertices.push(opposite);
+    createCornerPoints(origin: THREE.Vector3, basis: THREE.Vector3[]): THREE.BufferGeometry {
+        const opposite = origin.clone().add(basis[0]).add(basis[1]).add(basis[2])
+        const vertices = [origin, opposite]
 
         for (let len=basis.length, i=0; i<len; ++i) {
             // Corners close to origin
-            const position1 = origin.clone().add(basis[i].clone());
-            geometry.vertices.push(position1);
+            vertices.push(origin.clone().add(basis[i].clone()))
 
             // Corners close to opposite point of origin
-            const position2 = opposite.clone().sub(basis[i].clone());
-            geometry.vertices.push(position2);
+            vertices.push(opposite.clone().sub(basis[i].clone()))
         }
-        return geometry;
+
+        const geometry = new THREE.BufferGeometry().setFromPoints(vertices)
+        return geometry
     }
 
     /**
@@ -524,13 +521,12 @@ export abstract class Viewer {
      * @param material - Cylinder material
      */
     createCylinder(pos1, pos2, radius, nSegments, material) {
-        var direction = new THREE.Vector3().subVectors( pos2, pos1 );
-        let dirLen = direction.length();
-        let dirNorm = direction.clone().divideScalar(dirLen);
-        var arrow = new THREE.ArrowHelper( dirNorm, pos1 );
-        var edgeGeometry = new THREE.CylinderGeometry( radius, radius, dirLen, nSegments, 0 );
-        var edge = new THREE.Mesh( edgeGeometry, material);
-
+        const direction = new THREE.Vector3().subVectors( pos2, pos1 );
+        const dirLen = direction.length();
+        const dirNorm = direction.clone().divideScalar(dirLen);
+        const arrow = new THREE.ArrowHelper( dirNorm, pos1 );
+        const edgeGeometry = new THREE.CylinderGeometry(radius, radius, dirLen, nSegments);
+        const edge = new THREE.Mesh(edgeGeometry, material);
         edge.rotation.copy(arrow.rotation.clone());
         edge.position.copy(new THREE.Vector3().addVectors( pos1, direction.multiplyScalar(0.5) ));
 

@@ -1,10 +1,11 @@
 import * as THREE from "three";
-/**
- * Customized version of the three.js ConvexGeometry that additionally stores
- * the face edges.
- */
-declare const ConvexGeometry: {
-    (points: THREE.Vector3[]): void;
-    prototype: any;
+declare type ConvexGeometry = {
+    geometry: THREE.BufferGeometry;
+    faces: THREE.Vector3[][];
 };
-export { ConvexGeometry };
+/**
+ * Customized version of the three.js ConvexBufferGeometry that additionally
+ * identifies and stores the face edges.
+ */
+declare const getConvexGeometry: (points: THREE.Vector3[]) => ConvexGeometry;
+export { getConvexGeometry };

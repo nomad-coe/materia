@@ -303,7 +303,7 @@ export class StructureViewer extends Viewer {
      *   initially centered. Available options are:
      *    - "COC": Center of cell.
      *    - "COP": Center of atom positions.
-     * @param {string} options.layout.viewRotation.align.top Optional alignment
+     * @param {string} options.layout.viewRotation.alignment.top Optional alignment
      * indicating which lattice basis vector should point upwards. Possible
      * values are: "a", "b", "c", "-a", "-b", "-c".
      * @param {string} options.layout.viewRotation.align.right Optional alignment
@@ -311,9 +311,14 @@ export class StructureViewer extends Viewer {
      * precisely: the cross-product of options.layout.viewRotation.align.top
      * and options.layout.viewRotation.align.right will point away from the
      * screen.). Possible values are: "a", "b", "c", "-a", "-b", "-c".
-     * @param {number[][]} options.layout.viewRotation.align.rotations Optional
-     * rotations that are applied after the alignment has been done (see
-     * options.layout.viewRotation.align). The rotations are given as a list of
+     * @param {string[][]} options.layout.viewRotation.alignments Optional
+     * alignments for the basis vectors. You can define two alignments for any two
+     * axis vectors. E.g. [["up", "c"], ["right", "b"]] will force the third basis
+     * vector to point exactly up, and the second basis vector to as close to right
+     * as possible.
+     * @param {number[][]} options.layout.viewRotation.rotations Optional
+     * rotations that are applied after the alignments have been done (see
+     * options.layout.viewRotation.alignments). The rotations are given as a list of
      * 4-element arrays containing the rotations axis and rotation angle in
      * degrees. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with
      * respect to the x-coordinate. If multiple rotations are specified, they
@@ -322,7 +327,6 @@ export class StructureViewer extends Viewer {
      * system of the structure. In this global coordinate system [1, 0, 0]
      * points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away
      * from the screen.
-     *
      * @param {boolean} options.latticeConstants.enabled Show lattice parameters
      * @param {string} options.latticeConstants.font Font size for lattice
      * constants. Applied as default to all labels, can be overridden
@@ -586,7 +590,7 @@ export class StructureViewer extends Viewer {
         // a full reload.
         // Overrride with settings from user and child class
         function eachRecursive(source, target) {
-            for (var k in source) {
+            for (const k in source) {
                 // Find variable in default settings
                 if (source[k] !== null && Object.prototype.toString.call(source[k]) === "[object Object]") {
                     // If the current level is not defined in the target, it is
@@ -594,7 +598,7 @@ export class StructureViewer extends Viewer {
                     if (target[k] === undefined) {
                         return true;
                     }
-                    let update = eachRecursive(source[k], target[k]);
+                    const update = eachRecursive(source[k], target[k]);
                     if (update) {
                         return true;
                     }
@@ -1149,8 +1153,6 @@ export class StructureViewer extends Viewer {
         let angleLabelSprites = [];
         // If 2D periodic, we save the periodic indices, and ensure a right
         // handed coordinate system.
-        let first;
-        let second;
         for (let iTrueBasis = 0; iTrueBasis < 3; ++iTrueBasis) {
             iBasis += 1;
             let axisLabel = axisLabels[iBasis];
@@ -1172,57 +1174,54 @@ export class StructureViewer extends Viewer {
             let basisVec3 = basis[(iTrueBasis + 2) % 3].clone();
             if (axisEnabled) {
                 // Basis and angle label selection, same for all systems
-                let origin = new THREE.Vector3(0, 0, 0);
-                let dir = basisVec1.clone();
+                const origin = new THREE.Vector3(0, 0, 0);
+                const dir = basisVec1.clone();
                 // Add an axis label
-                let textPos = dir.clone()
+                const textPos = dir.clone()
                     .multiplyScalar(0.5);
                 let labelOffset;
                 let newBasis2;
-                let newBasis3;
                 if (basisVec2.length() == 0) {
                     newBasis2 = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
                     labelOffset = new THREE.Vector3().crossVectors(basisVec1, newBasis2);
                 }
                 else if (basisVec3.length() == 0) {
-                    newBasis3 = new THREE.Vector3().crossVectors(basisVec1, basisVec2);
                     labelOffset = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
                 }
                 else {
-                    let labelOffset1 = new THREE.Vector3().crossVectors(basisVec1, basisVec2);
-                    let labelOffset2 = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
+                    const labelOffset1 = new THREE.Vector3().crossVectors(basisVec1, basisVec2);
+                    const labelOffset2 = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
                     labelOffset = new THREE.Vector3().sub(labelOffset1).add(labelOffset2);
                 }
                 labelOffset.normalize();
                 labelOffset.multiplyScalar(0.8);
                 textPos.add(labelOffset);
-                let axisLabelSprite = this.createLabel(textPos, axisLabel, axisColor, axisFont, axisFontSize, new THREE.Vector2(0.0, 0.0), strokeWidth, strokeColor);
+                const axisLabelSprite = this.createLabel(textPos, axisLabel, axisColor, axisFont, axisFontSize, new THREE.Vector2(0.0, 0.0), strokeWidth, strokeColor);
                 this.latticeConstants.add(axisLabelSprite);
                 this.axisLabels.push(axisLabelSprite);
                 // Add basis vector colored line
-                let cellVectorMaterial = new THREE.MeshBasicMaterial({
+                const cellVectorMaterial = new THREE.MeshBasicMaterial({
                     color: axisColor,
                     transparent: true,
                     opacity: 0.75
                 });
-                let cellVector = basisVec1.clone();
-                let cellVectorLine = this.createCylinder(origin.clone(), cellVector.clone().add(origin), 0.09, 10, cellVectorMaterial);
+                const cellVector = basisVec1.clone();
+                const cellVectorLine = this.createCylinder(origin.clone(), cellVector.clone().add(origin), 0.09, 10, cellVectorMaterial);
                 this.latticeConstants.add(cellVectorLine);
                 // Add basis vector axis line
-                let cellAxisMaterial = new THREE.MeshBasicMaterial({
+                const cellAxisMaterial = new THREE.MeshBasicMaterial({
                     color: "#000000",
                 });
-                let axisStart = this.basisVectors[iTrueBasis].clone();
-                let axisEnd = axisStart.clone().multiplyScalar(1 + axisOffset / axisStart.length());
-                let cellAxisVector = basisVec1.clone();
-                let cellAxisVectorLine = this.createCylinder(origin.clone(), axisEnd, 0.02, 10, cellAxisMaterial);
+                const axisStart = this.basisVectors[iTrueBasis].clone();
+                const axisEnd = axisStart.clone().multiplyScalar(1 + axisOffset / axisStart.length());
+                const cellAxisVectorLine = this.createCylinder(origin.clone(), axisEnd, 0.02, 10, cellAxisMaterial);
                 this.latticeConstants.add(cellAxisVectorLine);
                 // Add axis arrow
-                let arrowGeometry = new THREE.CylinderGeometry(0, 0.10, 0.5, 12);
-                let arrowMaterial = new THREE.MeshBasicMaterial({
+                const arrowGeometry = new THREE.CylinderGeometry(0, 0.10, 0.5, 12);
+                const arrowMaterial = new THREE.MeshBasicMaterial({
                     color: infoColor,
                 });
-                let arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+                const arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
                 arrow.position.copy(dir)
                     .multiplyScalar(1 + axisOffset / dir.length());
                 arrow.lookAt(new THREE.Vector3());
@@ -1231,46 +1230,47 @@ export class StructureViewer extends Viewer {
             }
             if (angleEnabled) {
                 // Add angle label and curve
-                let arcMaterial = new THREE.LineDashedMaterial({
+                const arcMaterial = new THREE.LineDashedMaterial({
                     color: infoColor,
                     linewidth: 2,
                     dashSize: 0.2,
                     gapSize: 0.1
                 });
-                let normal = new THREE.Vector3().crossVectors(basisVec1, basisVec2);
-                let angle = basisVec1.angleTo(basisVec2);
-                let radius = Math.max(Math.min(1 / 4 * basisVec1.length(), 1 / 4 * basisVec2.length()), 1);
-                let curve = new THREE.EllipseCurve(0, 0, // ax, aY
+                const normal = new THREE.Vector3().crossVectors(basisVec1, basisVec2);
+                const angle = basisVec1.angleTo(basisVec2);
+                const radius = Math.max(Math.min(1 / 4 * basisVec1.length(), 1 / 4 * basisVec2.length()), 1);
+                const curve = new THREE.EllipseCurve(0, 0, // ax, aY
                 radius, radius, // xRadius, yRadius
                 0, angle, // aStartAngle, aEndAngle
                 false, // aClockwise
                 0 // aRotation
                 );
-                let points = curve.getSpacedPoints(20);
-                let arcGeometry = new THREE.Geometry().setFromPoints(points);
-                let arc = new THREE.Line(arcGeometry, arcMaterial);
+                const nArcPoints = 20;
+                const points = curve.getSpacedPoints(nArcPoints);
+                const arcGeometry = new THREE.BufferGeometry().setFromPoints(points);
+                const arc = new THREE.Line(arcGeometry, arcMaterial);
                 arc.computeLineDistances();
                 // First rotate the arc so that it's x-axis points towards the
                 // first basis vector that defines the arc
-                let yAxis = new THREE.Vector3(0, 1, 0);
-                let xAxis = new THREE.Vector3(1, 0, 0);
-                let zAxis = new THREE.Vector3(0, 0, 1);
-                let quaternion = new THREE.Quaternion().setFromUnitVectors(xAxis, basisVec1.clone().normalize());
+                const xAxis = new THREE.Vector3(1, 0, 0);
+                const quaternion = new THREE.Quaternion().setFromUnitVectors(xAxis, basisVec1.clone().normalize());
                 arc.quaternion.copy(quaternion);
                 // Then rotate the arc along it's x axis so that the xy-plane
                 // coincides with the plane defined by the the two basis vectors
                 // that define the plane.
-                let lastArcPointLocal = arcGeometry.vertices[arcGeometry.vertices.length - 1];
+                const verticesArray = arcGeometry.attributes.position.array;
+                const nVertices = verticesArray.length / 3;
+                const lastArcPointLocal = new THREE.Vector3().fromArray(verticesArray, (nVertices - 1) * 3);
                 arc.updateMatrixWorld(); // The positions are not otherwise updated properly
-                let lastArcPointWorld = arc.localToWorld(lastArcPointLocal.clone());
+                const lastArcPointWorld = arc.localToWorld(lastArcPointLocal.clone());
                 // The angle direction is defined by the first basis vector
-                let axis = basisVec1;
-                let arcNormal = new THREE.Vector3()
+                const axis = basisVec1;
+                const arcNormal = new THREE.Vector3()
                     .crossVectors(axis, lastArcPointWorld);
                 let planeAngle = normal.angleTo(arcNormal);
-                let planeCross = new THREE.Vector3()
+                const planeCross = new THREE.Vector3()
                     .crossVectors(basisVec2, lastArcPointWorld);
-                let directionValue = planeCross.dot(axis);
+                const directionValue = planeCross.dot(axis);
                 if (directionValue > 0) {
                     planeAngle = -planeAngle;
                 }
@@ -1278,10 +1278,10 @@ export class StructureViewer extends Viewer {
                 // Add label for the angle
                 arc.updateMatrixWorld(); // The positions are not otherwise updated properly
                 arc.updateMatrix(); // The positions are not otherwise updated properly
-                let angleLabelPos = arc.localToWorld(arcGeometry.vertices[9].clone());
-                let angleLabelLen = angleLabelPos.length();
+                const angleLabelPos = arc.localToWorld(new THREE.Vector3().fromArray(verticesArray, (nArcPoints / 2 - 1) * 3));
+                const angleLabelLen = angleLabelPos.length();
                 angleLabelPos.multiplyScalar(1 + 0.3 / angleLabelLen);
-                let angleLabelObj = this.createLabel(angleLabelPos, angleLabel.toString(), angleColor, angleFont, angleFontSize, new THREE.Vector2(0.0, 0.0), angleStrokeWidth, angleStrokeColor);
+                const angleLabelObj = this.createLabel(angleLabelPos, angleLabel.toString(), angleColor, angleFont, angleFontSize, new THREE.Vector2(0.0, 0.0), angleStrokeWidth, angleStrokeColor);
                 this.latticeConstants.add(angleLabelObj);
                 this.axisLabels.push(angleLabelObj);
                 this.angleArcs.add(arc);
@@ -1308,7 +1308,7 @@ export class StructureViewer extends Viewer {
         const B = new THREE.Matrix3();
         B.set(a.x, b.x, c.x, a.y, b.y, c.y, a.z, b.z, c.z);
         this.B = B;
-        this.Bi = new THREE.Matrix3().getInverse(B);
+        this.Bi = new THREE.Matrix3().copy(B).invert();
     }
     getCornerPoints() {
         // The atom positions will be used as visualization boundaries
@@ -1380,13 +1380,10 @@ export class StructureViewer extends Viewer {
             let line1Mat = lineMaterial.clone();
             let isDim1 = !periodicity[i];
             if (!(isDim1 && collapsed)) {
-                /*
-                if (isDim1) {
-                    line1Mat = dimMaterial.clone();
-                }
-                */
-                let lineGeometry = new THREE.Geometry();
-                lineGeometry.vertices.push(origin.clone(), basisVector.clone().add(origin));
+                const points = [];
+                points.push(origin.clone());
+                points.push(basisVector.clone().add(origin));
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
                 let line = new THREE.Line(lineGeometry, line1Mat);
                 cell.add(line);
                 line.computeLineDistances();
@@ -1397,8 +1394,10 @@ export class StructureViewer extends Viewer {
             let isDim2 = !periodicity[i] || !periodicity[(i + 1) % 3];
             if (!(isDim2 && collapsed)) {
                 let line2Mat = lineMaterial.clone();
-                let line2Geometry = new THREE.Geometry();
-                line2Geometry.vertices.push(secondAddition.clone().add(origin), basisVector.clone().add(secondAddition).add(origin));
+                const points = [];
+                points.push(secondAddition.clone().add(origin));
+                points.push(basisVector.clone().add(secondAddition).add(origin));
+                let line2Geometry = new THREE.BufferGeometry().setFromPoints(points);
                 let line2 = new THREE.Line(line2Geometry, line2Mat);
                 cell.add(line2);
                 line2.computeLineDistances();
@@ -1408,20 +1407,24 @@ export class StructureViewer extends Viewer {
             let thirdAddition = basisVectors[thirdIndex].clone();
             let isDim3 = !periodicity[i] || !periodicity[(i + 2) % 3];
             if (!(isDim3 && collapsed)) {
-                let line3Mat = lineMaterial.clone();
-                let line3Geometry = new THREE.Geometry();
-                line3Geometry.vertices.push(thirdAddition.clone().add(origin), basisVector.clone().add(thirdAddition).add(origin));
-                let line3 = new THREE.Line(line3Geometry, line3Mat);
+                const line3Mat = lineMaterial.clone();
+                const points = [];
+                points.push(thirdAddition.clone().add(origin));
+                points.push(basisVector.clone().add(thirdAddition).add(origin));
+                const line3Geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const line3 = new THREE.Line(line3Geometry, line3Mat);
                 cell.add(line3);
                 line3.computeLineDistances();
             }
             // Fourth line
             let isDim4 = !periodicity[i] || !periodicity[(i + 2) % 3] || !periodicity[(i + 1) % 3];
             if (!(isDim4 && collapsed)) {
-                let line4Mat = lineMaterial.clone();
-                let line4Geometry = new THREE.Geometry();
-                line4Geometry.vertices.push(secondAddition.clone().add(thirdAddition).add(origin), basisVector.clone().add(secondAddition).add(thirdAddition).add(origin));
-                let line4 = new THREE.Line(line4Geometry, line4Mat);
+                const line4Mat = lineMaterial.clone();
+                const points = [];
+                points.push(secondAddition.clone().add(thirdAddition).add(origin));
+                points.push(basisVector.clone().add(secondAddition).add(thirdAddition).add(origin));
+                const line4Geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const line4 = new THREE.Line(line4Geometry, line4Mat);
                 cell.add(line4);
                 line4.computeLineDistances();
             }
