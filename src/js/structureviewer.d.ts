@@ -10,6 +10,7 @@ export declare class StructureViewer extends Viewer {
     B: THREE.Matrix3;
     Bi: THREE.Matrix3;
     basisVectors: THREE.Vector3[];
+    basisVectorCollapsed: boolean[];
     updateBonds: boolean;
     maxRadii: number;
     atomicRadii: Array<number>;
@@ -304,12 +305,13 @@ export declare class StructureViewer extends Viewer {
      * Creates outlines for a cell specified by the given basis vectors.
      * @param origin - The origin for the cell
      * @param basisVectors - The cell basis vectors
+     * @param basisVectorCollapsed - Whether a basis vector is collapsed (length = 0)
      * @param periodicity - The periodicity of the cell
      * @param color - Color fo the cell wireframe
      * @param linewidth - Line width fo the wireframe
      * @param dashed - Is wireframe dashed
      */
-    createCell(origin: any, basisVectors: any, periodicity: any, color: any, linewidth: number, dashSize: number, gapSize: number): THREE.Object3D;
+    createCell(origin: any, basisVectors: any, basisVectorCollapsed: any, periodicity: any, color: any, linewidth: number, dashSize: number, gapSize: number): THREE.Object3D;
     /**
      * @param rotations The rotations as a list. Each rotation should be an
      * array containing four numbers: [x, y, z, angle]. The rotations are
@@ -373,28 +375,6 @@ export declare class StructureViewer extends Viewer {
      * @param targetSize - The targeted size.
      */
     getRepetitions(latticeVector: any, targetSize: any): number;
-    /**
-     * Setup the view for 0D systems (atoms, molecules).
-     */
-    setup0D(fracPos: any, cartPos: any, labels: any): void;
-    /**
-     * Replicates the structure along the specified direction to emphasize the
-     * 1D nature of the material.
-     *
-     * @param dim - The index of the periodic dimension.
-     */
-    setup1D(fracPos: any, cartPos: any, labels: any, pbc: any, periodicIndices: any): void;
-    /**
-     * Replicates the structure along the specified direction to emphasize the
-     * 2D nature of the material.
-     *
-     * @param periodicIndices - The indices of the periodic dimension.
-     */
-    setup2D(fracPos: any, cartPos: any, labels: any, pbc: any, periodicIndices: any): void;
-    /**
-     * Setup the view for 3D systems (crystals)
-     */
-    setup3D(fracPos: any, cartPos: any, labels: any): void;
     elementNames: string[];
     elementNumbers: object;
     missing: number;

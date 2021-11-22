@@ -11,6 +11,7 @@ export class StructureViewer extends Viewer {
     B:THREE.Matrix3;
     Bi:THREE.Matrix3;
     basisVectors:THREE.Vector3[];
+    basisVectorCollapsed:boolean[];
     updateBonds:boolean = false;
     maxRadii: number;
     atomicRadii:Array<number> = [];       // Contains the atomic radii
@@ -596,10 +597,10 @@ export class StructureViewer extends Viewer {
 
         // Determine the periodicity and setup the vizualization accordingly
         let nPeriodic = 0;
-        let periodicIndices = [];
-        let p1 = periodicity[0];
-        let p2 = periodicity[1];
-        let p3 = periodicity[2];
+        const periodicIndices = [];
+        const p1 = periodicity[0];
+        const p2 = periodicity[1];
+        const p3 = periodicity[2];
 
         if (p1 && p2 && p3) {
             nPeriodic = 3;
@@ -607,9 +608,9 @@ export class StructureViewer extends Viewer {
             nPeriodic = 0;
         } else {
             for (let dim = 0; dim < 3; ++dim) {
-                let p1 = periodicity[dim];
-                let p2 = periodicity[(dim+1) % 3];
-                let p3 = periodicity[(dim+2) % 3];
+                const p1 = periodicity[dim];
+                const p2 = periodicity[(dim+1) % 3];
+                const p3 = periodicity[(dim+2) % 3];
                 if (p1 && !p2 && !p3) {
                     nPeriodic = 1;
                     periodicIndices.push(dim)
@@ -623,10 +624,18 @@ export class StructureViewer extends Viewer {
                 }
             }
         }
+
+        // Valid cell basis
         if (this.B !== undefined) {
             this.createConventionalCell(periodicity, this.options.cell.enabled);
             this.createLatticeConstants(this.basisVectors, periodicity, periodicIndices);
             this.createAtoms(fracPos, atomicNumbers, periodicity, true);
+        // Cell with non-valid basis
+        } else if (this.basisVectors !== undefined){
+            this.createConventionalCell(periodicity, this.options.cell.enabled);
+            this.createLatticeConstants(this.basisVectors, periodicity, periodicIndices);
+            this.createAtoms(cartPos, atomicNumbers, periodicity, false);
+        // No cell at all
         } else {
             this.createAtoms(cartPos, atomicNumbers, periodicity, false);
         }
@@ -645,7 +654,6 @@ export class StructureViewer extends Viewer {
         if (viewCenter === "COP") {
             centerPos = this.calculateCOP(atomPos);
         } else if (viewCenter === "COC") {
-
             centerPos = new THREE.Vector3()
                 .add(this.basisVectors[0])
                 .add(this.basisVectors[1])
@@ -663,7 +671,7 @@ export class StructureViewer extends Viewer {
         this.setZoom(this.options.controls.zoomLevel);
 
         // Set view alignment and rotation
-        if (this.B !== undefined) {
+        if (this.basisVectors !== undefined) {
             this.alignView(this.options?.layout?.viewRotation?.alignments);
         }
         this.rotateView(this.options?.layout?.viewRotation?.rotations);
@@ -966,11 +974,14 @@ export class StructureViewer extends Viewer {
             let angleStrokeWidth = angleStrokeWidths[iBasis];
             let axisEnabled = axisEnableds[iBasis];
             let angleEnabled = angleEnableds[iBasis];
+            const collapsed1 = this.basisVectorCollapsed[iTrueBasis]
+            const collapsed2 = this.basisVectorCollapsed[(iTrueBasis+1) % 3]
+            const collapsed3 = this.basisVectorCollapsed[(iTrueBasis+2) % 3]
             let basisVec1 = basis[iTrueBasis];
             let basisVec2 = basis[(iTrueBasis+1) % 3].clone();
             let basisVec3 = basis[(iTrueBasis+2) % 3].clone();
 
-            if (axisEnabled) {
+            if (axisEnabled && !collapsed1) {
                 // Basis and angle label selection, same for all systems
 
                 const origin = new THREE.Vector3( 0, 0, 0 );
@@ -980,12 +991,16 @@ export class StructureViewer extends Viewer {
                 const textPos = dir.clone()
                     .multiplyScalar(0.5);
                 let labelOffset;
-                let newBasis2;
-                if (basisVec2.length() == 0) {
-                    newBasis2 = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
-                    labelOffset = new THREE.Vector3().crossVectors(basisVec1, newBasis2);
-                } else if (basisVec3.length() == 0) {
-                    labelOffset = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
+                let newBasis;
+                if (collapsed2 && collapsed3) {
+                    newBasis = new THREE.Vector3(0, 0, 1);
+                    labelOffset = new THREE.Vector3().crossVectors(basisVec1, newBasis);
+                } else if (collapsed2) {
+                    newBasis = new THREE.Vector3().crossVectors(basisVec1, basisVec3);
+                    labelOffset = new THREE.Vector3().crossVectors(basisVec1, newBasis);
+                } else if (collapsed3) {
+                    newBasis = new THREE.Vector3().crossVectors(basisVec1, basisVec2);
+                    labelOffset = new THREE.Vector3().crossVectors(basisVec1, newBasis);
                 } else {
                     const labelOffset1 = new THREE.Vector3().crossVectors(basisVec1, basisVec2)
                     const labelOffset2 = new THREE.Vector3().crossVectors(basisVec1, basisVec3)
@@ -1040,7 +1055,7 @@ export class StructureViewer extends Viewer {
                 this.latticeConstants.add(arrow);
             }
 
-            if (angleEnabled) {
+            if (angleEnabled && !collapsed1 && !collapsed2) {
                 // Add angle label and curve
                 const arcMaterial = new THREE.LineDashedMaterial({
                     color: infoColor,
@@ -1126,11 +1141,22 @@ export class StructureViewer extends Viewer {
      * @param vectors - The positions from which to create vectors.
      */
     createBasisVectors(basis:number[][]): void {
+        // No cell specified
         if (basis === undefined) {
             this.basisVectors = undefined
             this.B = undefined
             this.Bi = undefined
             return
+        }
+
+        // Collapsed dimensions
+        this.basisVectorCollapsed = [];
+        for (let i=0; i < 3; ++i) {
+            let length = 0
+            for (let j=0; j < 3; ++j) {
+                length += basis[i][j]
+            }
+            this.basisVectorCollapsed.push(length < 1E-6)
         }
 
         // Create basis transformation matrices
@@ -1144,8 +1170,13 @@ export class StructureViewer extends Viewer {
             a.y, b.y, c.y,
             a.z, b.z, c.z,
         )
-        this.B = B
-        this.Bi = new THREE.Matrix3().copy(B).invert();
+        if (this.basisVectorCollapsed.some(element => element)) {
+            this.B = undefined
+            this.Bi = undefined
+        } else {
+            this.B = B
+            this.Bi = new THREE.Matrix3().copy(B).invert();
+        }
     }
 
     getCornerPoints() {
@@ -1177,6 +1208,7 @@ export class StructureViewer extends Viewer {
         const cell = this.createCell(
             new THREE.Vector3(),
             this.basisVectors,
+            this.basisVectorCollapsed,
             periodicity,
             this.options.cell.color,
             this.options.cell.linewidth,
@@ -1192,12 +1224,13 @@ export class StructureViewer extends Viewer {
      * Creates outlines for a cell specified by the given basis vectors.
      * @param origin - The origin for the cell
      * @param basisVectors - The cell basis vectors
+     * @param basisVectorCollapsed - Whether a basis vector is collapsed (length = 0)
      * @param periodicity - The periodicity of the cell
      * @param color - Color fo the cell wireframe
      * @param linewidth - Line width fo the wireframe
      * @param dashed - Is wireframe dashed
      */
-    createCell(origin, basisVectors, periodicity, color, linewidth:number, dashSize:number, gapSize:number) {
+    createCell(origin, basisVectors, basisVectorCollapsed, periodicity, color, linewidth:number, dashSize:number, gapSize:number) {
 
         let nonPeriodic
         let cell = new THREE.Object3D();
@@ -1216,19 +1249,10 @@ export class StructureViewer extends Viewer {
             });
         }
 
-        // Determine the if one of the cell vectors is a zero vector
-        let collapsed = true;
-        for (let i=0; i<3; ++i) {
-            let vec = basisVectors[i];
-            let len = vec.length();
-            if (len > 1E-3 && !periodicity[i]) {
-                collapsed = false;
-            }
-        }
-
         for (let len=basisVectors.length, i=0; i<len; ++i) {
 
-            let basisVector = basisVectors[i].clone();
+            let basisVector = basisVectors[i].clone()
+            let collapsed = basisVectorCollapsed[i]
 
             // First line
             let line1Mat = lineMaterial.clone();
@@ -1732,80 +1756,6 @@ export class StructureViewer extends Viewer {
         let multiplier = Math.max(Math.floor(targetSize/vectorLen)-1, 1);
 
         return multiplier;
-    }
-
-    /**
-     * Setup the view for 0D systems (atoms, molecules).
-     */
-    setup0D(fracPos, cartPos, labels) {
-        let pbc = [false, false, false];
-        this.createConventionalCell(pbc, this.options.cell.enabled);
-        this.createAtoms(fracPos, labels, pbc);
-        this.createLatticeConstants(this.basisVectors, pbc, []);
-    }
-
-    /**
-     * Replicates the structure along the specified direction to emphasize the
-     * 1D nature of the material.
-     *
-     * @param dim - The index of the periodic dimension.
-     */
-    setup1D(fracPos, cartPos, labels, pbc, periodicIndices) {
-        // Duplicate the cell in the periodic dimensions. The number of
-        // duplications is determined so that a certain size is achieved.
-        let dim = periodicIndices[0]
-        let translation1 = this.basisVectors[dim].clone();
-        let multiplier = this.getRepetitions(translation1, 15);
-        let multipliers = [1, 1, 1];
-        multipliers[dim] = multiplier;
-        this.options.layout.periodicity = multipliers;
-
-        if (this.options.cell.enabled) {
-            this.createConventionalCell(pbc, this.options.cell.enabled);
-        }
-        this.createAtoms(fracPos, labels, pbc);
-
-        this.createLatticeConstants(this.basisVectors, pbc, periodicIndices);
-    }
-
-    /**
-     * Replicates the structure along the specified direction to emphasize the
-     * 2D nature of the material.
-     *
-     * @param periodicIndices - The indices of the periodic dimension.
-     */
-    setup2D(fracPos, cartPos, labels, pbc, periodicIndices) {
-        // Duplicate the cell in the periodic dimensions. The number of
-        // duplications is determined so that a certain size is achieved.
-        let dim1 = periodicIndices[0]
-        let dim2 = periodicIndices[1]
-        let translation1 = this.basisVectors[dim1].clone();
-        let translation2 = this.basisVectors[dim2].clone();
-        let width = 0;
-        let height = 0;
-        if (this.options.layout.allowRepeat) {
-            width = this.getRepetitions(translation1, 12);
-            height = this.getRepetitions(translation2, 12);
-        }
-        let multipliers = [1, 1, 1];
-        multipliers[dim1] = width;
-        multipliers[dim2] = height;
-        this.options.layout.periodicity = multipliers;
-
-        this.createConventionalCell(pbc, this.options.cell.enabled);
-        this.createAtoms(fracPos, labels, pbc);
-
-        this.createLatticeConstants(this.basisVectors, pbc, periodicIndices);
-    }
-
-    /**
-     * Setup the view for 3D systems (crystals)
-     */
-    setup3D(fracPos, cartPos, labels) {
-        let pbc = [true, true, true];
-        this.createConventionalCell(pbc, this.options.cell.enabled);
-        this.createAtoms(fracPos, labels, pbc);
-        this.createLatticeConstants(this.basisVectors, pbc, [0, 1, 2]);
     }
 
 	elementNames:string[] = [
