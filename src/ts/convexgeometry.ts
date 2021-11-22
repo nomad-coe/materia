@@ -1,5 +1,4 @@
 import * as THREE from "three"
-import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ConvexHull } from './convexhull';
 
 type ConvexGeometry = {
@@ -12,7 +11,7 @@ type ConvexGeometry = {
  * identifies and stores the face edges.
  */
 const getConvexGeometry = function(points: THREE.Vector3[]): ConvexGeometry {
-    let bufferGeometry = new THREE.BufferGeometry()
+    const bufferGeometry = new THREE.BufferGeometry()
 
 	// Calculate convex hull from given points
 	const convexHull = new ConvexHull().setFromPoints(points);
@@ -60,7 +59,6 @@ const getConvexGeometry = function(points: THREE.Vector3[]): ConvexGeometry {
         } while (currentEdge !== startEdge)
         faceEdges.push(faceEdge)
     }
-    bufferGeometry = BufferGeometryUtils.mergeVertices(bufferGeometry);
     return {geometry: bufferGeometry, faces: faceEdges}
 };
 
