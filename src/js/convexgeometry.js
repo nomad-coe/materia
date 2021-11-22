@@ -1,12 +1,11 @@
 import * as THREE from "three";
-import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ConvexHull } from './convexhull';
 /**
  * Customized version of the three.js ConvexBufferGeometry that additionally
  * identifies and stores the face edges.
  */
 const getConvexGeometry = function (points) {
-    let bufferGeometry = new THREE.BufferGeometry();
+    const bufferGeometry = new THREE.BufferGeometry();
     // Calculate convex hull from given points
     const convexHull = new ConvexHull().setFromPoints(points);
     // Generate vertices and normals
@@ -52,7 +51,6 @@ const getConvexGeometry = function (points) {
         } while (currentEdge !== startEdge);
         faceEdges.push(faceEdge);
     }
-    bufferGeometry = BufferGeometryUtils.mergeVertices(bufferGeometry);
     return { geometry: bufferGeometry, faces: faceEdges };
 };
 export { getConvexGeometry };
