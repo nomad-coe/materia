@@ -1149,16 +1149,6 @@ export class StructureViewer extends Viewer {
             return
         }
 
-        // Collapsed dimensions
-        this.basisVectorCollapsed = [];
-        for (let i=0; i < 3; ++i) {
-            let length = 0
-            for (let j=0; j < 3; ++j) {
-                length += basis[i][j]
-            }
-            this.basisVectorCollapsed.push(length < 1E-6)
-        }
-
         // Create basis transformation matrices
         const a = new THREE.Vector3().fromArray(basis[0])
         const b = new THREE.Vector3().fromArray(basis[1])
@@ -1170,6 +1160,14 @@ export class StructureViewer extends Viewer {
             a.y, b.y, c.y,
             a.z, b.z, c.z,
         )
+
+        // Check for collapsed dimensions
+        this.basisVectorCollapsed = [];
+        for (let i=0; i < 3; ++i) {
+            const length = this.basisVectors[i].length()
+            this.basisVectorCollapsed.push(length < 1E-6)
+        }
+
         if (this.basisVectorCollapsed.some(element => element)) {
             this.B = undefined
             this.Bi = undefined
