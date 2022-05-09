@@ -22,10 +22,10 @@
 project = 'materia'
 author = 'Lauri Himanen'
 
-version = '0.0.10'
-release = '0.0.10'
-stable_version = "0.0.10"
-dev_version = "0.0.10"
+version = '0.0.11'
+release = '0.0.11'
+stable_version = "0.0.11"
+dev_version = "0.0.11"
 
 # -- General configuration ---------------------------------------------------
 

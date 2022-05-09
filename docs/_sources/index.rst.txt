@@ -29,6 +29,9 @@ The full source code with examples and regression tests can be explored at `gith
 
 Changelog
 =========
+ - 0.0.11:
+    - Updated dependencies used to build the 3D visualization.
+
  - 0.0.10:
     - Fixed issue in the detection of the visualization boundary for the
       BrillouinZoneViewer.
