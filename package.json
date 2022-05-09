@@ -18,7 +18,7 @@
     "build": "gulp build"
   },
   "dependencies": {
-    "three": ">=0.135.0",
+    "three": "^0.135.0",
     "three.meshline": "1.4.0",
     "voronoi-diagram": "1.0.1"
   },
