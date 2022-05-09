@@ -244,7 +244,7 @@ export declare class StructureViewer extends Viewer {
     /**
      *
      */
-    calculateCOP(positions: any): THREE.Vector3;
+    calculateCOP(positions: any): any;
     /**
      * Centers the visualization around a specific point.
      * @param centerPos - The center position as a cartesian vector.
@@ -274,7 +274,7 @@ export declare class StructureViewer extends Viewer {
      * @return THREE.js Group containing the visuals for the atom. The position
      * of the atom is determined by the position of the group.
      */
-    getAtom(index: number): THREE.Object3D;
+    getAtom(index: number): any;
     /**
      * Set the zoom level
      *
@@ -311,7 +311,7 @@ export declare class StructureViewer extends Viewer {
      * @param linewidth - Line width fo the wireframe
      * @param dashed - Is wireframe dashed
      */
-    createCell(origin: any, basisVectors: any, basisVectorCollapsed: any, periodicity: any, color: any, linewidth: number, dashSize: number, gapSize: number): THREE.Object3D;
+    createCell(origin: any, basisVectors: any, basisVectorCollapsed: any, periodicity: any, color: any, linewidth: number, dashSize: number, gapSize: number): any;
     /**
      * @param rotations The rotations as a list. Each rotation should be an
      * array containing four numbers: [x, y, z, angle]. The rotations are

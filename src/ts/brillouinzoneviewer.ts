@@ -1,7 +1,7 @@
 import { Viewer } from "./viewer"
 import * as THREE from "three"
 import { getConvexGeometry } from './convexgeometry'
-import { MeshLine, MeshLineMaterial } from 'threejs-meshline'
+import { MeshLine, MeshLineMaterial } from 'three.meshline'
 import voronoi from 'voronoi-diagram'
 
 /*
@@ -391,7 +391,7 @@ export class BrillouinZoneViewer extends Viewer {
             }
             //const edgeGeometry = new THREE.BufferGeometry().setFromPoints(edgeVertices);
             const edgeLine = new MeshLine();
-            edgeLine.setVertices(edgeVertices)
+            edgeLine.setPoints(edgeVertices)
             const edgeMesh = new THREE.Mesh(edgeLine, edgeMaterial);
             this.zone.add(edgeMesh);
         }
@@ -437,7 +437,7 @@ export class BrillouinZoneViewer extends Viewer {
                 depthTest: false,
             });
             const kpathLine = new MeshLine();
-            kpathLine.setVertices(lineVertices)
+            kpathLine.setPoints(lineVertices)
             const line = new THREE.Mesh(kpathLine, lineMaterial);
             this.info.add(line);
 
@@ -495,7 +495,7 @@ export class BrillouinZoneViewer extends Viewer {
                 labelPoints.push(kpointCart)
             }
             const kpathLine = new MeshLine();
-            kpathLine.setVertices(kpathVertices)
+            kpathLine.setPoints(kpathVertices)
             const kpath = new THREE.Mesh(kpathLine, kpathMaterial);
             this.info.add(kpath);
         }

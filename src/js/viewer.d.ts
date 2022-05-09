@@ -107,7 +107,7 @@ export declare abstract class Viewer {
      * @param radius - Cylinder radius
      * @param material - Cylinder material
      */
-    createCylinder(pos1: any, pos2: any, radius: any, nSegments: any, material: any): THREE.Mesh<THREE.CylinderGeometry, any>;
+    createCylinder(pos1: any, pos2: any, radius: any, nSegments: any, material: any): any;
     /**
      * Helper function for creating a text sprite that lives in 3D space.
      *

@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 export declare class OrthographicControls {
     enabled: boolean;
     enablePan: boolean;
@@ -42,8 +41,8 @@ export declare class OrthographicControls {
     constructor(object: any, domElement: any);
     handleResize(): void;
     handleEvent(event: any): void;
-    getMouseOnScreen(pageX: any, pageY: any): THREE.Vector2;
-    getMouseOnCircle(pageX: any, pageY: any): THREE.Vector2;
+    getMouseOnScreen(pageX: any, pageY: any): any;
+    getMouseOnCircle(pageX: any, pageY: any): any;
     /**
       * Used to trigger rotation after a move has been detected and stored in
       * this.movePrev and this.moveCurr.
