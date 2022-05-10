@@ -94,7 +94,7 @@ var viewer = new materia.StructureViewer(targetElem, options);
 let positions = [
     [0, 0, 0],
 ];
-let species = ["H"];
+let species = ['H'];
 var bulk = {
     "species": species,
     "cell": [

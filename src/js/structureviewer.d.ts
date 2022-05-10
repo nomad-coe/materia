@@ -164,14 +164,16 @@ export declare class StructureViewer extends Viewer {
      *
      *   - "covalent": Covalent radii from DOI:10.1039/B801115J.
      *   - Custom list of atomic radii. Provide an array of floating point
-     *     numbers where the index corresponds to an atomic number.
+     *     numbers where the index corresponds to an atomic number. Index 0 is
+     *     reserved for atoms with unknown radii.
      *
      * @param {string|string[]} options.atoms.colors The colors to use
      * for atoms. Available options are:
      *
      *   - "Jmol" (default): Jmol colors.
      *   - Custom list of colors. Provide an array of hexadecimal colors where
-     *     the index corresponds to an atomic number.
+     *     the index corresponds to an atomic number. Index 0 is reserved for atoms
+     *     with unknown atomic number.
      *
      * @param {number} options.atoms.scale Scaling factor for the atomic radii.
      *
@@ -297,6 +299,18 @@ export declare class StructureViewer extends Viewer {
         margin: number;
     };
     /**
+     * Returns the atomic radii for the given atomic number.
+     *
+     * @param atomicNumber - The atomic number for which radii is requested.
+     */
+    getRadii(atomicNumber: number): number;
+    /**
+     * Returns the color for the given atomic number.
+     *
+     * @param atomicNumber - The atomic number for which color is requested.
+     */
+    getColor(atomicNumber: number): string;
+    /**
      * Create the conventional cell
      *
      */
@@ -375,9 +389,11 @@ export declare class StructureViewer extends Viewer {
      * @param targetSize - The targeted size.
      */
     getRepetitions(latticeVector: any, targetSize: any): number;
+    label_missing: string;
     elementNames: string[];
     elementNumbers: object;
-    missing: number;
+    radii_unknown: number;
     covalentRadii: number[];
+    color_unknown: string;
     jmolColors: string[];
 }

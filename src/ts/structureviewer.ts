@@ -179,14 +179,16 @@ export class StructureViewer extends Viewer {
      *
      *   - "covalent": Covalent radii from DOI:10.1039/B801115J.
      *   - Custom list of atomic radii. Provide an array of floating point
-     *     numbers where the index corresponds to an atomic number.
+     *     numbers where the index corresponds to an atomic number. Index 0 is
+     *     reserved for atoms with unknown radii.
      *
      * @param {string|string[]} options.atoms.colors The colors to use
      * for atoms. Available options are:
      *
      *   - "Jmol" (default): Jmol colors.
      *   - Custom list of colors. Provide an array of hexadecimal colors where
-     *     the index corresponds to an atomic number.
+     *     the index corresponds to an atomic number. Index 0 is reserved for atoms
+     *     with unknown atomic number.
      *
      * @param {number} options.atoms.scale Scaling factor for the atomic radii.
      * 
@@ -539,10 +541,10 @@ export class StructureViewer extends Viewer {
         }
 
         // Determine the atomicNumbers if not given
-        const atomicNumbers = typeof species[0] === "number" ? species : species.map(symb => {
-            return this.elementNumbers[symb];
-        });
-        this.maxRadii = Math.max(...atomicNumbers.map(Z => this.atomicRadii[Z]))
+        const atomicNumbers = typeof species[0] === "number"
+            ? species.map(Z => (Z < 0 || Z >= this.elementNames.length) ? 0 : Z)
+            : species.map(symb => this.elementNumbers[symb] || 0);
+        this.maxRadii = Math.max(...atomicNumbers.map(Z => this.getRadii(Z)))
 
         // If bonds are not explicitly stated, determine them automatically.
         if (!bonds) {
@@ -1199,6 +1201,24 @@ export class StructureViewer extends Viewer {
     }
 
     /**
+     * Returns the atomic radii for the given atomic number.
+     *
+     * @param atomicNumber - The atomic number for which radii is requested.
+     */
+    getRadii(atomicNumber:number) {
+        return this.atomicRadii[atomicNumber] || this.radii_unknown;
+    }
+
+    /**
+     * Returns the color for the given atomic number.
+     *
+     * @param atomicNumber - The atomic number for which color is requested.
+     */
+    getColor(atomicNumber:number) {
+        return this.elementColors[atomicNumber] || this.color_unknown;
+    }
+
+    /**
      * Create the conventional cell
      *
      */
@@ -1494,8 +1514,9 @@ export class StructureViewer extends Viewer {
             this.addAtom(i, iPos, atomicNumber, meshMap, fractional);
 
             // Gather element legend data
-            let elementName = this.elementNames[atomicNumber-1];
-            this.elements[elementName] = [this.elementColors[atomicNumber], this.atomicRadii[atomicNumber]]; }
+            let elementName = this.elementNames[atomicNumber];
+            this.elements[elementName] = [this.getColor(atomicNumber), this.getRadii(atomicNumber)];
+        }
     }
 
     /**
@@ -1561,8 +1582,8 @@ export class StructureViewer extends Viewer {
                         let num1 = this.atomNumbers[i];
                         let num2 = this.atomNumbers[j];
                         let distance = pos2.clone().sub(pos1).length()
-                        let radii1 = this.options.atoms.scale*this.atomicRadii[num1]
-                        let radii2 = this.options.atoms.scale*this.atomicRadii[num2]
+                        let radii1 = this.options.atoms.scale * this.getRadii(num1)
+                        let radii2 = this.options.atoms.scale * this.getRadii(num2)
                         if (distance <= this.options.bonds.threshold*1.1*(radii1 + radii2)) {
                             this.addBond(i, j, pos1, pos2, bondMaterial);
                         }
@@ -1634,12 +1655,12 @@ export class StructureViewer extends Viewer {
             mesh[atomicNumber] = {};
             // Calculate the amount of segments that are needed to reach a
             // certain angle for the ball surface segments
-            let radius = this.options.atoms.scale*this.atomicRadii[atomicNumber];
+            let radius = this.options.atoms.scale * this.getRadii(atomicNumber);
             let targetAngle = this.options.atoms.smoothness;
             let nSegments = Math.ceil(360/(180-targetAngle));
 
             // Atom
-            let color = this.elementColors[atomicNumber];
+            let color = this.getColor(atomicNumber);
             let atomGeometry = new THREE.SphereGeometry( radius, nSegments, nSegments );
             let atomMaterial;
             if (this.options?.atoms?.material?.toon !== undefined) {
@@ -1756,20 +1777,21 @@ export class StructureViewer extends Viewer {
         return multiplier;
     }
 
+    label_missing = 'X';
 	elementNames:string[] = [
-	  'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si',  // Si = 14
+	  this.label_missing, 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si',  // Si = 14
 	  'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', // Nin = 28
 	  'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr', 'Nb',  // Nb = 41
 	  'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe',  // Xe = 54
 	  'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', // Ho= 67
 	  'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',  // Hg = 80
 	  'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np',  // Np = 93
-	  'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Ha', 'Sg', // sg = 106
-	  'Ns', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og' // Mt = 109
+	  'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', // Sg = 106
+	  'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og' // Og = 118
 	];
 
     elementNumbers:object = {
-        'H': 1,  'He': 2, 'Li': 3, 'Be': 4,
+        [this.label_missing]: 0, 'H': 1,  'He': 2, 'Li': 3, 'Be': 4,
         'B': 5,  'C': 6,  'N': 7,  'O': 8,  'F': 9,
         'Ne': 10, 'Na': 11, 'Mg': 12, 'Al': 13, 'Si': 14,
         'P': 15,  'S': 16,  'Cl': 17, 'Ar': 18, 'K': 19,
@@ -1789,17 +1811,19 @@ export class StructureViewer extends Viewer {
         'At': 85, 'Rn': 86, 'Fr': 87, 'Ra': 88, 'Ac': 89,
         'Th': 90, 'Pa': 91, 'U': 92,  'Np': 93, 'Pu': 94,
         'Am': 95, 'Cm': 96, 'Bk': 97, 'Cf': 98, 'Es': 99,
-        'Fm': 100, 'Md': 101, 'No': 102, 'Lr': 103,
+        'Fm': 100, 'Md': 101, 'No': 102, 'Lr': 103, 'Rf': 104,
+        'Db': 105, 'Sg': 106, 'Bh': 107, 'Hs': 108, 'Mt': 109,
+        'Ds': 110, 'Rg': 111, 'Cn': 112, 'Nh': 113, 'Fl': 114,
+        'Mc': 115, 'Lv': 116, 'Ts': 117, 'Og': 118,
     };
-
 
     //  Covalent radii revisited,
     //  Beatriz Cordero, Verónica Gómez, Ana E. Platero-Prats, Marc Revés,
     //  Jorge Echeverría, Eduard Cremades, Flavia Barragán and Santiago Alvarez,
     //  Dalton Trans., 2008, 2832-2838 DOI:10.1039/B801115J
-    missing = 0.2;
+    radii_unknown = 0.3;
     covalentRadii:number[] = [
-        this.missing,
+        this.radii_unknown,
         0.31,
         0.28,
         1.28,
@@ -1896,17 +1920,18 @@ export class StructureViewer extends Viewer {
         1.87,
         1.8,
         1.69,
-        this.missing,
-        this.missing,
-        this.missing,
-        this.missing,
-        this.missing,
-        this.missing,
-        this.missing,
+        this.radii_unknown,
+        this.radii_unknown,
+        this.radii_unknown,
+        this.radii_unknown,
+        this.radii_unknown,
+        this.radii_unknown,
+        this.radii_unknown,
     ]
     // Jmol colors. See: http://jmol.sourceforge.net/jscolors/#color_U
+    color_unknown = "#ff1493"
     jmolColors:string[] = [
-        "#ff0000",
+        this.color_unknown,
         "#ffffff",
         "#d9ffff",
         "#cc80ff",
