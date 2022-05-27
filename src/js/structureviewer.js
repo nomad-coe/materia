@@ -1,4 +1,5 @@
 import { Viewer } from "./viewer";
+import { isPlainObject, isNil, range } from "lodash";
 import * as THREE from "three";
 /**
  * Class for visualizing an atomic structure.
@@ -707,7 +708,9 @@ export class StructureViewer extends Viewer {
         this.primCell = undefined;
         this.bonds = undefined;
         this.atomPos = undefined;
+        this.positions = undefined;
         this.atomNumbers = undefined;
+        this.atomicNumbers = undefined;
         this.latticeConstants = undefined;
         this.B = undefined;
         this.Bi = undefined;
@@ -752,19 +755,9 @@ export class StructureViewer extends Viewer {
         this.setupCamera();
         this.setupControls();
         // Determine the radii to be used
-        if (this.options.atoms.radii === "covalent") {
-            this.atomicRadii = this.covalentRadii;
-        }
-        else if (Array.isArray(this.options.atoms.radii)) {
-            this.atomicRadii = this.options.atoms.radii;
-        }
+        this.atomicRadii = this.covalentRadii;
         // Determine the atom colors to be used
-        if (this.options.atoms.colors === "Jmol") {
-            this.elementColors = this.jmolColors;
-        }
-        else if (Array.isArray(this.options.atoms.colors)) {
-            this.elementColors = this.options.atoms.colors;
-        }
+        this.elementColors = this.jmolColors;
         // Check that the received data is OK.
         const isFractional = structure["fractional"] === undefined ? false : structure["fractional"];
         const positions = structure["positions"];
@@ -877,11 +870,13 @@ export class StructureViewer extends Viewer {
         else {
             this.createAtoms(cartPos, atomicNumbers, periodicity, false);
         }
-        let atomPos = this.getPositions();
+        // Create the styles
+        this.styleAtoms(this.options.atoms);
+        const atomPos = this.getPositions();
         // Create bonds
         this.createBonds(bonds);
         // Setup the view center
-        let viewCenter = this.options.layout.viewCenter;
+        const viewCenter = this.options.layout.viewCenter;
         let centerPos;
         // Center of positions takes into account also the repeated positions
         // and positions created at the cell boundaries.
@@ -1662,16 +1657,66 @@ export class StructureViewer extends Viewer {
                 this.repeat(periodicity, positions, labels);
             }
         }
-        // Create the 3D atoms at the correct positions
-        let meshMap = {};
-        for (let len = positions.length, i = 0; i < len; ++i) {
-            let iPos = positions[i];
-            // Add the primary atom
-            let atomicNumber = labels[i];
-            this.addAtom(i, iPos, atomicNumber, meshMap, fractional);
-            // Gather element legend data
-            let elementName = this.elementNames[atomicNumber];
-            this.elements[elementName] = [this.getColor(atomicNumber), this.getRadii(atomicNumber)];
+        // Convert fractional to cartesian
+        const cartPositions = [];
+        for (let pos of positions) {
+            const posVector = new THREE.Vector3();
+            if (fractional) {
+                posVector.add(this.basisVectors[0].clone().multiplyScalar(pos.x));
+                posVector.add(this.basisVectors[1].clone().multiplyScalar(pos.y));
+                posVector.add(this.basisVectors[2].clone().multiplyScalar(pos.z));
+            }
+            else {
+                posVector.copy(pos);
+            }
+            cartPositions.push(posVector);
+        }
+        // Save the atom positions for later instantiation according to the given styles.
+        this.positions = cartPositions;
+        this.atomicNumbers = labels;
+    }
+    /**
+     * Creates/updates representation for the atoms based on the given list of configs.
+     *
+     * @param configs - Array of styling configurations to apply.
+     */
+    styleAtoms(configs) {
+        // Update configs sequentially
+        if (isPlainObject(configs)) {
+            configs = [configs];
+        }
+        for (const config of configs) {
+            const include = config.include;
+            const exclude = config.exclude;
+            const hasInclude = !isNil(include);
+            const hasExclude = !isNil(exclude);
+            let indices;
+            const nAtoms = this.atomicNumbers.length;
+            if (hasInclude && hasExclude) {
+                throw Error("Only provide include or exclude, not both");
+            }
+            else if (hasInclude) {
+                indices = include;
+            }
+            else if (hasExclude) {
+                throw Error("Exclude not supported yet.");
+            }
+            else {
+                indices = range(nAtoms);
+            }
+            // Create/update visuals representations of the 3D atoms
+            const meshMap = {};
+            const positions = this.positions;
+            const labels = this.atomicNumbers;
+            for (const i of indices) {
+                let iPos = positions[i];
+                // Add the atom
+                let atomicNumber = labels[i];
+                this.addAtom(i, iPos, atomicNumber, meshMap, config);
+                // Gather element legend data
+                let elementName = this.elementNames[atomicNumber];
+                this.elements[elementName] = [this.getColor(atomicNumber), this.getRadii(atomicNumber)];
+            }
         }
     }
     /**
@@ -1765,7 +1810,6 @@ export class StructureViewer extends Viewer {
      *
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
-     * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
     addBond(i, j, pos1, pos2, bondMaterial) {
         // Bond
@@ -1795,24 +1839,26 @@ export class StructureViewer extends Viewer {
      *
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
-     * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
-    addAtom(index, position, atomicNumber, mesh, fractional = true) {
-        var _a, _b, _c, _d, _e, _f, _g;
-        let exists = atomicNumber in mesh;
+    addAtom(index, position, atomicNumber, mesh, config) {
+        var _a, _b, _c;
+        const exists = atomicNumber in mesh;
         if (!exists) {
             mesh[atomicNumber] = {};
             // Calculate the amount of segments that are needed to reach a
             // certain angle for the ball surface segments
-            let radius = this.options.atoms.scale * this.getRadii(atomicNumber);
-            let targetAngle = this.options.atoms.smoothness;
+            const radius = config.radius === 'covalent'
+                ? this.getRadii(atomicNumber)
+                : config.radius;
+            const scaledRadius = config.scale * radius;
+            let targetAngle = config.smoothness;
             let nSegments = Math.ceil(360 / (180 - targetAngle));
             // Atom
             let color = this.getColor(atomicNumber);
-            let atomGeometry = new THREE.SphereGeometry(radius, nSegments, nSegments);
+            let atomGeometry = new THREE.SphereGeometry(scaledRadius, nSegments, nSegments);
             let atomMaterial;
-            if (((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.atoms) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) !== undefined) {
-                let nTones = (_g = (_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.atoms) === null || _e === void 0 ? void 0 : _e.material) === null || _f === void 0 ? void 0 : _f.toon) === null || _g === void 0 ? void 0 : _g.tones;
+            if (((_a = config === null || config === void 0 ? void 0 : config.material) === null || _a === void 0 ? void 0 : _a.toon) !== undefined) {
+                let nTones = (_c = (_b = config === null || config === void 0 ? void 0 : config.material) === null || _b === void 0 ? void 0 : _b.toon) === null || _c === void 0 ? void 0 : _c.tones;
                 var colors = new Uint8Array(nTones);
                 for (var c = 0; c <= nTones; c++) {
                     colors[c] = (c / nTones) * 256;
@@ -1827,30 +1873,31 @@ export class StructureViewer extends Viewer {
                 });
             }
             else {
-                atomMaterial = new THREE.MeshPhongMaterial({ color: color, shininess: this.options.atoms.material.phong.shininess });
+                atomMaterial = new THREE.MeshPhongMaterial({
+                    color: color,
+                    shininess: config.material.phong.shininess,
+                    opacity: config.opacity
+                });
             }
-            let atom = new THREE.Mesh(atomGeometry, atomMaterial);
+            const atom = new THREE.Mesh(atomGeometry, atomMaterial);
             mesh[atomicNumber].atom = atom;
             // Atom outline hack
             if (this.options.outline.enabled) {
-                let addition = this.options.outline.size;
-                let scale = addition / radius + 1;
-                let outlineGeometry = new THREE.SphereGeometry(radius * scale, nSegments, nSegments);
-                let outlineMaterial = new THREE.MeshBasicMaterial({ color: this.options.outline.color, side: THREE.BackSide });
-                let outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
+                const addition = this.options.outline.size;
+                const scale = addition / scaledRadius + 1;
+                const outlineGeometry = new THREE.SphereGeometry(scaledRadius * scale, nSegments, nSegments);
+                const outlineMaterial = new THREE.MeshBasicMaterial({
+                    color: this.options.outline.color,
+                    side: THREE.BackSide,
+                    opacity: config.opacity
+                });
+                const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
                 mesh[atomicNumber].outline = outline;
             }
         }
-        let imesh = mesh[atomicNumber];
-        let true_pos = new THREE.Vector3();
-        if (fractional) {
-            true_pos.add(this.basisVectors[0].clone().multiplyScalar(position.x));
-            true_pos.add(this.basisVectors[1].clone().multiplyScalar(position.y));
-            true_pos.add(this.basisVectors[2].clone().multiplyScalar(position.z));
-        }
-        else {
-            true_pos.copy(position);
-        }
+        const imesh = mesh[atomicNumber];
+        const true_pos = new THREE.Vector3();
+        true_pos.copy(position);
         // Put all atoms visuals inside a named group
         let group = new THREE.Group();
         group.name = "atom" + index;
@@ -1875,9 +1922,9 @@ export class StructureViewer extends Viewer {
      * level.
      */
     render() {
-        let canvas = this.rootElement;
-        let canvasWidth = canvas.clientWidth;
-        let canvasHeight = canvas.clientHeight;
+        const canvas = this.rootElement;
+        const canvasWidth = canvas.clientWidth;
+        const canvasHeight = canvas.clientHeight;
         // Project a [1,0,0] vector in the camera space to the world space, and
         // then to the screen space. The length of this vector is then used to
         // scale the labels.

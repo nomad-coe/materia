@@ -66,20 +66,34 @@ let options = {
     threshold: 1.0,
     smoothness: 155,
   },
-  atoms: {
-    material: {
-        phong: {
-          shininess: 30,
-        }
-        //toon: {
-          //tones: 3
-        //}
+  atoms: [
+    {
+      include: [0],
+      material: {
+          phong: {
+            shininess: 30,
+          }
+      },
+      opacity: 0.1,
+      color: "Jmol",
+      radius: "covalent",
+      scale: 1,
+      smoothness: 175,
     },
-    colors: "Jmol",
-    radii: "covalent",
-    scale: 1,
-    smoothness: 175,
-  },
+    {
+      include: [1],
+      material: {
+          phong: {
+            shininess: 30,
+          }
+      },
+      opacity: 1,
+      color: "Jmol",
+      radius: "covalent",
+      scale: 1,
+      smoothness: 175,
+    },
+  ],
   renderer: {
     shadows: {
       enabled: true
@@ -93,8 +107,9 @@ var viewer = new materia.StructureViewer(targetElem, options);
 // Define structure and load it into the viewer
 let positions = [
     [0, 0, 0],
+    [1, 1, 1],
 ];
-let species = ['H'];
+let species = ['H', 'O'];
 var bulk = {
     "species": species,
     "cell": [

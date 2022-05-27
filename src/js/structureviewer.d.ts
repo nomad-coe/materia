@@ -4,9 +4,11 @@ import * as THREE from "three";
  * Class for visualizing an atomic structure.
  */
 export declare class StructureViewer extends Viewer {
-    structure: Object;
-    atomPos: any[];
-    atomNumbers: any[];
+    structure: unknown;
+    atomPos: number[][];
+    positions: number[][];
+    atomicNumbers: number[];
+    atomNumbers: number[];
     B: THREE.Matrix3;
     Bi: THREE.Matrix3;
     basisVectors: THREE.Vector3[];
@@ -353,6 +355,12 @@ export declare class StructureViewer extends Viewer {
      */
     createAtoms(positions: any, labels: any, pbc: Array<boolean>, fractional?: boolean): void;
     /**
+     * Creates/updates representation for the atoms based on the given list of configs.
+     *
+     * @param configs - Array of styling configurations to apply.
+     */
+    styleAtoms(configs: any): void;
+    /**
      * Creates bonds between the atoms based on radii and distance.
      *
      * @param bonds - A Nx2 list of atom indices specifying the bonded atoms. Alternatively
@@ -369,7 +377,6 @@ export declare class StructureViewer extends Viewer {
      *
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
-     * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
     addBond(i: any, j: any, pos1: any, pos2: any, bondMaterial: any): void;
     /**
@@ -377,9 +384,8 @@ export declare class StructureViewer extends Viewer {
      *
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
-     * @param fractional - Are the coordinates relatice to the cell basis vectors
      */
-    addAtom(index: any, position: any, atomicNumber: any, mesh: any, fractional?: boolean): void;
+    addAtom(index: any, position: any, atomicNumber: any, mesh: any, config: any): void;
     render(): void;
     /**
      * Used to get a number of repetitions that are needed for the given

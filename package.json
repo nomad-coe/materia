@@ -18,6 +18,7 @@
     "build": "gulp build"
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "three": "^0.135.0",
     "three.meshline": "1.4.0",
     "voronoi-diagram": "1.0.1"
