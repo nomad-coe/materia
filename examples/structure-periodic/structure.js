@@ -138,7 +138,8 @@ setInterval(() => {
   viewer.setOptions({
     atoms: [{
       include: [0],
-      color: colors[Math.floor(colors.length * Math.random())]
+      // color: colors[Math.floor(colors.length * Math.random())]
+      opacity: 0.1
     }]
   })
 }, 1000)
