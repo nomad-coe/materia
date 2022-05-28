@@ -1722,7 +1722,7 @@ export class StructureViewer extends Viewer {
             }
             else if (hasExclude) {
                 const excludeSet = new Set(exclude);
-                indices = range(nAtoms).filter(x => excludeSet.has(x));
+                indices = range(nAtoms).filter(x => !excludeSet.has(x));
             }
             else {
                 indices = range(nAtoms);

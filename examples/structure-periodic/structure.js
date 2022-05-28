@@ -65,24 +65,6 @@ let options = {
   },
   atoms: [
     {
-      include: [0],
-      material: {
-          phong: {
-            shininess: 30,
-          }
-      },
-      outline: {
-        enabled: true,
-        color: "#000000",
-        size: 0.025
-      },
-      opacity: 0.5,
-      color: "#00ff00",
-      radius: 0.3,
-      scale: 1,
-    },
-    {
-      include: [1],
       material: {
           phong: {
             shininess: 30,
@@ -137,8 +119,7 @@ const colors = [
 setInterval(() => {
   viewer.setOptions({
     atoms: [{
-      include: [0],
-      // color: colors[Math.floor(colors.length * Math.random())]
+      exclude: [1],
       opacity: 0.1
     }]
   })
