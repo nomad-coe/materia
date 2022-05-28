@@ -1,4 +1,5 @@
 import { OrthographicControls } from "./orthographiccontrols"
+import { isArray, merge, mergeWith, cloneDeep } from "lodash"
 import * as THREE from "three"
 /**
  * Abstract base class for visualizing 3D scenes with three.js.
@@ -9,7 +10,7 @@ export abstract class Viewer {
     controls:any;                         // Controller object for handling mouse interaction with the system
     scene:any;                            // The default scene
     scenes:any[] = [];                    // A list of scenes that are rendered
-    cameraWidth:number = 10.0;            // The default "width" of the camera
+    cameraWidth = 10.0;                   // The default "width" of the camera
     rootElement:any;                      // A root html element that contains all visualization components
     options:any = {};                     // Options for the viewer. Can be e.g. used to control which settings are enabled
 
@@ -72,26 +73,36 @@ export abstract class Viewer {
      * Used to recursively fill the target options with options stored in the
      * source object.
      */
-    fillOptions(source: object, target: object): void {
+    fillOptions(source: any, target: any): void {
+        return mergeWith(target, source, (objValue, srcValue, key, object, source, stack) => {
+            if (key === 'atoms' && isArray(srcValue)) {
+                const newList = []
+                for (const atoms of srcValue) {
+                    newList.push(merge(cloneDeep(objValue), atoms))
+                }
+                return newList
+            }
+            return undefined
+        })
 
         // Overrride with settings from user and child class
-        function eachRecursive(source, target) {
-            for (const k in source) {
-                // Find variable in default settings
-                if (source[k] !== null && Object.prototype.toString.call(source[k]) === "[object Object]") {
-                    // If the current level is not defined in the target, it is
-                    // initialized with empty object.
-                    if (target[k] === undefined) {
-                        target[k] = {}
-                    }
-                    eachRecursive(source[k], target[k]);
-                } else {
-                    // We store each leaf property into the default settings
-                    target[k] = source[k];
-                }
-            }
-        }
-        eachRecursive(source, target);
+        // function eachRecursive(source, target) {
+        //     for (const k in source) {
+        //         // Find variable in default settings
+        //         if (source[k] !== null && isPlainObject(source[k])) {
+        //             // If the current level is not defined in the target, it is
+        //             // initialized with empty object.
+        //             if (target[k] === undefined) {
+        //                 target[k] = {}
+        //             }
+        //             eachRecursive(source[k], target[k]);
+        //         } else {
+        //             // We store each leaf property into the default settings
+        //             target[k] = source[k];
+        //         }
+        //     }
+        // }
+        // eachRecursive(source, target);
     }
 
     /**

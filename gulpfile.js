@@ -22,7 +22,13 @@ gulp.task('typescript', function(done) {
       .pipe(gulp.dest('./src/js'));
 });
 
-// Copy files from node-modules
+// Copy external dependencies
+gulp.task('copy-dependencies', function(done) {
+    gulp.src('./node_modules/object-hash/dist/object_hash.js').pipe(gulp.dest('./src/js'));
+    done();
+});
+
+// Copy three.js to examples folder where it is imported externally
 gulp.task('copy-node-modules', function(done) {
     gulp.src(paths.nodemodules).pipe(gulp.dest('./examples/js'));
     done();
@@ -44,7 +50,7 @@ gulp.task('webpack', function(done) {
 });
 
 // Build task
-gulp.task('build', gulp.series("typescript", "copy-node-modules", "webpack"));
+gulp.task('build', gulp.series("copy-dependencies",  "typescript", "copy-node-modules", "webpack"));
 
 // Development task
 gulp.task('develop', function(done) {

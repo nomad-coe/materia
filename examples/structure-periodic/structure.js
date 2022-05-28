@@ -58,9 +58,6 @@ let options = {
         phong: {
           shininess: 30,
         }
-        //toon: {
-          //tones: 3
-        //}
     },
     radius: 0.08,
     threshold: 1.0,
@@ -74,11 +71,15 @@ let options = {
             shininess: 30,
           }
       },
-      opacity: 0.1,
-      color: "Jmol",
-      radius: "covalent",
+      outline: {
+        enabled: true,
+        color: "#000000",
+        size: 0.025
+      },
+      opacity: 0.5,
+      color: "#00ff00",
+      radius: 0.3,
       scale: 1,
-      smoothness: 175,
     },
     {
       include: [1],
@@ -87,11 +88,15 @@ let options = {
             shininess: 30,
           }
       },
+      outline: {
+        enabled: true,
+        color: "#000000",
+        size: 0.025
+      },
       opacity: 1,
       color: "Jmol",
       radius: "covalent",
       scale: 1,
-      smoothness: 175,
     },
   ],
   renderer: {
@@ -107,7 +112,7 @@ var viewer = new materia.StructureViewer(targetElem, options);
 // Define structure and load it into the viewer
 let positions = [
     [0, 0, 0],
-    [1, 1, 1],
+    [0.60, 0.60, 0.60],
 ];
 let species = ['H', 'O'];
 var bulk = {
@@ -123,3 +128,17 @@ var bulk = {
 };
 
 viewer.load(bulk);
+
+const colors = [
+  "#ff0000",
+  "#00ff00",
+  "#0000ff",
+]
+setInterval(() => {
+  viewer.setOptions({
+    atoms: [{
+      include: [0],
+      color: colors[Math.floor(colors.length * Math.random())]
+    }]
+  })
+}, 1000)

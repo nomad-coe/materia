@@ -122,12 +122,6 @@ export declare class StructureViewer extends Viewer {
      * @param {number} options.latticeConstants.gamma.stroke.width Font stroke width
      * @param {string} options.latticeConstants.gamma.stroke.color Font stroke color
      *
-     * @param {boolean} options.outline.enabled Used to enable or disable a
-     *   fixed color outline around atoms and bonds. Notice that enabling the
-     *   outline incurs a performance penalty.
-     * @param {string} options.outline.color Outline color.
-     * @param {number} options.outline.size Outline size.
-     *
      * @param {boolean} options.cell.enabled Show unit cell wireframe.
      * @param {boolean} options.cell.color Unit cell wireframe color.
      * @param {boolean} options.cell.linewidth Unit cell wireframe line width.
@@ -152,32 +146,43 @@ export declare class StructureViewer extends Viewer {
      *   specified for the structure, bonds will be detected automatically with
      *   the following criteria: distance <=
      *   this.options.bonds.threshold * 1.1 * (radius1 + radius2)
+     * @param {boolean} options.bonds.outline.enabled Used to enable or disable a
+     *   fixed color outline around the bond. Notice that enabling the
+     *   outline incurs a performance penalty.
+     * @param {string} options.bonds.outline.color Outline color.
+     * @param {number} options.bonds.outline.size Outline size.
      *
+     * @param {object || list} options.atoms Object, or array of objects
+     * containing options for atom visualization. If an array is given, the
+     * options are added sequentially in order. See below for the subparameters.
      * @param {number} options.atoms.smoothness A value between 0-180 that
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
+     * @param {number} options.atoms.opacity The opacity of the atom
      * @param {number} options.atoms.material.phong.shininess Shininess of the
      * atom material (for phong material)
      * @param {number} options.atoms.material.toon.tones Tone-steps for toon
      * material
-     * @param {string|number[]} options.atoms.radii The radii to use for atoms.
-     * Defaults to covalent radii. Available options are:
+     * @param {string|number[]} options.atoms.radii The radius to use for the
+     * atom.  Defaults to covalent radii. Available options are:
      *
-     *   - "covalent": Covalent radii from DOI:10.1039/B801115J.
-     *   - Custom list of atomic radii. Provide an array of floating point
-     *     numbers where the index corresponds to an atomic number. Index 0 is
-     *     reserved for atoms with unknown radii.
+     *   - "covalent": Covalent radius from DOI:10.1039/B801115J.
+     *   - Radius in angstrom.
      *
-     * @param {string|string[]} options.atoms.colors The colors to use
-     * for atoms. Available options are:
+     * @param {string|string[]} options.atoms.color The color to use. Available
+     * options are:
      *
-     *   - "Jmol" (default): Jmol colors.
-     *   - Custom list of colors. Provide an array of hexadecimal colors where
-     *     the index corresponds to an atomic number. Index 0 is reserved for atoms
-     *     with unknown atomic number.
+     *   - "Jmol" (default): Jmol color.
+     *   - Hexadecimal color, e.g. '#ffffff'
      *
      * @param {number} options.atoms.scale Scaling factor for the atomic radii.
+     * Used to scale the given radius.
+     * @param {boolean} options.atoms.outline.enabled Used to enable or disable a
+     *   fixed color outline around the atom. Notice that enabling the
+     *   outline incurs a performance penalty.
+     * @param {string} options.atoms.outline.color Outline color.
+     * @param {number} options.atoms.outline.size Outline size.
      *
      * @param {string} options.renderer.background.color Color of the background.
      * @param {number} options.renderer.background.opacity Opacity of the background.
@@ -188,7 +193,7 @@ export declare class StructureViewer extends Viewer {
      * options. Defaults to true. You should only disable this setting if you
      * plan to do a render manually afterwards.
      */
-    setOptions(options: any, render?: boolean, reload?: boolean): void;
+    setOptions(options: any, render?: boolean): void;
     /**
      * Used to determine if a full realod of the structure is needed given the
      * updated options.
@@ -311,7 +316,7 @@ export declare class StructureViewer extends Viewer {
      *
      * @param atomicNumber - The atomic number for which color is requested.
      */
-    getColor(atomicNumber: number): string;
+    getColor(config: any, atomicNumber: number): string;
     /**
      * Create the conventional cell
      *
@@ -355,11 +360,12 @@ export declare class StructureViewer extends Viewer {
      */
     createAtoms(positions: any, labels: any, pbc: Array<boolean>, fractional?: boolean): void;
     /**
-     * Creates/updates representation for the atoms based on the given list of configs.
+     * Creates/updates representation for the atoms based on the given list of
+     * configs.
      *
      * @param configs - Array of styling configurations to apply.
      */
-    styleAtoms(configs: any): void;
+    setAtoms(configs: any): void;
     /**
      * Creates bonds between the atoms based on radii and distance.
      *
@@ -378,14 +384,18 @@ export declare class StructureViewer extends Viewer {
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
      */
-    addBond(i: any, j: any, pos1: any, pos2: any, bondMaterial: any): void;
+    addBond(i: number, j: number, pos1: THREE.Vector3, pos2: THREE.Vector3, bondMaterial: any): void;
     /**
-     * Creates atoms and directly adds themto the scene.
+     * Creates atoms and directly adds them to the scene.
      *
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
      */
-    addAtom(index: any, position: any, atomicNumber: any, mesh: any, config: any): void;
+    updateAtom(index: number, mesh: any, config: any): void;
+    createAtomGeometry(config: any, atomicNumber: any): any;
+    createAtomMaterial(config: any, atomicNumber: any): any;
+    createAtomOutlineGeometry(config: any, atomicNumber: any): any;
+    createAtomOutlineMaterial(config: any): any;
     render(): void;
     /**
      * Used to get a number of repetitions that are needed for the given

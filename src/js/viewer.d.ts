@@ -23,7 +23,7 @@ export declare abstract class Viewer {
      * Used to recursively fill the target options with options stored in the
      * source object.
      */
-    fillOptions(source: object, target: object): void;
+    fillOptions(source: any, target: any): void;
     /**
      * This function will set up all the basics for visualization: scenes,
      * lights, camera and controls.

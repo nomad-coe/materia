@@ -1,5 +1,6 @@
 import { Viewer } from "./viewer"
-import { isPlainObject, isNil, range } from "lodash"
+import objectHash from '../js/object_hash.js'
+import { isPlainObject, isNil, range, size } from "lodash"
 import * as THREE from "three"
 
 /**
@@ -137,13 +138,7 @@ export class StructureViewer extends Viewer {
      * @param {number} options.latticeConstants.gamma.size Font size
      * @param {number} options.latticeConstants.gamma.stroke.width Font stroke width
      * @param {string} options.latticeConstants.gamma.stroke.color Font stroke color
-     *
-     * @param {boolean} options.outline.enabled Used to enable or disable a
-     *   fixed color outline around atoms and bonds. Notice that enabling the
-     *   outline incurs a performance penalty.
-     * @param {string} options.outline.color Outline color.
-     * @param {number} options.outline.size Outline size.
-     *
+     * 
      * @param {boolean} options.cell.enabled Show unit cell wireframe.
      * @param {boolean} options.cell.color Unit cell wireframe color.
      * @param {boolean} options.cell.linewidth Unit cell wireframe line width.
@@ -168,32 +163,43 @@ export class StructureViewer extends Viewer {
      *   specified for the structure, bonds will be detected automatically with
      *   the following criteria: distance <=
      *   this.options.bonds.threshold * 1.1 * (radius1 + radius2)
-     *
+     * @param {boolean} options.bonds.outline.enabled Used to enable or disable a
+     *   fixed color outline around the bond. Notice that enabling the
+     *   outline incurs a performance penalty.
+     * @param {string} options.bonds.outline.color Outline color.
+     * @param {number} options.bonds.outline.size Outline size.
+     * 
+     * @param {object || list} options.atoms Object, or array of objects
+     * containing options for atom visualization. If an array is given, the
+     * options are added sequentially in order. See below for the subparameters.
      * @param {number} options.atoms.smoothness A value between 0-180 that
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
      *   polygons.
+     * @param {number} options.atoms.opacity The opacity of the atom
      * @param {number} options.atoms.material.phong.shininess Shininess of the
      * atom material (for phong material)
      * @param {number} options.atoms.material.toon.tones Tone-steps for toon
      * material
-     * @param {string|number[]} options.atoms.radii The radii to use for atoms.
-     * Defaults to covalent radii. Available options are:
+     * @param {string|number[]} options.atoms.radii The radius to use for the
+     * atom.  Defaults to covalent radii. Available options are:
      *
-     *   - "covalent": Covalent radii from DOI:10.1039/B801115J.
-     *   - Custom list of atomic radii. Provide an array of floating point
-     *     numbers where the index corresponds to an atomic number. Index 0 is
-     *     reserved for atoms with unknown radii.
+     *   - "covalent": Covalent radius from DOI:10.1039/B801115J.
+     *   - Radius in angstrom.
      *
-     * @param {string|string[]} options.atoms.colors The colors to use
-     * for atoms. Available options are:
+     * @param {string|string[]} options.atoms.color The color to use. Available
+     * options are:
      *
-     *   - "Jmol" (default): Jmol colors.
-     *   - Custom list of colors. Provide an array of hexadecimal colors where
-     *     the index corresponds to an atomic number. Index 0 is reserved for atoms
-     *     with unknown atomic number.
-     *
+     *   - "Jmol" (default): Jmol color.
+     *   - Hexadecimal color, e.g. '#ffffff'
+     * 
      * @param {number} options.atoms.scale Scaling factor for the atomic radii.
+     * Used to scale the given radius.
+     * @param {boolean} options.atoms.outline.enabled Used to enable or disable a
+     *   fixed color outline around the atom. Notice that enabling the
+     *   outline incurs a performance penalty.
+     * @param {string} options.atoms.outline.color Outline color.
+     * @param {number} options.atoms.outline.size Outline size.
      * 
      * @param {string} options.renderer.background.color Color of the background.
      * @param {number} options.renderer.background.opacity Opacity of the background.
@@ -204,7 +210,7 @@ export class StructureViewer extends Viewer {
      * options. Defaults to true. You should only disable this setting if you
      * plan to do a render manually afterwards.
      */
-    setOptions(options: any, render = true, reload = true): void {
+    setOptions(options: any, render = true): void {
         const defaultOptions = {
             view: {
                 fitMargin: 0.5,
@@ -214,11 +220,6 @@ export class StructureViewer extends Viewer {
                 translation: [0, 0, 0],
                 viewCenter: "COP",
                 wrapTolerance: 0.05,
-            },
-            outline: {
-                enabled: true,
-                color: "#000000",
-                size: 0.025,
             },
             cell: {
                 enabled: true,
@@ -273,6 +274,11 @@ export class StructureViewer extends Viewer {
                       shininess: 30,
                     }
                 },
+                outline: {
+                    enabled: true,
+                    color: "#000000",
+                    size: 0.025,
+                },
                 color: "#ffffff",
                 radius: 0.08,
                 threshold: 1,
@@ -284,37 +290,49 @@ export class StructureViewer extends Viewer {
                       shininess: 30,
                     }
                 },
-                colors: "Jmol",
-                radii: "covalent",
+                outline: {
+                    enabled: true,
+                    color: "#000000",
+                    size: 0.025,
+                },
+                opacity: 1,
+                color: "Jmol",
+                radius: "covalent",
                 scale: 1,
                 smoothness: 165,
             }
         }
-
         // Upon first call, fill the missing values with default options
         if (Object.keys(this.options).length === 0) {
-            this.fillOptions(options, defaultOptions);
-            super.setOptions(defaultOptions);
+            this.fillOptions(options, defaultOptions)
+            super.setOptions(defaultOptions)
         // On subsequent calls update only the given values and simply do a full
         // reload for the structure. This is not efficient by any means for most
         // settings but gets the job done for now.
         } else {
-            this.fillOptions(options, this.options);
-            super.setOptions(this.options);
+            // Handle changes in atoms. These can be only changed alone and only
+            // a subset of properties are supported.
+            if (!isNil(options.atoms)) {
+                if (size(options) !== 1) {
+                    throw Error("When changing style options for atoms, please do not update other properties simultaneously.")
+                }
+                this.setAtoms(options.atoms)
+            } else {
+                this.fillOptions(options, this.options)
+                super.setOptions(this.options)
 
-            // Check if a full structure reload is required
-            if (reload) {
+                // Check if a full structure reload is required
                 if (this.needFullReload(options) && this.structure !== undefined) {
                     this.load(this.structure);
                 } else {
-                    if (options?.latticeConstants?.enabled !== undefined) {this.toggleLatticeConstants(options.latticeConstants.enabled)};
-                    if (options?.cell?.enabled !== undefined) {this.toggleCell(options.cell.enabled)};
-                    if (options?.bonds?.enabled !== undefined) {this.toggleBonds(options.bonds.enabled)};
-                    if (options?.renderer?.shadows?.enabled !== undefined) {this.toggleShadows(options.renderer.shadows.enabled)};
+                    if (options?.latticeConstants?.enabled !== undefined) {this.toggleLatticeConstants(options.latticeConstants.enabled)}
+                    if (options?.cell?.enabled !== undefined) {this.toggleCell(options.cell.enabled)}
+                    if (options?.bonds?.enabled !== undefined) {this.toggleBonds(options.bonds.enabled)}
+                    if (options?.renderer?.shadows?.enabled !== undefined) {this.toggleShadows(options.renderer.shadows.enabled)}
                 }
-            }
-            if (options?.renderer?.background !== undefined) {
-                this.setBackgroundColor(options?.renderer?.background.color, options?.renderer?.background.opacity)
+                if (options?.renderer?.background !== undefined) {
+                    this.setBackgroundColor(options?.renderer?.background.color, options?.renderer?.background.opacity)
+                }
             }
             if (render) {
                 this.render();
@@ -328,9 +346,9 @@ export class StructureViewer extends Viewer {
      * updated options.
      * @param {*} options The updated options.
      */
-    needFullReload(options:any) {
+    needFullReload(options:any) : boolean {
         // Options that do not require a full reload
-        let noReload = {
+        const noReload = {
             cell: {
                 enabled: true,
             },
@@ -391,7 +409,7 @@ export class StructureViewer extends Viewer {
     /**
      * Hides or shows the lattice parameter labels.
      */
-    toggleLatticeConstants(value:boolean) {
+    toggleLatticeConstants(value:boolean) : void {
         if (this.latticeConstants !== undefined) {
             this.latticeConstants.visible = value;
             this.angleArcs.visible = value;
@@ -401,7 +419,7 @@ export class StructureViewer extends Viewer {
     /**
      * Hides or shows the cell.
      */
-    toggleCell(value:boolean) {
+    toggleCell(value:boolean) : void {
         if (this.convCell !== undefined) {
             this.convCell.visible = value;
         }
@@ -413,7 +431,7 @@ export class StructureViewer extends Viewer {
     /**
      * Hides or shows the bonds.
      */
-    toggleBonds(value:boolean) {
+    toggleBonds(value:boolean) : void {
         if (value) {
             this.createBonds();
         }
@@ -425,21 +443,21 @@ export class StructureViewer extends Viewer {
     /**
      * Hides or shows the shadows.
      */
-    toggleShadows(value:boolean) {
+    toggleShadows(value:boolean) : void {
 
         this.renderer.shadowMap.enabled = value;
         for (let i=0; i < this.lights.length; ++i) {
-            let light = this.lights[i];
+            const light = this.lights[i];
             light.castShadow = value;
         }
         for (let i=0; i < this.atomFills.length; ++i) {
-            let atom = this.atomFills[i];
+            const atom = this.atomFills[i];
             atom.receiveShadow = value;
             atom.castShadow = value;
             atom.material.needsUpdate = true;
         }
         for (let i=0; i < this.bondFills.length; ++i) {
-            let bond = this.bondFills[i];
+            const bond = this.bondFills[i];
             bond.receiveShadow = value;
             if (this.options?.atoms?.material?.toon !== undefined) {
                 bond.castShadow = false;
@@ -639,7 +657,7 @@ export class StructureViewer extends Viewer {
         }
 
         // Create the styles
-        this.styleAtoms(this.options.atoms)
+        this.setAtoms(this.options.atoms)
 
         const atomPos = this.getPositions()
 
@@ -690,10 +708,10 @@ export class StructureViewer extends Viewer {
      *
      */
     calculateCOP(positions) {
-        let nPos = positions.length;
-        let sum = new THREE.Vector3();
+        const nPos = positions.length;
+        const sum = new THREE.Vector3();
         for (let i=0; i < nPos; ++i) {
-            let pos = positions[i];
+            const pos = positions[i];
             sum.add(pos);
         }
         sum.divideScalar(nPos);
@@ -759,20 +777,20 @@ export class StructureViewer extends Viewer {
      */
     getPositions(fractional=false) {
         let positions = [];
-        let atoms = this.atoms.children
-        let nAtoms = atoms.length
+        const atoms = this.atoms.children
+        const nAtoms = atoms.length
         if (fractional) {
-            let cartPos = [];
+            const cartPos = [];
             for (let i=0; i < nAtoms; ++i) {
-                let atom = atoms[i];
-                let position = atom.position.clone();
+                const atom = atoms[i];
+                const position = atom.position.clone();
                 cartPos.push(position)
             }
             positions = this.toScaled(cartPos)
         } else {
             for (let i=0; i < nAtoms; ++i) {
-                let atom = atoms[i];
-                let position = atom.position.clone();
+                const atom = atoms[i];
+                const position = atom.position.clone();
                 positions.push(position)
             }
         }
@@ -842,12 +860,12 @@ export class StructureViewer extends Viewer {
 
     setupLights() {
         this.lights = [];
-        let shadowMapWidth = 2048;
-        let shadowBias = -0.001;
-        let shadowCutoff = 50;
+        const shadowMapWidth = 2048;
+        const shadowBias = -0.001;
+        const shadowCutoff = 50;
 
         // Key light
-        let keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
+        const keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
         keyLight.shadow.mapSize.width = shadowMapWidth;
         keyLight.shadow.mapSize.height = shadowMapWidth;
         keyLight.shadow.bias = shadowBias; //fixes self-shadowing artifacts
@@ -863,7 +881,7 @@ export class StructureViewer extends Viewer {
         this.lights.push(keyLight);
 
         // Fill light
-        let fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
         fillLight.shadow.mapSize.width = shadowMapWidth;
         fillLight.shadow.mapSize.height = shadowMapWidth;
         fillLight.shadow.bias = shadowBias;
@@ -874,7 +892,7 @@ export class StructureViewer extends Viewer {
         }
 
         // Back light
-        let backLight = new THREE.DirectionalLight(0xffffff, 0.25);
+        const backLight = new THREE.DirectionalLight(0xffffff, 0.25);
         backLight.shadow.mapSize.width = shadowMapWidth;
         backLight.shadow.mapSize.height = shadowMapWidth;
         backLight.shadow.bias = shadowBias;
@@ -885,7 +903,7 @@ export class StructureViewer extends Viewer {
         }
 
         // White ambient light.
-        let ambientLight = new THREE.AmbientLight( 0x404040, 1.7 ); // soft white light
+        const ambientLight = new THREE.AmbientLight( 0x404040, 1.7 ); // soft white light
         this.sceneStructure.add( ambientLight );
     }
 
@@ -899,16 +917,16 @@ export class StructureViewer extends Viewer {
         this.axisLabels = []
         this.infoContainer.add(this.latticeConstants);
         this.infoContainer.add(this.angleArcs);
-        let infoColor = 0x000000;
+        const infoColor = 0x000000;
 
-        let axisMaterial = new THREE.LineBasicMaterial({
+        const axisMaterial = new THREE.LineBasicMaterial({
             color: "#000000",
             linewidth: 1.5
         });
-        let axisOffset = 1.3;
+        const axisOffset = 1.3;
 
         let iBasis = -1;
-        let cellBasisColors = [];
+        const cellBasisColors = [];
         cellBasisColors.push(this.options.latticeConstants.a.color);
         cellBasisColors.push(this.options.latticeConstants.b.color);
         cellBasisColors.push(this.options.latticeConstants.c.color);
@@ -924,11 +942,11 @@ export class StructureViewer extends Viewer {
         angleStrokeWidths.push(this.options.latticeConstants.alpha?.stroke?.width === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.alpha.stroke.width);
         angleStrokeWidths.push(this.options.latticeConstants.beta?.stroke?.width === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.beta.stroke.width);
         angleStrokeWidths.push(this.options.latticeConstants.gamma?.stroke?.width === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.gamma.stroke.width);
-        let angleLabels = [this.options.latticeConstants.gamma.label, this.options.latticeConstants.alpha.label, this.options.latticeConstants.beta.label];
-        let axisLabels = [this.options.latticeConstants.a.label, this.options.latticeConstants.b.label, this.options.latticeConstants.c.label];
-        let angleEnableds = [this.options.latticeConstants.gamma.enabled, this.options.latticeConstants.alpha.enabled, this.options.latticeConstants.beta.enabled];
-        let axisEnableds = [this.options.latticeConstants.a.enabled, this.options.latticeConstants.b.enabled, this.options.latticeConstants.c.enabled];
-        let axisFonts = [];
+        const angleLabels = [this.options.latticeConstants.gamma.label, this.options.latticeConstants.alpha.label, this.options.latticeConstants.beta.label];
+        const axisLabels = [this.options.latticeConstants.a.label, this.options.latticeConstants.b.label, this.options.latticeConstants.c.label];
+        const angleEnableds = [this.options.latticeConstants.gamma.enabled, this.options.latticeConstants.alpha.enabled, this.options.latticeConstants.beta.enabled];
+        const axisEnableds = [this.options.latticeConstants.a.enabled, this.options.latticeConstants.b.enabled, this.options.latticeConstants.c.enabled];
+        const axisFonts = [];
         axisFonts.push(this.options.latticeConstants.a.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.a.font);
         axisFonts.push(this.options.latticeConstants.b.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.b.font);
         axisFonts.push(this.options.latticeConstants.c.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.c.font);
@@ -952,34 +970,32 @@ export class StructureViewer extends Viewer {
         angleFontSizes.push(this.options.latticeConstants.alpha.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.alpha.size);
         angleFontSizes.push(this.options.latticeConstants.beta.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.beta.size);
         angleFontSizes.push(this.options.latticeConstants.gamma.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.gamma.size);
-        let axisLabelSprites = [];
-        let angleLabelSprites = [];
 
         // If 2D periodic, we save the periodic indices, and ensure a right
         // handed coordinate system.
         for (let iTrueBasis=0; iTrueBasis<3; ++iTrueBasis) {
 
             iBasis += 1;
-            let axisLabel = axisLabels[iBasis];
-            let axisColor = cellBasisColors[iBasis];
-            let axisFont = axisFonts[iBasis];
-            let axisFontSize = axisFontSizes[iBasis];
-            let angleFontSize = angleFontSizes[iBasis];
-            let strokeWidth = strokeWidths[iBasis];
-            let strokeColor = strokeColors[iBasis];
-            let angleFont = angleFonts[iBasis];
-            let angleColor = angleColors[iBasis];
-            let angleLabel = angleLabels[iBasis];
-            let angleStrokeColor = angleStrokeColors[iBasis];
-            let angleStrokeWidth = angleStrokeWidths[iBasis];
-            let axisEnabled = axisEnableds[iBasis];
-            let angleEnabled = angleEnableds[iBasis];
+            const axisLabel = axisLabels[iBasis];
+            const axisColor = cellBasisColors[iBasis];
+            const axisFont = axisFonts[iBasis];
+            const axisFontSize = axisFontSizes[iBasis];
+            const angleFontSize = angleFontSizes[iBasis];
+            const strokeWidth = strokeWidths[iBasis];
+            const strokeColor = strokeColors[iBasis];
+            const angleFont = angleFonts[iBasis];
+            const angleColor = angleColors[iBasis];
+            const angleLabel = angleLabels[iBasis];
+            const angleStrokeColor = angleStrokeColors[iBasis];
+            const angleStrokeWidth = angleStrokeWidths[iBasis];
+            const axisEnabled = axisEnableds[iBasis];
+            const angleEnabled = angleEnableds[iBasis];
             const collapsed1 = this.basisVectorCollapsed[iTrueBasis]
             const collapsed2 = this.basisVectorCollapsed[(iTrueBasis+1) % 3]
             const collapsed3 = this.basisVectorCollapsed[(iTrueBasis+2) % 3]
-            let basisVec1 = basis[iTrueBasis];
-            let basisVec2 = basis[(iTrueBasis+1) % 3].clone();
-            let basisVec3 = basis[(iTrueBasis+2) % 3].clone();
+            const basisVec1 = basis[iTrueBasis];
+            const basisVec2 = basis[(iTrueBasis+1) % 3].clone();
+            const basisVec3 = basis[(iTrueBasis+2) % 3].clone();
 
             if (axisEnabled && !collapsed1) {
                 // Basis and angle label selection, same for all systems
@@ -1212,8 +1228,10 @@ export class StructureViewer extends Viewer {
      *
      * @param atomicNumber - The atomic number for which color is requested.
      */
-    getColor(atomicNumber:number) {
-        return this.elementColors[atomicNumber] || this.color_unknown;
+    getColor(config, atomicNumber:number) : string {
+        return config.color === 'Jmol'
+        ? this.elementColors[atomicNumber] || this.color_unknown
+        : config.color
     }
 
     /**
@@ -1249,7 +1267,7 @@ export class StructureViewer extends Viewer {
     createCell(origin, basisVectors, basisVectorCollapsed, periodicity, color, linewidth:number, dashSize:number, gapSize:number) {
 
         let nonPeriodic
-        let cell = new THREE.Object3D();
+        const cell = new THREE.Object3D();
         let lineMaterial;
         if (!(dashSize === 0 && gapSize === 0)) {
             lineMaterial = new THREE.LineDashedMaterial({
@@ -1267,42 +1285,42 @@ export class StructureViewer extends Viewer {
 
         for (let len=basisVectors.length, i=0; i<len; ++i) {
 
-            let basisVector = basisVectors[i].clone()
-            let collapsed = basisVectorCollapsed[i]
+            const basisVector = basisVectors[i].clone()
+            const collapsed = basisVectorCollapsed[i]
 
             // First line
-            let line1Mat = lineMaterial.clone();
-            let isDim1 = !periodicity[i];
+            const line1Mat = lineMaterial.clone();
+            const isDim1 = !periodicity[i];
             if (!(isDim1 && collapsed)) {
                 const points = []
                 points.push(origin.clone())
                 points.push(basisVector.clone().add(origin))
                 const lineGeometry = new THREE.BufferGeometry().setFromPoints(points)
-                let line = new THREE.Line(lineGeometry, line1Mat)
+                const line = new THREE.Line(lineGeometry, line1Mat)
                 cell.add( line )
                 line.computeLineDistances()
             }
 
             // Second line
-            let secondIndex = (i+1) % len;
-            let secondAddition = basisVectors[secondIndex].clone();
-            let isDim2 = !periodicity[i] || !periodicity[(i+1)%3];
+            const secondIndex = (i+1) % len;
+            const secondAddition = basisVectors[secondIndex].clone();
+            const isDim2 = !periodicity[i] || !periodicity[(i+1)%3];
 
             if (!(isDim2 && collapsed)) {
-                let line2Mat = lineMaterial.clone();
+                const line2Mat = lineMaterial.clone();
                 const points = []
                 points.push(secondAddition.clone().add(origin))
                 points.push(basisVector.clone().add(secondAddition).add(origin))
-                let line2Geometry = new THREE.BufferGeometry().setFromPoints(points);
-                let line2 = new THREE.Line(line2Geometry, line2Mat);
+                const line2Geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const line2 = new THREE.Line(line2Geometry, line2Mat);
                 cell.add( line2 );
                 line2.computeLineDistances();
             }
 
             // Third line
-            let thirdIndex = (i+2) % len;
-            let thirdAddition = basisVectors[thirdIndex].clone();
-            let isDim3 = !periodicity[i] || !periodicity[(i+2)%3];
+            const thirdIndex = (i+2) % len;
+            const thirdAddition = basisVectors[thirdIndex].clone();
+            const isDim3 = !periodicity[i] || !periodicity[(i+2)%3];
 
             if (!(isDim3 && collapsed)) {
                 const line3Mat = lineMaterial.clone();
@@ -1316,7 +1334,7 @@ export class StructureViewer extends Viewer {
             }
 
             // Fourth line
-            let isDim4 = !periodicity[i] || !periodicity[(i+2)%3] || !periodicity[(i+1)%3];
+            const isDim4 = !periodicity[i] || !periodicity[(i+2)%3] || !periodicity[(i+1)%3];
             if (!(isDim4 && collapsed)) {
                 const line4Mat = lineMaterial.clone();
                 const points = []
@@ -1375,28 +1393,28 @@ export class StructureViewer extends Viewer {
      * Used to add periodic repetitions of atoms.
      */
     repeat(multipliers:Array<number>, fracPos, labels) {
-        let a = new THREE.Vector3(1, 0, 0);
-        let b = new THREE.Vector3(0, 1, 0);
-        let c = new THREE.Vector3(0, 0, 1);
-        let newPos = [];
-        let newLabels = [];
+        const a = new THREE.Vector3(1, 0, 0);
+        const b = new THREE.Vector3(0, 1, 0);
+        const c = new THREE.Vector3(0, 0, 1);
+        const newPos = [];
+        const newLabels = [];
         for (let i = 0; i < multipliers[0]; ++i) {
             for (let j = 0; j < multipliers[1]; ++j) {
                 for (let k = 0; k < multipliers[2]; ++k) {
                     if (!(i == 0 && j == 0 && k == 0)) {
 
                         // Add clone to the current coordinate
-                        let aTranslation = a.clone().multiplyScalar(i)
-                        let bTranslation = b.clone().multiplyScalar(j)
-                        let cTranslation = c.clone().multiplyScalar(k)
+                        const aTranslation = a.clone().multiplyScalar(i)
+                        const bTranslation = b.clone().multiplyScalar(j)
+                        const cTranslation = c.clone().multiplyScalar(k)
 
                         // Add in front
                         for (let l=0, size=fracPos.length; l < size; ++l) {
-                            let iPos = new THREE.Vector3().copy(fracPos[l]);
+                            const iPos = new THREE.Vector3().copy(fracPos[l]);
                             iPos.add(aTranslation);
                             iPos.add(bTranslation);
                             iPos.add(cTranslation);
-                            let iLabel = labels[l];
+                            const iLabel = labels[l];
                             newPos.push(iPos);
                             newLabels.push(iLabel);
                         }
@@ -1413,7 +1431,7 @@ export class StructureViewer extends Viewer {
     /**
      * Wraps all atoms to be within the unit cell.
      */
-    wrap(positions, fractional:boolean=true) {
+    wrap(positions, fractional=true) {
         if (!fractional) {
             this.toScaled(positions, false)
         }
@@ -1433,18 +1451,18 @@ export class StructureViewer extends Viewer {
      */
     addBoundaryAtoms(fracPos, labels) {
         for (let len=fracPos.length, i=0; i<len; ++i) {
-            let iFracPos = fracPos[i];
+            const iFracPos = fracPos[i];
 
-            let atomicNumber = labels[i];
+            const atomicNumber = labels[i];
 
             // If the atom sits on the cell surface, add the periodic images if
             // requested.
-            let x = iFracPos.x;
-            let y = iFracPos.y;
-            let z = iFracPos.z;
-            let xZero = this.almostEqual(0, x, this.basisVectors[0], this.options.layout.wrapTolerance);
-            let yZero = this.almostEqual(0, y, this.basisVectors[1], this.options.layout.wrapTolerance);
-            let zZero = this.almostEqual(0, z, this.basisVectors[2], this.options.layout.wrapTolerance);
+            const x = iFracPos.x;
+            const y = iFracPos.y;
+            const z = iFracPos.z;
+            const xZero = this.almostEqual(0, x, this.basisVectors[0], this.options.layout.wrapTolerance);
+            const yZero = this.almostEqual(0, y, this.basisVectors[1], this.options.layout.wrapTolerance);
+            const zZero = this.almostEqual(0, z, this.basisVectors[2], this.options.layout.wrapTolerance);
 
             if (xZero && yZero && zZero) {
                 fracPos.push(new THREE.Vector3(1,0,0).add(iFracPos)); labels.push(atomicNumber);
@@ -1492,7 +1510,7 @@ export class StructureViewer extends Viewer {
 
         // Determine the periodicity handling
         if (pbc.some(a => {return a === true})) {
-            let periodicity = this.options.layout.periodicity;
+            const periodicity = this.options.layout.periodicity;
             if (periodicity === "wrap") {
                 this.wrap(positions, fractional);
             } else if (fractional && periodicity === "boundary") {
@@ -1504,7 +1522,7 @@ export class StructureViewer extends Viewer {
 
         // Convert fractional to cartesian
         const cartPositions = [];
-        for (let pos of positions) {
+        for (const pos of positions) {
             const posVector = new THREE.Vector3();
             if (fractional) {
                 posVector.add(this.basisVectors[0].clone().multiplyScalar(pos.x));
@@ -1519,14 +1537,21 @@ export class StructureViewer extends Viewer {
         // Save the atom positions for later instantiation according to the given styles.
         this.positions = cartPositions
         this.atomicNumbers = labels
+
+        // Gather element legend data
+        for (const atomicNumber of labels) {
+            const elementName = this.elementNames[atomicNumber];
+            this.elements[elementName] = [this.jmolColors[atomicNumber], this.covalentRadii[atomicNumber]];
+        }
     }
 
     /**
-     * Creates/updates representation for the atoms based on the given list of configs.
+     * Creates/updates representation for the atoms based on the given list of
+     * configs.
      *
      * @param configs - Array of styling configurations to apply.
      */
-    styleAtoms(configs) : void {
+    setAtoms(configs) : void {
         // Update configs sequentially
         if (isPlainObject(configs)) {
             configs = [configs]
@@ -1539,29 +1564,20 @@ export class StructureViewer extends Viewer {
             let indices
             const nAtoms = this.atomicNumbers.length
             if (hasInclude && hasExclude) {
-                throw Error("Only provide include or exclude, not both")
+                throw Error("Only provide include or exclude, not both.")
             } else if (hasInclude) {
                 indices = include
             } else if (hasExclude) {
-                throw Error("Exclude not supported yet.")
+                const excludeSet = new Set(exclude)
+                indices = range(nAtoms).filter(x => excludeSet.has(x))
             } else {
                 indices = range(nAtoms)
             }
 
             // Create/update visuals representations of the 3D atoms
             const meshMap = {};
-            const positions = this.positions;
-            const labels = this.atomicNumbers;
             for (const i of indices) {
-                let iPos = positions[i];
-
-                // Add the atom
-                let atomicNumber = labels[i];
-                this.addAtom(i, iPos, atomicNumber, meshMap, config);
-
-                // Gather element legend data
-                let elementName = this.elementNames[atomicNumber];
-                this.elements[elementName] = [this.getColor(atomicNumber), this.getRadii(atomicNumber)];
+                this.updateAtom(i, meshMap, config);
             }
         }
     }
@@ -1572,7 +1588,7 @@ export class StructureViewer extends Viewer {
      * @param bonds - A Nx2 list of atom indices specifying the bonded atoms. Alternatively
      *                you can use "auto" to automatically create the bonds.
      */
-    createBonds(bonds="auto") {
+    createBonds(bonds="auto") : void {
         if (!this.options.bonds.enabled) {
             return;
         }
@@ -1587,7 +1603,7 @@ export class StructureViewer extends Viewer {
         this.bonds.remove(...this.bonds.children);
 
         // Get current positions
-        let atomPos = this.getPositions()
+        const atomPos = this.getPositions()
 
         // Create material once
         let bondMaterial
@@ -1597,7 +1613,7 @@ export class StructureViewer extends Viewer {
             for ( let c = 0; c <= nTones; c ++ ) {
                 colors[c] = ( c / nTones ) * 256;
             }
-            let gradientMap = new THREE.DataTexture( colors, colors.length, 1, THREE.LuminanceFormat );
+            const gradientMap = new THREE.DataTexture( colors, colors.length, 1, THREE.LuminanceFormat );
             gradientMap.minFilter = THREE.NearestFilter;
             gradientMap.magFilter = THREE.NearestFilter;
             gradientMap.generateMipmaps = false;
@@ -1606,31 +1622,34 @@ export class StructureViewer extends Viewer {
                 gradientMap: gradientMap
             });
         } else {
-            bondMaterial = new THREE.MeshPhongMaterial( { color: this.options.bonds.color, shininess: this.options.bonds.material.phong.shininess} );
+            bondMaterial = new THREE.MeshPhongMaterial({
+                color: this.options.bonds.color,
+                shininess: this.options.bonds.material.phong.shininess
+            })
         }
 
         // Manual bonds
         if (Array.isArray(bonds)) {
-            for (let bond of bonds) {
-                let i = bond[0];
-                let j = bond[1];
-                let pos1 = atomPos[i];
-                let pos2 = atomPos[j];
+            for (const bond of bonds) {
+                const i = bond[0];
+                const j = bond[1];
+                const pos1 = atomPos[i];
+                const pos2 = atomPos[j];
                 this.addBond(i, j, pos1, pos2, bondMaterial);
             }
         // Automatically detect bonds
         } else if (bonds === "auto") {
-            let nAtoms = atomPos.length;
+            const nAtoms = atomPos.length;
             for (let i=0; i < nAtoms; ++i) {
                 for (let j=0; j < nAtoms; ++j) {
                     if (j > i) {
-                        let pos1 = atomPos[i];
-                        let pos2 = atomPos[j];
-                        let num1 = this.atomNumbers[i];
-                        let num2 = this.atomNumbers[j];
-                        let distance = pos2.clone().sub(pos1).length()
-                        let radii1 = this.options.atoms.scale * this.getRadii(num1)
-                        let radii2 = this.options.atoms.scale * this.getRadii(num2)
+                        const pos1 = atomPos[i];
+                        const pos2 = atomPos[j];
+                        const num1 = this.atomNumbers[i];
+                        const num2 = this.atomNumbers[j];
+                        const distance = pos2.clone().sub(pos1).length()
+                        const radii1 = this.options.atoms.scale * this.getRadii(num1)
+                        const radii2 = this.options.atoms.scale * this.getRadii(num2)
                         if (distance <= this.options.bonds.threshold*1.1*(radii1 + radii2)) {
                             this.addBond(i, j, pos1, pos2, bondMaterial);
                         }
@@ -1647,8 +1666,8 @@ export class StructureViewer extends Viewer {
       * given target value with a tolerance given in cartesian corodinates.
       */
     almostEqual(target:number, coordinate:number, basisVector:any, tolerance:number) {
-        let relDistance = (coordinate - target);
-        let absDistance = Math.abs(basisVector.clone().multiplyScalar(relDistance).length());
+        const relDistance = (coordinate - target);
+        const absDistance = Math.abs(basisVector.clone().multiplyScalar(relDistance).length());
         if (absDistance < tolerance) {
             return true;
         } else {
@@ -1662,26 +1681,26 @@ export class StructureViewer extends Viewer {
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
      */
-    addBond(i, j, pos1, pos2, bondMaterial) {
+    addBond(i:number, j:number, pos1:THREE.Vector3, pos2:THREE.Vector3, bondMaterial) : void  {
         // Bond
-        let radius = this.options.bonds.radius;
-        let targetAngle = this.options.bonds.smoothness;
-        let nSegments = Math.ceil(360/(180-targetAngle));
-        let cylinder = this.createCylinder(pos1, pos2, radius, nSegments, bondMaterial);
+        const radius = this.options.bonds.radius;
+        const targetAngle = this.options.bonds.smoothness;
+        const nSegments = Math.ceil(360/(180-targetAngle));
+        const cylinder = this.createCylinder(pos1, pos2, radius, nSegments, bondMaterial);
         cylinder.name = "fill";
         this.bondFills.push(cylinder);
 
         // Put all bonds visuals inside a named group
-        let group = new THREE.Group();
+        const group = new THREE.Group();
         group.name = "bond" + i + "-" + j;
         group.add(cylinder);
 
-        // Bond outline hack
-        if (this.options.outline.enabled) {
-            let addition = this.options.outline.size;
-            let scale = addition/radius + 1;
-            let outlineMaterial = new THREE.MeshBasicMaterial({color: this.options.outline.color, side: THREE.BackSide});
-            let outline = this.createCylinder(pos1, pos2, scale*radius, 10, outlineMaterial);
+        // Bond outline
+        if (this.options.bonds.outline.enabled) {
+            const addition = this.options.bonds.outline.size;
+            const scale = addition/radius + 1;
+            const outlineMaterial = new THREE.MeshBasicMaterial({color: this.options.bonds.outline.color, side: THREE.BackSide});
+            const outline = this.createCylinder(pos1, pos2, scale*radius, 10, outlineMaterial);
             outline.name = "outline";
             group.add(outline);
         }
@@ -1689,99 +1708,134 @@ export class StructureViewer extends Viewer {
     }
 
     /**
-     * Creates atoms and directly adds themto the scene.
+     * Creates atoms and directly adds them to the scene.
      *
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
      */
-    addAtom(index, position, atomicNumber, mesh, config) : void {
-        const exists = atomicNumber in mesh;
-        if (!exists) {
-            mesh[atomicNumber] = {};
-            // Calculate the amount of segments that are needed to reach a
-            // certain angle for the ball surface segments
-            const radius = config.radius === 'covalent'
-              ? this.getRadii(atomicNumber)
-              : config.radius
-            const scaledRadius = config.scale * radius;
-            let targetAngle = config.smoothness;
-            let nSegments = Math.ceil(360/(180-targetAngle));
+    updateAtom(index:number, mesh, config) : void {
+        // See if atom already exists. If not, create it.
+        const atomGroup = this.atoms.getObjectByName(`atom${index}`)
+        const atomicNumber = this.atomicNumbers[index];
+        if (isNil(atomGroup)) {
+            // The mesh created by each distinct config will be stored for reuse.
+            // This speeds up the creation significantly.
+            const position = this.positions[index];
+            const configHash = objectHash({config, atomicNumber}, {algorithm: 'md5'})
+            const exists = configHash in mesh;
+            if (!exists) {
+                mesh[configHash] = {};
 
-            // Atom
-            let color = this.getColor(atomicNumber);
-            let atomGeometry = new THREE.SphereGeometry( scaledRadius, nSegments, nSegments );
-            let atomMaterial;
-            if (config?.material?.toon !== undefined) {
-                let nTones = config?.material?.toon?.tones
-                var colors = new Uint8Array(nTones);
-                for ( var c = 0; c <= nTones; c ++ ) {
-                    colors[c] = ( c / nTones ) * 256;
+                // Atom 
+                const atomGeometry = this.createAtomGeometry(config, atomicNumber)
+                const atomMaterial = this.createAtomMaterial(config, atomicNumber)
+                const atom = new THREE.Mesh( atomGeometry, atomMaterial );
+                mesh[configHash].atom = atom;
+
+                // Atom outline
+                if (config?.outline?.enabled) {
+                    const outlineGeometry = this.createAtomOutlineGeometry(config, atomicNumber)
+                    const outlineMaterial = this.createAtomOutlineMaterial(config)
+                    const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
+                    mesh[configHash].outline = outline;
                 }
-                var gradientMap = new THREE.DataTexture( colors, colors.length, 1, THREE.LuminanceFormat );
-                gradientMap.minFilter = THREE.NearestFilter;
-                gradientMap.magFilter = THREE.NearestFilter;
-                gradientMap.generateMipmaps = false;
-                atomMaterial = new THREE.MeshToonMaterial({
-                    color: color,
-                    gradientMap: gradientMap
-                });
-            } else {
-                atomMaterial = new THREE.MeshPhongMaterial({
-                    color: color,
-                    shininess: config.material.phong.shininess,
-                    opacity: config.opacity
-                });
+
             }
-            const atom = new THREE.Mesh( atomGeometry, atomMaterial );
-            mesh[atomicNumber].atom = atom;
+            const imesh = mesh[configHash];
+            const true_pos = new THREE.Vector3();
+            true_pos.copy(position);
 
-            // Atom outline hack
-            if (this.options.outline.enabled) {
-                const addition = this.options.outline.size;
-                const scale = addition/scaledRadius + 1;
-                const outlineGeometry = new THREE.SphereGeometry(scaledRadius*scale, nSegments, nSegments);
-                const outlineMaterial = new THREE.MeshBasicMaterial({
-                    color : this.options.outline.color,
-                    side: THREE.BackSide,
-                    opacity: config.opacity
-                });
-                const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
-                mesh[atomicNumber].outline = outline;
+            // Put all atoms visuals inside a named group
+            const group = new THREE.Group();
+            group.name = "atom" + index;
+            const atom = imesh["atom"].clone();
+            atom.name = "fill";
+            group.add(atom)
+            if (config?.outline?.enabled) {
+                const outline = imesh["outline"].clone();
+                this.atomOutlines.push(outline);
+                outline.name = "outline";
+                group.add(outline)
             }
-
+            group.position.copy(true_pos);
+            this.atoms.add(group)
+            this.atomFills.push(atom);
+            this.atomNumbers.push(atomicNumber);
+            // Always after adding an atom the bond information should be updated.
+            this.updateBonds = true;
+        // If atom already exists, update its visuals.
+        } else {
+            if (!isNil(config.color)) atomGroup.getObjectByName(`fill`).material.color.set(this.getColor(config, atomicNumber))
+            if (!isNil(config.opacity)) atomGroup.getObjectByName(`fill`).material.opacity.set(config.opacity)
+            if (!isNil(config?.outline?.color)) atomGroup.getObjectByName(`outline`).material.color.set(config.outline.color)
         }
-        const imesh =mesh[atomicNumber];
-        const true_pos = new THREE.Vector3();
-        true_pos.copy(position);
+    }
 
-        // Put all atoms visuals inside a named group
-        let group = new THREE.Group();
-        group.name = "atom" + index;
-        let atom = imesh["atom"].clone();
-        atom.name = "fill";
-        group.add(atom)
-        if (this.options.outline.enabled) {
-            let outline = imesh["outline"].clone();
-            this.atomOutlines.push(outline);
-            outline.name = "outline";
-            group.add(outline)
+    createAtomGeometry(config, atomicNumber) {
+        // Calculate the amount of segments that are needed to reach a
+        // certain angle for the ball surface segments
+        const radius = config.radius === 'covalent'
+        ? this.getRadii(atomicNumber)
+        : config.radius
+        const scaledRadius = config.scale * radius;
+        const targetAngle = config.smoothness;
+        const nSegments = Math.ceil(360/(180-targetAngle));
+        const atomGeometry = new THREE.SphereGeometry( scaledRadius, nSegments, nSegments );
+        return atomGeometry
+    }
+
+    createAtomMaterial(config, atomicNumber) {
+        let atomMaterial;
+        const color = this.getColor(config, atomicNumber)
+        if (config?.material?.toon !== undefined) {
+            const nTones = config?.material?.toon?.tones
+            const colors = new Uint8Array(nTones);
+            for (let c = 0; c <= nTones; c ++) {
+                colors[c] = ( c / nTones ) * 256;
+            }
+            const gradientMap = new THREE.DataTexture( colors, colors.length, 1, THREE.LuminanceFormat );
+            gradientMap.minFilter = THREE.NearestFilter;
+            gradientMap.magFilter = THREE.NearestFilter;
+            gradientMap.generateMipmaps = false;
+            atomMaterial = new THREE.MeshToonMaterial({
+                color: color,
+                gradientMap: gradientMap
+            });
+        } else {
+            atomMaterial = new THREE.MeshPhongMaterial({
+                color: color,
+                shininess: config.material.phong.shininess,
+                opacity: config.opacity
+            });
         }
-        group.position.copy(true_pos);
+        return atomMaterial
+    }
 
-        this.atoms.add(group)
-        this.atomFills.push(atom);
-        this.atomNumbers.push(atomicNumber);
+    createAtomOutlineGeometry(config, atomicNumber) {
+        const radius = config.radius === 'covalent'
+        ? this.getRadii(atomicNumber)
+        : config.radius
+        const scaledRadius = config.scale * radius;
+        const addition = config?.outline?.size;
+        const scale = addition / scaledRadius + 1;
+        const targetAngle = config.smoothness;
+        const nSegments = Math.ceil(360/(180-targetAngle));
+        return  new THREE.SphereGeometry(scaledRadius*scale, nSegments, nSegments);
+    }
 
-        // Always after adding an atom the bond information should be updated.
-        this.updateBonds = true;
+    createAtomOutlineMaterial(config) {
+        return new THREE.MeshBasicMaterial({
+            color : config?.outline?.color,
+            side: THREE.BackSide,
+            opacity: config.opacity
+        })
     }
 
     /*
      * A modified render-function that scales the labels according to the zoom
      * level.
      */
-    render() {
-
+    render() : void {
         const canvas = this.rootElement;
         const canvasWidth = canvas.clientWidth;
         const canvasHeight = canvas.clientHeight;
@@ -1789,24 +1843,24 @@ export class StructureViewer extends Viewer {
         // Project a [1,0,0] vector in the camera space to the world space, and
         // then to the screen space. The length of this vector is then used to
         // scale the labels.
-        let x = new THREE.Vector3(1, 0, 0);
-        let origin = new THREE.Vector3(0, 0, 0);
-        let vectors = [x, origin]
+        const x = new THREE.Vector3(1, 0, 0);
+        const origin = new THREE.Vector3(0, 0, 0);
+        const vectors = [x, origin]
         for (let i=0; i < vectors.length; ++i) {
-            let vec = vectors[i];
+            const vec = vectors[i];
             this.camera.localToWorld(vec);
             vec.project( this.camera );
             vec.x = Math.round( (   vec.x + 1 ) * canvasWidth  / 2 );
             vec.y = Math.round( ( - vec.y + 1 ) * canvasHeight / 2 );
         }
 
-        let displacement = new THREE.Vector3().subVectors(origin, x);
-        let distance = displacement.length();
-        let scale = 8*1/Math.pow(distance, 0.5);  // The sqrt makes the scaling behave nicer...
+        const displacement = new THREE.Vector3().subVectors(origin, x);
+        const distance = displacement.length();
+        const scale = 8*1/Math.pow(distance, 0.5);  // The sqrt makes the scaling behave nicer...
 
         if (this.axisLabels !== undefined) {
             for (let i=0; i < this.axisLabels.length; ++i) {
-                let label = this.axisLabels[i];
+                const label = this.axisLabels[i];
                 label.scale.set(scale, scale, 1);
             }
         }
@@ -1821,8 +1875,8 @@ export class StructureViewer extends Viewer {
      * @param targetSize - The targeted size.
      */
     getRepetitions(latticeVector, targetSize) {
-        let vectorLen = latticeVector.length();
-        let multiplier = Math.max(Math.floor(targetSize/vectorLen)-1, 1);
+        const vectorLen = latticeVector.length();
+        const multiplier = Math.max(Math.floor(targetSize/vectorLen)-1, 1);
 
         return multiplier;
     }
