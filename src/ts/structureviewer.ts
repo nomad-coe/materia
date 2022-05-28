@@ -1766,7 +1766,10 @@ export class StructureViewer extends Viewer {
         // If atom already exists, update its visuals.
         } else {
             if (!isNil(config.color)) atomGroup.getObjectByName(`fill`).material.color.set(this.getColor(config, atomicNumber))
-            if (!isNil(config.opacity)) atomGroup.getObjectByName(`fill`).material.opacity = config.opacity
+            if (!isNil(config.opacity)) {
+                atomGroup.getObjectByName(`outline`).material.opacity = config.opacity
+                atomGroup.getObjectByName(`fill`).material.opacity = config.opacity
+            }
             if (!isNil(config?.outline?.color)) atomGroup.getObjectByName(`outline`).material.color.set(config.outline.color)
         }
     }
