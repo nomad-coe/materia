@@ -75,7 +75,7 @@ let options = {
         color: "#000000",
         size: 0.025
       },
-      opacity: 1,
+      opacity: 0.5,
       color: "Jmol",
       radius: "covalent",
       scale: 1,
@@ -116,11 +116,11 @@ const colors = [
   "#00ff00",
   "#0000ff",
 ]
-setInterval(() => {
-  viewer.setOptions({
-    atoms: [{
-      exclude: [1],
-      opacity: 0.1
-    }]
-  })
-}, 1000)
+// setInterval(() => {
+//   viewer.setOptions({
+//     atoms: [{
+//       exclude: [1],
+//       opacity: 0.1
+//     }]
+//   })
+// }, 1000)
