@@ -1721,7 +1721,8 @@ export class StructureViewer extends Viewer {
                 indices = include;
             }
             else if (hasExclude) {
-                throw Error("Exclude not supported yet.");
+                const excludeSet = new Set(exclude);
+                indices = range(nAtoms).filter(x => excludeSet.has(x));
             }
             else {
                 indices = range(nAtoms);
