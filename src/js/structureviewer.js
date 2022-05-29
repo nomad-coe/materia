@@ -1712,6 +1712,7 @@ export class StructureViewer extends Viewer {
             const exclude = config.exclude;
             const hasInclude = !isNil(include);
             const hasExclude = !isNil(exclude);
+            const configHash = objectHash(config, { algorithm: 'md5' });
             let indices;
             const nAtoms = this.atomicNumbers.length;
             if (hasInclude && hasExclude) {
@@ -1730,7 +1731,7 @@ export class StructureViewer extends Viewer {
             // Create/update visuals representations of the 3D atoms
             const meshMap = {};
             for (const i of indices) {
-                this.updateAtom(i, meshMap, config);
+                this.updateAtom(i, meshMap, config, configHash);
             }
         }
     }
@@ -1858,33 +1859,33 @@ export class StructureViewer extends Viewer {
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
      */
-    updateAtom(index, mesh, config) {
+    updateAtom(index, mesh, config, configHash) {
         var _a, _b, _c;
         // See if atom already exists. If not, create it.
         const atomGroup = this.atoms.getObjectByName(`atom${index}`);
         const atomicNumber = this.atomicNumbers[index];
         if (isNil(atomGroup)) {
-            // The mesh created by each distinct config will be stored for reuse.
-            // This speeds up the creation significantly.
+            // The mesh created by each distinct config will be stored for
+            // reuse.  This speeds up the creation significantly.
             const position = this.positions[index];
-            const configHash = objectHash({ config, atomicNumber }, { algorithm: 'md5' });
-            const exists = configHash in mesh;
+            const hash = `${configHash}_${atomicNumber}`;
+            const exists = hash in mesh;
             if (!exists) {
-                mesh[configHash] = {};
+                mesh[hash] = {};
                 // Atom 
                 const atomGeometry = this.createAtomGeometry(config, atomicNumber);
                 const atomMaterial = this.createAtomMaterial(config, atomicNumber);
                 const atom = new THREE.Mesh(atomGeometry, atomMaterial);
-                mesh[configHash].atom = atom;
+                mesh[hash].atom = atom;
                 // Atom outline
                 if ((_a = config === null || config === void 0 ? void 0 : config.outline) === null || _a === void 0 ? void 0 : _a.enabled) {
                     const outlineGeometry = this.createAtomOutlineGeometry(config, atomicNumber);
                     const outlineMaterial = this.createAtomOutlineMaterial(config);
                     const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
-                    mesh[configHash].outline = outline;
+                    mesh[hash].outline = outline;
                 }
             }
-            const imesh = mesh[configHash];
+            const imesh = mesh[hash];
             const true_pos = new THREE.Vector3();
             true_pos.copy(position);
             // Put all atoms visuals inside a named group

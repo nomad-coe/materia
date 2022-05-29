@@ -391,7 +391,7 @@ export declare class StructureViewer extends Viewer {
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
      */
-    updateAtom(index: number, mesh: any, config: any): void;
+    updateAtom(index: number, mesh: any, config: any, configHash: any): void;
     createAtomGeometry(config: any, atomicNumber: any): any;
     createAtomMaterial(config: any, atomicNumber: any): any;
     createAtomOutlineGeometry(config: any, atomicNumber: any): any;
