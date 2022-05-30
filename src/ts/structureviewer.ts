@@ -762,13 +762,12 @@ export class StructureViewer extends Viewer {
      * their COP and zooming the camera so that all atoms fit with the given
      * margin.
      */
-    zoomToContent(indices:Array<number>, render=true): void {
+    zoomToContent(render=true): void {
         const {points, margin} = this.getCornerPoints()
         const center = this.calculateCOP(points)
-        const radiusMargin = Math.max(...indices.map(i => this.getRadii(this.atomicNumbers[i])))
         this.centerView(center, false)
         const p = points.map(p => p.clone().add(this.translation))
-        this.fitViewToPoints(p, radiusMargin + margin, false)
+        this.fitViewToPoints(p, this.options.view.fitMargin + margin, false)
         render && this.render()
     }
 

@@ -276,7 +276,7 @@ export declare class StructureViewer extends Viewer {
      * their COP and zooming the camera so that all atoms fit with the given
      * margin.
      */
-    zoomToContent(indices: Array<number>, render?: boolean): void;
+    zoomToContent(render?: boolean): void;
     /**
      * Translate the atoms.
      *
