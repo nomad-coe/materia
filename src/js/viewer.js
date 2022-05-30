@@ -1,6 +1,7 @@
 import { OrthographicControls } from "./orthographiccontrols";
 import { merge } from "lodash";
 import * as THREE from "three";
+
 /**
  * Abstract base class for visualizing 3D scenes with three.js.
  */
@@ -226,7 +227,7 @@ export class Viewer {
     /**
      * Used to setup the DOM element where the viewer will be displayed.
      */
-    changeHostElement(hostElement, refit = true, render = true) {
+    changeHostElement(hostElement, refit = true) {
         // If no host element currently specified, don't do anything
         if (hostElement === undefined) {
             return;
@@ -242,9 +243,6 @@ export class Viewer {
         this.resizeCanvasToHostElement();
         if (refit) {
             this.fitViewToContent();
-        }
-        if (render) {
-            this.render();
         }
     }
     /**
@@ -300,7 +298,7 @@ export class Viewer {
      * Center the camera so that the the given points fit the view with the
      * given margin.
      */
-    fitViewToPoints(points, margin, render = true) {
+    fitViewToPoints(points, margin) {
         // Make sure that all transforms are updated
         this.scenes.forEach((scene) => scene.updateMatrixWorld());
         // Project all 8 corners of the normalized cell into screen space and
@@ -374,7 +372,6 @@ export class Viewer {
         const newZoom = Math.min(zoomRight, zoomLeft, zoomUp, zoomDown);
         this.camera.zoom = newZoom;
         this.camera.updateProjectionMatrix();
-        render && this.render();
     }
     /**
      * This will automatically fit the structure to the given rendering area.
@@ -414,7 +411,6 @@ export class Viewer {
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.rootElement.clientWidth, this.rootElement.clientHeight);
         this.controls.handleResize();
-        this.render();
     }
     onWindowResize() {
         this.resizeCanvasToHostElement();
@@ -533,7 +529,7 @@ export class Viewer {
         const result = copy ? a.clone() : a;
         return result.applyMatrix3(A).applyMatrix3(Bi);
     }
-    alignView(alignments, directions, objects, render = true) {
+    alignView(alignments, directions, objects) {
         // Check alignment validity
         if (alignments === undefined) {
             return;
@@ -597,9 +593,6 @@ export class Viewer {
         };
         for (const alignment of alignments) {
             rotate(alignment);
-        }
-        if (render) {
-            this.render();
         }
     }
 }
