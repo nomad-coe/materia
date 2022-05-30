@@ -155,12 +155,12 @@ export abstract class Viewer {
      */
     clearScenes(): void {
         for (let iScene=0; iScene<this.scenes.length; ++iScene) {
-            let scene = this.scenes[iScene];
+            const scene = this.scenes[iScene];
             scene.traverse( function(node) {
 
-                let geometry = node.geometry;
-                let material = node.material;
-                let texture = node.texture;
+                const geometry = node.geometry;
+                const material = node.material;
+                const texture = node.texture;
                 if (geometry) {
                     geometry.dispose();
                 }
@@ -173,7 +173,7 @@ export abstract class Viewer {
             })
             while (scene.children.length)
             {
-                let child = scene.children[0];
+                const child = scene.children[0];
                 scene.remove(child);
             }
         }
@@ -187,16 +187,16 @@ export abstract class Viewer {
         let imgData;
         try {
             // Create headers and actual image contents
-            let strMime = "image/png";
-            let strDownloadMime = "image/octet-stream";
+            const strMime = "image/png";
+            const strDownloadMime = "image/octet-stream";
             this.render();
             imgData = this.renderer.domElement.toDataURL(strMime);
-            let strData = imgData.replace(strMime, strDownloadMime);
+            const strData = imgData.replace(strMime, strDownloadMime);
 
             // Create link element for the data. Firefox requires the link to
             // be in the body
             filename = filename + ".png";
-            let link = document.createElement('a');
+            const link = document.createElement('a');
             link.style.display = "none";
             document.body.appendChild(link);
             link.download = filename;
@@ -215,7 +215,7 @@ export abstract class Viewer {
      * This will check if WegGL is available on the current browser.
      */
     webglAvailable() : boolean {
-        let w:any = window;
+        const w:any = window;
 		try {
 			const canvas = document.createElement( 'canvas' );
 			return !!( w.WebGLRenderingContext && (
@@ -461,10 +461,10 @@ export abstract class Viewer {
      * This will automatically fit the structure to the given rendering area.
      * Will also leave a small margin.
      */
-    fitViewToContent(): void {
+    fitViewToContent(render=true): void {
         const {points, margin} = this.getCornerPoints()
         const finalMargin = this.options.view.fitMargin + margin
-        this.fitViewToPoints(points, finalMargin)
+        this.fitViewToPoints(points, finalMargin, render)
     }
 
     /*
@@ -644,7 +644,7 @@ export abstract class Viewer {
         return result.applyMatrix3(A).applyMatrix3(Bi);
     }
 
-    alignView(alignments:string[][], directions:Object, objects:THREE.Object3D[], render = true): void {
+    alignView(alignments:string[][], directions:any, objects:THREE.Object3D[], render = true): void {
         // Check alignment validity
         if (alignments === undefined) {
             return

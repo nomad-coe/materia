@@ -1,6 +1,6 @@
 import { Viewer } from "./viewer";
 import objectHash from '../js/object_hash.js';
-import { isPlainObject, isNil, range, size } from "lodash";
+import { isNumber, isArray, isPlainObject, isNil, range, size } from "lodash";
 import * as THREE from "three";
 /**
  * Class for visualizing an atomic structure.
@@ -888,28 +888,12 @@ export class StructureViewer extends Viewer {
         }
         // Create the styles
         this.setAtoms(this.options.atoms);
-        const atomPos = this.getPositions();
         // Create bonds
         this.createBonds(bonds);
-        // Setup the view center
+        // Setup the view center. Center of positions takes into account also
+        // the repeated positions and positions created at the cell boundaries.
         const viewCenter = this.options.layout.viewCenter;
-        let centerPos;
-        // Center of positions takes into account also the repeated positions
-        // and positions created at the cell boundaries.
-        if (viewCenter === "COP") {
-            centerPos = this.calculateCOP(atomPos);
-        }
-        else if (viewCenter === "COC") {
-            centerPos = new THREE.Vector3()
-                .add(this.basisVectors[0])
-                .add(this.basisVectors[1])
-                .add(this.basisVectors[2])
-                .multiplyScalar(0.5);
-        }
-        else if (Array.isArray(viewCenter)) {
-            centerPos = new THREE.Vector3().fromArray(viewCenter);
-        }
-        this.centerView(centerPos);
+        this.center(viewCenter);
         // Translate the system according to given option
         this.translate(this.options.layout.translation);
         // Zoom according to given option
@@ -920,7 +904,7 @@ export class StructureViewer extends Viewer {
         }
         this.rotateView((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.viewRotation) === null || _f === void 0 ? void 0 : _f.rotations);
         if (this.options.view.autoFit) {
-            this.fitViewToContent();
+            this.fit('full');
         }
         this.toggleShadows(this.options.renderer.shadows.enabled);
         this.render();
@@ -941,6 +925,43 @@ export class StructureViewer extends Viewer {
     }
     /**
      * Centers the visualization around a specific point.
+     * @param position - The position to center on. Can be one of:
+     *   - 'COP': Center of all atom positions.
+     *   - 'COC': Center of the cell.
+     *   - Array<Number>: An array of atomic indices, the COP will be used.
+     *   - Array<Array<Number>>: An array of positions, the COP will be used.
+     */
+    center(positions, render = true) {
+        let centerPos;
+        if (positions === "COP") {
+            const atomPos = this.getPositions();
+            centerPos = this.calculateCOP(atomPos);
+        }
+        else if (positions == 'COC') {
+            centerPos = new THREE.Vector3()
+                .add(this.basisVectors[0])
+                .add(this.basisVectors[1])
+                .add(this.basisVectors[2])
+                .multiplyScalar(0.5);
+        }
+        else if (isArray(positions)) {
+            if (isNumber(positions[0])) {
+                const points = positions.map(i => this.positions[i]);
+                centerPos = this.calculateCOP(points);
+            }
+            else {
+                const points = this.toVectors(positions);
+                centerPos = this.calculateCOP(points);
+            }
+        }
+        else {
+            throw Error("Invalid center positions.");
+        }
+        this.centerView(centerPos, false);
+        render && this.render();
+    }
+    /**
+     * Centers the visualization around a specific point.
      * @param centerPos - The center position as a cartesian vector.
      */
     centerView(position, render = true) {
@@ -951,40 +972,32 @@ export class StructureViewer extends Viewer {
         render && this.render();
     }
     /**
-     * Centers the view at the COP of the fiven atomic indices.
-     * @param centerPos - The center position as a cartesian vector.
+     * Centers the visualization around a specific point.
+     * @param position - The position to center on. Can be one of:
+     *   - 'full': Fit the full view
+     *   - Array<Number>: An array of atomic indices, the COP will be used.
+     *   - Array<Array<Number>>: An array of positions, the COP will be used.
      */
-    centerViewToAtoms(indices, render = true) {
-        const points = indices.map(i => this.positions[i]);
-        const center = this.calculateCOP(points);
-        this.centerView(center, false);
-        render && this.render();
-    }
-    /**
-     * Sets the camera to point at the atomic indices by centering the view to
-     * their COP and zooming the camera so that all atoms fit with the given
-     * margin.
-     */
-    zoomToAtoms(indices, margin = 0, render = true) {
-        const points = indices.map(i => this.positions[i]);
-        const center = this.calculateCOP(points);
-        const radiusMargin = Math.max(...indices.map(i => this.getRadii(this.atomicNumbers[i])));
-        this.centerView(center, false);
-        const p = points.map(p => p.clone().add(this.translation));
-        this.fitViewToPoints(p, radiusMargin + margin, false);
-        render && this.render();
-    }
-    /**
-     * Sets the camera to point at the atomic indices by centering the view to
-     * their COP and zooming the camera so that all atoms fit with the given
-     * margin.
-     */
-    zoomToContent(render = true) {
-        const { points, margin } = this.getCornerPoints();
-        const center = this.calculateCOP(points);
-        this.centerView(center, false);
-        const p = points.map(p => p.clone().add(this.translation));
-        this.fitViewToPoints(p, this.options.view.fitMargin + margin, false);
+    fit(positions, margin = 0, render = true) {
+        if (positions === 'full') {
+            this.fitViewToContent(false);
+        }
+        else if (isArray(positions)) {
+            let points;
+            let addedMargin = 0;
+            if (isNumber(positions[0])) {
+                points = positions.map(i => this.positions[i]);
+                addedMargin = Math.max(...positions.map(i => this.getRadii(this.atomicNumbers[i])));
+            }
+            else {
+                points = this.toVectors(positions);
+            }
+            points = points.map(p => p.clone().add(this.translation));
+            this.fitViewToPoints(points, margin + addedMargin, false);
+        }
+        else {
+            throw Error("Invalid fit positions.");
+        }
         render && this.render();
     }
     /**
@@ -1051,8 +1064,14 @@ export class StructureViewer extends Viewer {
         }
         return positions;
     }
+    /**
+     * Converts a list of list of numbers into vectors.
+     *
+     * @param positions
+     * @param copy
+     * @returns
+     */
     toVectors(positions, copy = true) {
-        // Convert to vectors
         const vecPos = [];
         for (let i = 0, size = positions.length; i < size; ++i) {
             vecPos.push(new THREE.Vector3().fromArray(positions[i]));

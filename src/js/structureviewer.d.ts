@@ -257,26 +257,26 @@ export declare class StructureViewer extends Viewer {
     calculateCOP(positions: Array<THREE.Vector3>): THREE.Vector3;
     /**
      * Centers the visualization around a specific point.
+     * @param position - The position to center on. Can be one of:
+     *   - 'COP': Center of all atom positions.
+     *   - 'COC': Center of the cell.
+     *   - Array<Number>: An array of atomic indices, the COP will be used.
+     *   - Array<Array<Number>>: An array of positions, the COP will be used.
+     */
+    center(positions: any, render?: boolean): void;
+    /**
+     * Centers the visualization around a specific point.
      * @param centerPos - The center position as a cartesian vector.
      */
     centerView(position: THREE.Vector3, render?: boolean): void;
     /**
-     * Centers the view at the COP of the fiven atomic indices.
-     * @param centerPos - The center position as a cartesian vector.
+     * Centers the visualization around a specific point.
+     * @param position - The position to center on. Can be one of:
+     *   - 'full': Fit the full view
+     *   - Array<Number>: An array of atomic indices, the COP will be used.
+     *   - Array<Array<Number>>: An array of positions, the COP will be used.
      */
-    centerViewToAtoms(indices: Array<number>, render?: boolean): void;
-    /**
-     * Sets the camera to point at the atomic indices by centering the view to
-     * their COP and zooming the camera so that all atoms fit with the given
-     * margin.
-     */
-    zoomToAtoms(indices: Array<number>, margin?: number, render?: boolean): void;
-    /**
-     * Sets the camera to point at the atomic indices by centering the view to
-     * their COP and zooming the camera so that all atoms fit with the given
-     * margin.
-     */
-    zoomToContent(render?: boolean): void;
+    fit(positions: any, margin?: number, render?: boolean): void;
     /**
      * Translate the atoms.
      *
@@ -291,6 +291,13 @@ export declare class StructureViewer extends Viewer {
      * Gets the positions for atoms in the currently loaded structure.
      */
     getPositions(fractional?: boolean): any[];
+    /**
+     * Converts a list of list of numbers into vectors.
+     *
+     * @param positions
+     * @param copy
+     * @returns
+     */
     toVectors(positions: number[][], copy?: boolean): THREE.Vector3[];
     toCartesian(positions: THREE.Vector3[], copy?: boolean): THREE.Vector3[];
     toScaled(positions: THREE.Vector3[], copy?: boolean): THREE.Vector3[];
