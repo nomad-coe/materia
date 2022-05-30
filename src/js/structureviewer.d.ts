@@ -197,7 +197,7 @@ export declare class StructureViewer extends Viewer {
      * options. Defaults to true. You should only disable this setting if you
      * plan to do a render manually afterwards.
      */
-    setOptions(options: any, render?: boolean): void;
+    setOptions(options: any): void;
     /**
      * Used to determine if a full realod of the structure is needed given the
      * updated options.
@@ -253,7 +253,7 @@ export declare class StructureViewer extends Viewer {
      *   automated detection of bonds. This can be disabled through
      *   options.bonds.enabled.
      */
-    load(structure: any, render?: boolean): boolean;
+    load(structure: any): boolean;
     /**
      * Calculates the center of points.
      */
@@ -266,12 +266,12 @@ export declare class StructureViewer extends Viewer {
      *   - Array<Number>: An array of atomic indices, the COP will be used.
      *   - Array<Array<Number>>: An array of positions, the COP will be used.
      */
-    center(positions: any, render?: boolean): void;
+    center(positions: any): void;
     /**
      * Centers the visualization around a specific point.
      * @param centerPos - The center position as a cartesian vector.
      */
-    centerView(position: THREE.Vector3, render?: boolean): void;
+    centerView(position: THREE.Vector3): void;
     /**
      * Centers the visualization around a specific point.
      * @param position - The position to center on. Can be one of:
@@ -279,13 +279,13 @@ export declare class StructureViewer extends Viewer {
      *   - Array<Number>: An array of atomic indices, the COP will be used.
      *   - Array<Array<Number>>: An array of positions, the COP will be used.
      */
-    fit(positions: any, margin?: number, render?: boolean): void;
+    fit(positions: any, margin?: number): void;
     /**
      * Translate the atoms.
      *
      * @param translation - Cartesian translation to apply.
      */
-    translate(translation: number[], render?: boolean): void;
+    translate(translation: number[]): void;
     /**
      * Creates/updates representation for the atoms based on the given list of
      * configs.
@@ -296,7 +296,7 @@ export declare class StructureViewer extends Viewer {
     /**
      * Set the position for atoms in the currently loaded structure.
      */
-    setPositions(positions: number[][], fractional?: boolean, render?: boolean): void;
+    setPositions(positions: number[][], fractional?: boolean): void;
     /**
      * Gets the positions for atoms in the currently loaded structure.
      */
@@ -378,8 +378,8 @@ export declare class StructureViewer extends Viewer {
      * array containing four numbers: [x, y, z, angle]. The rotations are
      * applied in the given order.
      */
-    rotateView(rotations: number[], render?: boolean): void;
-    alignView(alignments: string[][], render?: boolean): void;
+    rotateView(rotations: number[]): void;
+    alignView(alignments: string[][]): void;
     /**
      * Used to add periodic repetitions of atoms.
      */

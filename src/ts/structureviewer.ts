@@ -214,7 +214,7 @@ export class StructureViewer extends Viewer {
      * options. Defaults to true. You should only disable this setting if you
      * plan to do a render manually afterwards.
      */
-    setOptions(options: any, render = true): void {
+    setOptions(options: any): void {
         const defaultOptions = {
             view: {
                 fitMargin: 0.5,
@@ -320,9 +320,6 @@ export class StructureViewer extends Viewer {
                 if (options?.renderer?.background !== undefined) {
                     this.setBackgroundColor(options?.renderer?.background.color, options?.renderer?.background.opacity)
                 }
-            }
-            if (render) {
-                this.render();
             }
         }
 
@@ -431,7 +428,6 @@ export class StructureViewer extends Viewer {
      * Hides or shows the shadows.
      */
     toggleShadows(value:boolean) : void {
-
         this.renderer.shadowMap.enabled = value;
         for (let i=0; i < this.lights.length; ++i) {
             const light = this.lights[i];
@@ -455,8 +451,8 @@ export class StructureViewer extends Viewer {
         }
 
         // For some reason double rendering is required... Maybe delay()?
-        this.render();
-        this.render();
+        // this.render();
+        // this.render();
     }
 
     /*
@@ -505,7 +501,7 @@ export class StructureViewer extends Viewer {
      *   automated detection of bonds. This can be disabled through
      *   options.bonds.enabled.
      */
-    load(structure, render=true): boolean {
+    load(structure): boolean {
         // Clear all the old data
         this.clear();
         this.setup();
@@ -671,7 +667,6 @@ export class StructureViewer extends Viewer {
         }
 
         this.toggleShadows(this.options.renderer.shadows.enabled);
-        render && this.render();
         return true;
     }
 
@@ -697,7 +692,7 @@ export class StructureViewer extends Viewer {
      *   - Array<Number>: An array of atomic indices, the COP will be used.
      *   - Array<Array<Number>>: An array of positions, the COP will be used.
      */
-    center(positions:any, render=true) : void {
+    center(positions:any) : void {
         let centerPos
         if (positions === "COP") {
             const atomPos = this.getPositions()
@@ -719,20 +714,18 @@ export class StructureViewer extends Viewer {
         } else {
             throw Error("Invalid center positions.")
         }
-        this.centerView(centerPos, false)
-        render && this.render();
+        this.centerView(centerPos)
     }
 
     /**
      * Centers the visualization around a specific point.
      * @param centerPos - The center position as a cartesian vector.
      */
-    centerView(position:THREE.Vector3, render=true) : void {
+    centerView(position:THREE.Vector3) : void {
         this.translation = position
         const invertedPos = position.multiplyScalar(-1)
         this.container.position.copy(invertedPos);
         this.infoContainer.position.copy(invertedPos);
-        render && this.render();
     }
 
     /**
@@ -742,7 +735,7 @@ export class StructureViewer extends Viewer {
      *   - Array<Number>: An array of atomic indices, the COP will be used.
      *   - Array<Array<Number>>: An array of positions, the COP will be used.
      */
-    fit(positions:any, margin=0, render=true) : void {
+    fit(positions:any, margin=0) : void {
         if (positions === 'full') {
           this.fitViewToContent(false)
         } else if (isArray(positions)) {
@@ -760,7 +753,6 @@ export class StructureViewer extends Viewer {
         } else {
             throw Error("Invalid fit positions.")
         }
-        render && this.render();
     }
 
     /**
@@ -768,11 +760,10 @@ export class StructureViewer extends Viewer {
      *
      * @param translation - Cartesian translation to apply.
      */
-    translate(translation:number[], render=true) : void {
+    translate(translation:number[]) : void {
         const vec = new THREE.Vector3().fromArray(translation);
         this.atomsObject.position.add(vec);
         this.bonds.position.add(vec);
-        render && this.render();
     }
 
     /**
@@ -843,7 +834,7 @@ export class StructureViewer extends Viewer {
     /**
      * Set the position for atoms in the currently loaded structure.
      */
-    setPositions(positions:number[][], fractional=false, render=true) : void {
+    setPositions(positions:number[][], fractional=false) : void {
         // Check the periodicity setting. You can only call this function if no
         // additional atoms need to be created through the periodicity setting.
         if (this.options.layout.periodicity !== "none" && this.options.layout.periodicity !== "wrap") {
@@ -866,10 +857,6 @@ export class StructureViewer extends Viewer {
         }
         this.updateBonds = true;
         this.createBonds();
-
-        if (render) {
-            this.render();
-        }
     }
 
     /**
@@ -980,7 +967,6 @@ export class StructureViewer extends Viewer {
      */
     setZoom(zoomLevel:number) : void {
         this.camera.zoom = zoomLevel;
-        this.render();
     }
 
     setupLights() {
@@ -1480,7 +1466,7 @@ export class StructureViewer extends Viewer {
      * array containing four numbers: [x, y, z, angle]. The rotations are
      * applied in the given order.
      */
-    rotateView(rotations: number[], render=true): void {
+    rotateView(rotations: number[]): void {
         if (rotations === undefined) {
             return;
         }
@@ -1491,12 +1477,9 @@ export class StructureViewer extends Viewer {
             this.rotateAroundWorldAxis(this.root, basis, angle);
             this.rotateAroundWorldAxis(this.sceneInfo, basis, angle);
         }
-        if (render) {
-            this.render();
-        }
     }
 
-    alignView(alignments: string[][], render = true): void {
+    alignView(alignments: string[][]): void {
         // Define available directions
         const directions = {
             "a": this.basisVectors[0].clone(),
@@ -1511,7 +1494,7 @@ export class StructureViewer extends Viewer {
         const objects = [this.root, this.sceneInfo]
 
         // Rotate
-        super.alignView(alignments, directions, objects, render);
+        super.alignView(alignments, directions, objects);
     }
 
     /**
@@ -1930,6 +1913,7 @@ export class StructureViewer extends Viewer {
      * level.
      */
     render() : void {
+        console.log("RENDERING")
         const canvas = this.rootElement;
         const canvasWidth = canvas.clientWidth;
         const canvasHeight = canvas.clientHeight;
