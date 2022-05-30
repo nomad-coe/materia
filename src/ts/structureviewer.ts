@@ -1913,7 +1913,6 @@ export class StructureViewer extends Viewer {
      * level.
      */
     render() : void {
-        console.log("RENDERING")
         const canvas = this.rootElement;
         const canvasWidth = canvas.clientWidth;
         const canvasHeight = canvas.clientHeight;
