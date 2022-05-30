@@ -758,6 +758,21 @@ export class StructureViewer extends Viewer {
     }
 
     /**
+     * Sets the camera to point at the atomic indices by centering the view to
+     * their COP and zooming the camera so that all atoms fit with the given
+     * margin.
+     */
+    zoomToContent(indices:Array<number>, render=true): void {
+        const {points, margin} = this.getCornerPoints()
+        const center = this.calculateCOP(points)
+        const radiusMargin = Math.max(...indices.map(i => this.getRadii(this.atomicNumbers[i])))
+        this.centerView(center, false)
+        const p = points.map(p => p.clone().add(this.translation))
+        this.fitViewToPoints(p, radiusMargin + margin, false)
+        render && this.render()
+    }
+
+    /**
      * Translate the atoms.
      *
      * @param translation - Cartesian translation to apply.

@@ -272,6 +272,12 @@ export declare class StructureViewer extends Viewer {
      */
     zoomToAtoms(indices: Array<number>, margin?: number, render?: boolean): void;
     /**
+     * Sets the camera to point at the atomic indices by centering the view to
+     * their COP and zooming the camera so that all atoms fit with the given
+     * margin.
+     */
+    zoomToContent(indices: Array<number>, render?: boolean): void;
+    /**
      * Translate the atoms.
      *
      * @param translation - Cartesian translation to apply.

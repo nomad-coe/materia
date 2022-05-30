@@ -9,11 +9,11 @@ import * as THREE from 'three';
  */
 
 
-var changeEvent = new CustomEvent('change');
-var startEvent = new CustomEvent('start');
-var endEvent = new CustomEvent('end');
-var STATE = { NONE: - 1, ROTATE: 0, ZOOM: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_ZOOM_PAN: 4 };
-var EPS = 0.0001;
+const changeEvent = new CustomEvent('change');
+const startEvent = new CustomEvent('start');
+const endEvent = new CustomEvent('end');
+const STATE = { NONE: - 1, ROTATE: 0, ZOOM: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_ZOOM_PAN: 4 };
+const EPS = 0.0001;
 
 export class OrthographicControls {
 
@@ -313,7 +313,7 @@ export class OrthographicControls {
 			this._lastPosition.copy( this.object.position );
 			this._zoomed = false;
 		}
-	};
+	}
 
     /**
      * Saves the current configuration as the reset configuration.
@@ -323,8 +323,11 @@ export class OrthographicControls {
 		this.position0.copy( this.object.position );
 		this.up0.copy( this.object.up );
 		this.zoom0 = this.object.zoom;
-	};
+	}
 
+    /**
+     * Loads the last saved reset state.
+     */
 	reset() {
 		this._state = STATE.NONE;
 		this._prevState = STATE.NONE;
@@ -340,7 +343,7 @@ export class OrthographicControls {
 		this.dispatchEvent( changeEvent );
 
 		this._lastPosition.copy( this.object.position );
-	};
+	}
 
 	dispose() {
 		this.domElement.removeEventListener( 'contextmenu', this.contextmenu.bind(this), false );
@@ -352,7 +355,7 @@ export class OrthographicControls {
 		this.domElement.removeEventListener( 'touchmove', this.touchmove.bind(this), false );
 		this.domElement.removeEventListener( 'mousemove', this.mousemove.bind(this), false );
 		this.domElement.removeEventListener( 'mouseup', this.mouseup.bind(this), false );
-	};
+	}
 
     mousedown( event ) {
         if ( this.enabled === false ) return;

@@ -61,6 +61,9 @@ export declare class OrthographicControls {
      * Saves the current configuration as the reset configuration.
      */
     saveReset(): void;
+    /**
+     * Loads the last saved reset state.
+     */
     reset(): void;
     dispose(): void;
     mousedown(event: any): void;
