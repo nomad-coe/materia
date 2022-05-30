@@ -681,7 +681,7 @@ export class StructureViewer extends Viewer {
         } else if (Array.isArray(viewCenter)) {
             centerPos = new THREE.Vector3().fromArray(viewCenter);
         }
-        this.setViewCenter(centerPos);
+        this.centerView(centerPos);
 
         // Translate the system according to given option
         this.translate(this.options.layout.translation);
@@ -696,7 +696,7 @@ export class StructureViewer extends Viewer {
         this.rotateView(this.options?.layout?.viewRotation?.rotations);
 
         if (this.options.view.autoFit) {
-            this.fitToCanvas();
+            this.fitViewToContent();
         }
 
         this.toggleShadows(this.options.renderer.shadows.enabled);
@@ -705,9 +705,9 @@ export class StructureViewer extends Viewer {
     }
 
     /**
-     *
+     * Calculates the center of points.
      */
-    calculateCOP(positions) {
+    calculateCOP(positions:Array<THREE.Vector3>) : THREE.Vector3 {
         const nPos = positions.length;
         const sum = new THREE.Vector3();
         for (let i=0; i < nPos; ++i) {
@@ -722,10 +722,24 @@ export class StructureViewer extends Viewer {
      * Centers the visualization around a specific point.
      * @param centerPos - The center position as a cartesian vector.
      */
-    setViewCenter(centerPos:THREE.Vector3) {
-        this.container.position.sub(centerPos);
-        this.infoContainer.position.sub(centerPos);
-        this.render();
+    centerView(position:THREE.Vector3, render=true) : void {
+        const invertedPos = position.multiplyScalar(-1)
+        this.container.position.copy(invertedPos);
+        this.infoContainer.position.copy(invertedPos);
+        render && this.render();
+    }
+
+    /**
+     * This will automatically fit the given atoms to the rendering area with
+     * the given margin.
+     */
+    fitViewToAtoms(indices:Array<number>, margin=0, render=true): void {
+        const points = indices.map(i => this.positions[i])
+        const center = this.calculateCOP(points)
+        const radiusMargin = Math.max(...indices.map(i => this.getRadii(this.atomicNumbers[i])))
+        this.centerView(center, false)
+        this.fitViewToPoints(points, radiusMargin + margin, false)
+        render && this.render()
     }
 
     /**
@@ -733,17 +747,17 @@ export class StructureViewer extends Viewer {
      *
      * @param translation - Cartesian translation to apply.
      */
-    translate(translation:number[]) {
+    translate(translation:number[], render=true) : void {
         const vec = new THREE.Vector3().fromArray(translation);
         this.atoms.position.add(vec);
         this.bonds.position.add(vec);
-        this.render();
+        render && this.render();
     }
 
     /**
      * Set the position for atoms in the currently loaded structure.
      */
-    setPositions(positions:number[][], fractional=false, render=true) {
+    setPositions(positions:number[][], fractional=false, render=true) : void {
         // Check the periodicity setting. You can only call this function if no
         // additional atoms need to be created through the periodicity setting.
         if (this.options.layout.periodicity !== "none" && this.options.layout.periodicity !== "wrap") {
@@ -853,7 +867,7 @@ export class StructureViewer extends Viewer {
      *
      * @param zoomLevel - The zoom level as a scalar.
      */
-    setZoom(zoomLevel:number[]) {
+    setZoom(zoomLevel:number) : void {
         this.camera.zoom = zoomLevel;
         this.render();
     }

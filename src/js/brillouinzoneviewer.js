@@ -78,7 +78,7 @@ export class BrillouinZoneViewer extends Viewer {
         }
         this.rotateView((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.viewRotation) === null || _f === void 0 ? void 0 : _f.rotations);
         if (this.options.view.autoFit) {
-            super.fitToCanvas();
+            super.fitViewToContent();
         }
         this.render();
         return true;

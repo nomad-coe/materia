@@ -97,7 +97,7 @@ export class BrillouinZoneViewer extends Viewer {
         this.rotateView(this.options?.layout?.viewRotation?.rotations);
 
         if (this.options.view.autoFit) {
-            super.fitToCanvas();
+            super.fitViewToContent();
         }
 
         this.render();

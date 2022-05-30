@@ -288,7 +288,7 @@ export abstract class Viewer {
     /**
      * Used to setup the DOM element where the viewer will be displayed.
      */
-    changeHostElement(hostElement:any, refit=true, render=true) {
+    changeHostElement(hostElement:any, refit=true, render=true) : void {
 
         // If no host element currently specified, don't do anything
         if (hostElement === undefined) {
@@ -307,7 +307,7 @@ export abstract class Viewer {
         this.resizeCanvasToHostElement();
 
         if (refit) {
-            this.fitToCanvas();
+            this.fitViewToContent();
         }
         if (render) {
             this.render();
@@ -317,14 +317,14 @@ export abstract class Viewer {
     /**
      * Used to reset the original view.
      */
-    saveReset() {
+    saveReset() : void {
         this.controls.saveReset();
     }
 
     /**
      * Used to reset the original view.
      */
-    reset() {
+    reset() : void {
         this.controls.reset();
     }
 
@@ -332,9 +332,8 @@ export abstract class Viewer {
      * Used to setup the controls that allow interacting with the visualization
      * with mouse.
      */
-    setupControls(
-    ) {
-        let controls = new OrthographicControls(this.camera, this.rootElement);
+    setupControls() : void {
+        const controls = new OrthographicControls(this.camera, this.rootElement);
         controls.rotateSpeed = this.options.controls.rotateSpeed;
         controls.rotationCenter = new THREE.Vector3();
         controls.zoomSpeed = this.options.controls.zoomSpeed;
@@ -374,14 +373,10 @@ export abstract class Viewer {
     }
 
     /**
-     * This will automatically fit the structure to the given rendering area.
-     * Will also leave a small margin.
+     * Center the camera so that the the given points fit the view with the
+     * given margin.
      */
-    fitToCanvas(): void {
-        // First get the corner points. They will change upon rotation etc. so
-        // they have to be recalculated.
-        const {points, margin} = this.getCornerPoints();
-
+    fitViewToPoints(points:Array<THREE.Vector3>, margin:number, render=true): void {
         // Make sure that all transforms are updated
         this.scenes.forEach((scene) => scene.updateMatrixWorld());
 
@@ -398,13 +393,12 @@ export abstract class Viewer {
         this.camera.updateProjectionMatrix();
 
         // Calculate margin size in screen space
-        const finalMargin = this.options.view.fitMargin + margin;
         const screenOrigin = new THREE.Vector3(0, 0, 0);
         screenOrigin.project( this.camera );
         screenOrigin.x = Math.round( (   screenOrigin.x + 1 ) * canvasWidth  / 2 );
         screenOrigin.y = Math.round( ( - screenOrigin.y + 1 ) * canvasHeight / 2 );
         screenOrigin.z = 0;
-        const screenMargin = new THREE.Vector3(finalMargin, finalMargin, 0);
+        const screenMargin = new THREE.Vector3(margin, margin, 0);
         screenMargin.project( this.camera );
         screenMargin.x = Math.round( (   screenMargin.x + 1 ) * canvasWidth  / 2 );
         screenMargin.y = Math.round( ( - screenMargin.y + 1 ) * canvasHeight / 2 );
@@ -460,12 +454,23 @@ export abstract class Viewer {
         const newZoom = Math.min(zoomRight, zoomLeft, zoomUp, zoomDown)
         this.camera.zoom = newZoom
         this.camera.updateProjectionMatrix();
+        render && this.render()
+    }
+
+    /**
+     * This will automatically fit the structure to the given rendering area.
+     * Will also leave a small margin.
+     */
+    fitViewToContent(): void {
+        const {points, margin} = this.getCornerPoints()
+        const finalMargin = this.options.view.fitMargin + margin
+        this.fitViewToPoints(points, finalMargin)
     }
 
     /*
      * Get the current zoom level for the visualization.
      */
-    getZoom() {
+    getZoom() : number {
         return this.camera.zoom;
     }
 
@@ -474,7 +479,7 @@ export abstract class Viewer {
      *
      * @param zoom - The wanted zoom level as a floating point number.
      */
-    setZoom(zoom) {
+    setZoom(zoom:number) : void {
         this.camera.zoom = zoom;
         this.camera.updateProjectionMatrix();
     }
@@ -482,10 +487,10 @@ export abstract class Viewer {
     /*
      * Callback function that is invoked when the window is resized.
      */
-    resizeCanvasToHostElement() {
-        let aspectRatio = this.rootElement.clientWidth/this.rootElement.clientHeight;
-        let width = this.cameraWidth;
-        let height = width/aspectRatio;
+    resizeCanvasToHostElement() : void {
+        const aspectRatio = this.rootElement.clientWidth/this.rootElement.clientHeight;
+        const width = this.cameraWidth;
+        const height = width/aspectRatio;
         this.camera.left = -width/2
         this.camera.right = width/2
         this.camera.top = height/2
@@ -496,10 +501,10 @@ export abstract class Viewer {
         this.render();
     }
 
-    onWindowResize() {
+    onWindowResize() : void {
         this.resizeCanvasToHostElement();
         if (this.options.view.autoFit) {
-            this.fitToCanvas();
+            this.fitViewToContent();
         }
         this.render();
     }
@@ -512,10 +517,10 @@ export abstract class Viewer {
      * This approach is copied from
      * http://stackoverflow.com/questions/12666570/how-to-change-the-zorder-of-object-with-threejs/12666937#12666937
      */
-    render() {
+    render() : void {
         this.renderer.clear();
         for (let iScene=0; iScene<this.scenes.length; ++iScene) {
-            let scene = this.scenes[iScene];
+            const scene = this.scenes[iScene];
             this.renderer.render(scene, this.camera);
             if (iScene !== this.scenes.length -1) {
                 this.renderer.clearDepth();

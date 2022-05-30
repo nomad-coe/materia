@@ -251,20 +251,25 @@ export declare class StructureViewer extends Viewer {
      */
     load(structure: any): boolean;
     /**
-     *
+     * Calculates the center of points.
      */
-    calculateCOP(positions: any): any;
+    calculateCOP(positions: Array<THREE.Vector3>): THREE.Vector3;
     /**
      * Centers the visualization around a specific point.
      * @param centerPos - The center position as a cartesian vector.
      */
-    setViewCenter(centerPos: THREE.Vector3): void;
+    centerView(position: THREE.Vector3, render?: boolean): void;
+    /**
+     * This will automatically fit the given atoms to the rendering area with
+     * the given margin.
+     */
+    fitViewToAtoms(indices: Array<number>, margin?: number, render?: boolean): void;
     /**
      * Translate the atoms.
      *
      * @param translation - Cartesian translation to apply.
      */
-    translate(translation: number[]): void;
+    translate(translation: number[], render?: boolean): void;
     /**
      * Set the position for atoms in the currently loaded structure.
      */
@@ -289,7 +294,7 @@ export declare class StructureViewer extends Viewer {
      *
      * @param zoomLevel - The zoom level as a scalar.
      */
-    setZoom(zoomLevel: number[]): void;
+    setZoom(zoomLevel: number): void;
     setupLights(): void;
     /**
      * Create the visuals to show the lattice parameter labels.

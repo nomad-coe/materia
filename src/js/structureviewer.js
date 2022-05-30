@@ -909,7 +909,7 @@ export class StructureViewer extends Viewer {
         else if (Array.isArray(viewCenter)) {
             centerPos = new THREE.Vector3().fromArray(viewCenter);
         }
-        this.setViewCenter(centerPos);
+        this.centerView(centerPos);
         // Translate the system according to given option
         this.translate(this.options.layout.translation);
         // Zoom according to given option
@@ -920,14 +920,14 @@ export class StructureViewer extends Viewer {
         }
         this.rotateView((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.viewRotation) === null || _f === void 0 ? void 0 : _f.rotations);
         if (this.options.view.autoFit) {
-            this.fitToCanvas();
+            this.fitViewToContent();
         }
         this.toggleShadows(this.options.renderer.shadows.enabled);
         this.render();
         return true;
     }
     /**
-     *
+     * Calculates the center of points.
      */
     calculateCOP(positions) {
         const nPos = positions.length;
@@ -943,21 +943,34 @@ export class StructureViewer extends Viewer {
      * Centers the visualization around a specific point.
      * @param centerPos - The center position as a cartesian vector.
      */
-    setViewCenter(centerPos) {
-        this.container.position.sub(centerPos);
-        this.infoContainer.position.sub(centerPos);
-        this.render();
+    centerView(position, render = true) {
+        const invertedPos = position.multiplyScalar(-1);
+        this.container.position.copy(invertedPos);
+        this.infoContainer.position.copy(invertedPos);
+        render && this.render();
+    }
+    /**
+     * This will automatically fit the given atoms to the rendering area with
+     * the given margin.
+     */
+    fitViewToAtoms(indices, margin = 0, render = true) {
+        const points = indices.map(i => this.positions[i]);
+        const center = this.calculateCOP(points);
+        const radiusMargin = Math.max(...indices.map(i => this.getRadii(this.atomicNumbers[i])));
+        this.centerView(center, false);
+        this.fitViewToPoints(points, radiusMargin + margin, false);
+        render && this.render();
     }
     /**
      * Translate the atoms.
      *
      * @param translation - Cartesian translation to apply.
      */
-    translate(translation) {
+    translate(translation, render = true) {
         const vec = new THREE.Vector3().fromArray(translation);
         this.atoms.position.add(vec);
         this.bonds.position.add(vec);
-        this.render();
+        render && this.render();
     }
     /**
      * Set the position for atoms in the currently loaded structure.

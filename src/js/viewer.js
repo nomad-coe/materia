@@ -268,7 +268,7 @@ export class Viewer {
         hostElement.appendChild(this.rootElement);
         this.resizeCanvasToHostElement();
         if (refit) {
-            this.fitToCanvas();
+            this.fitViewToContent();
         }
         if (render) {
             this.render();
@@ -291,7 +291,7 @@ export class Viewer {
      * with mouse.
      */
     setupControls() {
-        let controls = new OrthographicControls(this.camera, this.rootElement);
+        const controls = new OrthographicControls(this.camera, this.rootElement);
         controls.rotateSpeed = this.options.controls.rotateSpeed;
         controls.rotationCenter = new THREE.Vector3();
         controls.zoomSpeed = this.options.controls.zoomSpeed;
@@ -324,13 +324,10 @@ export class Viewer {
         return geometry;
     }
     /**
-     * This will automatically fit the structure to the given rendering area.
-     * Will also leave a small margin.
+     * Center the camera so that the the given points fit the view with the
+     * given margin.
      */
-    fitToCanvas() {
-        // First get the corner points. They will change upon rotation etc. so
-        // they have to be recalculated.
-        const { points, margin } = this.getCornerPoints();
+    fitViewToPoints(points, margin, render = true) {
         // Make sure that all transforms are updated
         this.scenes.forEach((scene) => scene.updateMatrixWorld());
         // Project all 8 corners of the normalized cell into screen space and
@@ -344,13 +341,12 @@ export class Viewer {
         this.camera.zoom = this.options.controls.zoomLevel;
         this.camera.updateProjectionMatrix();
         // Calculate margin size in screen space
-        const finalMargin = this.options.view.fitMargin + margin;
         const screenOrigin = new THREE.Vector3(0, 0, 0);
         screenOrigin.project(this.camera);
         screenOrigin.x = Math.round((screenOrigin.x + 1) * canvasWidth / 2);
         screenOrigin.y = Math.round((-screenOrigin.y + 1) * canvasHeight / 2);
         screenOrigin.z = 0;
-        const screenMargin = new THREE.Vector3(finalMargin, finalMargin, 0);
+        const screenMargin = new THREE.Vector3(margin, margin, 0);
         screenMargin.project(this.camera);
         screenMargin.x = Math.round((screenMargin.x + 1) * canvasWidth / 2);
         screenMargin.y = Math.round((-screenMargin.y + 1) * canvasHeight / 2);
@@ -405,6 +401,16 @@ export class Viewer {
         const newZoom = Math.min(zoomRight, zoomLeft, zoomUp, zoomDown);
         this.camera.zoom = newZoom;
         this.camera.updateProjectionMatrix();
+        render && this.render();
+    }
+    /**
+     * This will automatically fit the structure to the given rendering area.
+     * Will also leave a small margin.
+     */
+    fitViewToContent() {
+        const { points, margin } = this.getCornerPoints();
+        const finalMargin = this.options.view.fitMargin + margin;
+        this.fitViewToPoints(points, finalMargin);
     }
     /*
      * Get the current zoom level for the visualization.
@@ -425,9 +431,9 @@ export class Viewer {
      * Callback function that is invoked when the window is resized.
      */
     resizeCanvasToHostElement() {
-        let aspectRatio = this.rootElement.clientWidth / this.rootElement.clientHeight;
-        let width = this.cameraWidth;
-        let height = width / aspectRatio;
+        const aspectRatio = this.rootElement.clientWidth / this.rootElement.clientHeight;
+        const width = this.cameraWidth;
+        const height = width / aspectRatio;
         this.camera.left = -width / 2;
         this.camera.right = width / 2;
         this.camera.top = height / 2;
@@ -440,7 +446,7 @@ export class Viewer {
     onWindowResize() {
         this.resizeCanvasToHostElement();
         if (this.options.view.autoFit) {
-            this.fitToCanvas();
+            this.fitViewToContent();
         }
         this.render();
     }
@@ -455,7 +461,7 @@ export class Viewer {
     render() {
         this.renderer.clear();
         for (let iScene = 0; iScene < this.scenes.length; ++iScene) {
-            let scene = this.scenes[iScene];
+            const scene = this.scenes[iScene];
             this.renderer.render(scene, this.camera);
             if (iScene !== this.scenes.length - 1) {
                 this.renderer.clearDepth();

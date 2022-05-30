@@ -85,17 +85,22 @@ export declare abstract class Viewer {
      */
     createCornerPoints(origin: THREE.Vector3, basis: THREE.Vector3[]): THREE.BufferGeometry;
     /**
+     * Center the camera so that the the given points fit the view with the
+     * given margin.
+     */
+    fitViewToPoints(points: Array<THREE.Vector3>, margin: number, render?: boolean): void;
+    /**
      * This will automatically fit the structure to the given rendering area.
      * Will also leave a small margin.
      */
-    fitToCanvas(): void;
-    getZoom(): any;
+    fitViewToContent(): void;
+    getZoom(): number;
     /**
      * Sets the zoom level for the visualization.
      *
      * @param zoom - The wanted zoom level as a floating point number.
      */
-    setZoom(zoom: any): void;
+    setZoom(zoom: number): void;
     resizeCanvasToHostElement(): void;
     onWindowResize(): void;
     render(): void;
