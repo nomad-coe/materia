@@ -25,7 +25,7 @@ export declare class BrillouinZoneViewer extends Viewer {
      * @param {*} data.kpoints List of pairs of labels and reciprocal
      * lattice coordinates for specific k-points that should be shown.
      */
-    load(data: object): boolean;
+    load(data: object, render?: boolean): boolean;
     /**
      * Used to setup the visualization options.
      *

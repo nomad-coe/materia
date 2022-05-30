@@ -1,6 +1,6 @@
 import { Viewer } from "./viewer";
 import objectHash from '../js/object_hash.js';
-import { isNumber, isArray, isPlainObject, isNil, range, size } from "lodash";
+import { isNumber, isArray, isPlainObject, isNil, range, size, merge, cloneDeep } from "lodash";
 import * as THREE from "three";
 /**
  * Class for visualizing an atomic structure.
@@ -11,6 +11,9 @@ export class StructureViewer extends Viewer {
         this.updateBonds = false;
         this.atomicRadii = []; // Contains the atomic radii
         this.elementColors = []; // Contains the element colors
+        this.meshMap = {}; // Contains mappings from hashes to THREE.js meshes.
+        this.atomConfigMap = {}; // Contains mappings from atom indices to config hashes
+        this.configMap = {}; // Contains mappings from config hashes to configs
         this.lights = []; // Contains the lights in the scene
         this.bondFills = []; // Contains the bulk of the bonds
         this.atomFills = []; // Contains the bulk of the atoms
@@ -523,23 +526,6 @@ export class StructureViewer extends Viewer {
                 radius: 0.08,
                 threshold: 1,
                 smoothness: 145,
-            },
-            atoms: {
-                material: {
-                    phong: {
-                        shininess: 30,
-                    }
-                },
-                outline: {
-                    enabled: true,
-                    color: "#000000",
-                    size: 0.025,
-                },
-                opacity: 1,
-                color: "Jmol",
-                radius: "covalent",
-                scale: 1,
-                smoothness: 165,
             }
         };
         // Upon first call, fill the missing values with default options
@@ -557,7 +543,7 @@ export class StructureViewer extends Viewer {
                 if (size(options) !== 1) {
                     throw Error("When changing style options for atoms, please do not update other properties simultaneously.");
                 }
-                this.setAtoms(options.atoms);
+                this.atoms(options.atoms);
             }
             else {
                 this.fillOptions(options, this.options);
@@ -719,7 +705,7 @@ export class StructureViewer extends Viewer {
     clear() {
         super.clear();
         this.structure = undefined;
-        this.atoms = undefined;
+        this.atomsObject = undefined;
         this.convCell = undefined;
         this.primCell = undefined;
         this.bonds = undefined;
@@ -758,7 +744,7 @@ export class StructureViewer extends Viewer {
      *   automated detection of bonds. This can be disabled through
      *   options.bonds.enabled.
      */
-    load(structure) {
+    load(structure, render = true) {
         var _a, _b, _c, _d, _e, _f;
         // Clear all the old data
         this.clear();
@@ -815,9 +801,9 @@ export class StructureViewer extends Viewer {
         this.root = new THREE.Object3D();
         this.container = new THREE.Object3D();
         this.infoContainer = new THREE.Object3D();
-        this.atoms = new THREE.Object3D();
+        this.atomsObject = new THREE.Object3D();
         this.bonds = new THREE.Object3D();
-        this.container.add(this.atoms);
+        this.container.add(this.atomsObject);
         this.container.add(this.bonds);
         this.angleArcs = new THREE.Object3D();
         this.root.add(this.container);
@@ -887,7 +873,7 @@ export class StructureViewer extends Viewer {
             this.createAtoms(cartPos, atomicNumbers, periodicity, false);
         }
         // Create the styles
-        this.setAtoms(this.options.atoms);
+        this.atoms(this.options.atoms);
         // Create bonds
         this.createBonds(bonds);
         // Setup the view center. Center of positions takes into account also
@@ -907,7 +893,7 @@ export class StructureViewer extends Viewer {
             this.fit('full');
         }
         this.toggleShadows(this.options.renderer.shadows.enabled);
-        this.render();
+        render && this.render();
         return true;
     }
     /**
@@ -986,13 +972,14 @@ export class StructureViewer extends Viewer {
             let points;
             let addedMargin = 0;
             if (isNumber(positions[0])) {
-                points = positions.map(i => this.positions[i]);
+                const atomGlobalPos = this.getPositionsGlobal();
+                points = positions.map(i => atomGlobalPos[i]);
                 addedMargin = Math.max(...positions.map(i => this.getRadii(this.atomicNumbers[i])));
             }
             else {
                 points = this.toVectors(positions);
+                points = points.map(p => p.clone().add(this.translation));
             }
-            points = points.map(p => p.clone().add(this.translation));
             this.fitViewToPoints(points, margin + addedMargin, false);
         }
         else {
@@ -1007,9 +994,75 @@ export class StructureViewer extends Viewer {
      */
     translate(translation, render = true) {
         const vec = new THREE.Vector3().fromArray(translation);
-        this.atoms.position.add(vec);
+        this.atomsObject.position.add(vec);
         this.bonds.position.add(vec);
         render && this.render();
+    }
+    /**
+     * Creates/updates representation for the atoms based on the given list of
+     * configs.
+     *
+     * @param configs - Array of styling configurations to apply.
+     */
+    atoms(configs) {
+        // Update configs sequentially
+        const def = {
+            material: {
+                phong: {
+                    shininess: 30,
+                }
+            },
+            outline: {
+                enabled: true,
+                color: "#000000",
+                size: 0.025,
+            },
+            opacity: 1,
+            color: "Jmol",
+            radius: "covalent",
+            scale: 1,
+            smoothness: 165,
+        };
+        if (isNil(configs)) {
+            configs = [{}];
+        }
+        else if (isPlainObject(configs)) {
+            configs = [configs];
+        }
+        for (let config of configs) {
+            config = merge(def, cloneDeep(config));
+            const include = config.include;
+            const exclude = config.exclude;
+            const hasInclude = !isNil(include);
+            const hasExclude = !isNil(exclude);
+            let indices;
+            const nAtoms = this.atomicNumbers.length;
+            if (hasInclude && hasExclude) {
+                throw Error("Only provide include or exclude, not both.");
+            }
+            else if (hasInclude) {
+                indices = include;
+            }
+            else if (hasExclude) {
+                const excludeSet = new Set(exclude);
+                indices = range(nAtoms).filter(x => !excludeSet.has(x));
+            }
+            else {
+                indices = range(nAtoms);
+            }
+            // A hash is create for each configuration. This way we can store
+            // the config for each atom and easily see if e.g. meshes can be
+            // reused between atom instances.
+            delete config.include;
+            delete config.exclude;
+            const configHash = objectHash(config, { algorithm: 'md5' });
+            this.configMap[configHash] = config;
+            // Create/update visuals representations of the 3D atoms
+            for (const i of indices) {
+                this.atomConfigMap[i] = configHash;
+                this.updateAtom(i, config, configHash);
+            }
+        }
     }
     /**
      * Set the position for atoms in the currently loaded structure.
@@ -1044,7 +1097,7 @@ export class StructureViewer extends Viewer {
      */
     getPositions(fractional = false) {
         let positions = [];
-        const atoms = this.atoms.children;
+        const atoms = this.atomsObject.children;
         const nAtoms = atoms.length;
         if (fractional) {
             const cartPos = [];
@@ -1063,6 +1116,24 @@ export class StructureViewer extends Viewer {
             }
         }
         return positions;
+    }
+    /**
+     * Get the positions of atoms in the global coordinate system.
+     * @returns
+     */
+    getPositionsGlobal() {
+        // Transform positions to world coordinates
+        const atoms = this.atomsObject.children;
+        this.atomsObject.updateMatrixWorld();
+        const nAtoms = atoms.length;
+        const worldPos = [];
+        for (let i = 0; i < nAtoms; ++i) {
+            const atom = atoms[i];
+            const wPos = new THREE.Vector3();
+            atom.getWorldPosition(wPos);
+            worldPos.push(wPos);
+        }
+        return worldPos;
     }
     /**
      * Converts a list of list of numbers into vectors.
@@ -1117,7 +1188,7 @@ export class StructureViewer extends Viewer {
      * of the atom is determined by the position of the group.
      */
     getAtom(index) {
-        return this.atoms.getObjectByName(`atom${index}`);
+        return this.atomsObject.getObjectByName(`atom${index}`);
     }
     /**
      * Set the zoom level
@@ -1415,8 +1486,8 @@ export class StructureViewer extends Viewer {
     }
     getCornerPoints() {
         // The atom positions will be used as visualization boundaries
-        this.atoms.updateMatrixWorld();
-        const atoms = this.atoms.children;
+        this.atomsObject.updateMatrixWorld();
+        const atoms = this.atomsObject.children;
         // Transform positions to world coordinates
         const nAtoms = atoms.length;
         const worldPos = [];
@@ -1713,7 +1784,7 @@ export class StructureViewer extends Viewer {
      */
     createAtoms(positions, labels, pbc, fractional = true) {
         // Delete old atoms
-        this.atoms.remove(...this.atoms.children);
+        this.atomsObject.remove(...this.atomsObject.children);
         this.elements = {};
         this.atomNumbers = [];
         this.atomFills = [];
@@ -1752,45 +1823,6 @@ export class StructureViewer extends Viewer {
         for (const atomicNumber of labels) {
             const elementName = this.elementNames[atomicNumber];
             this.elements[elementName] = [this.jmolColors[atomicNumber], this.covalentRadii[atomicNumber]];
-        }
-    }
-    /**
-     * Creates/updates representation for the atoms based on the given list of
-     * configs.
-     *
-     * @param configs - Array of styling configurations to apply.
-     */
-    setAtoms(configs) {
-        // Update configs sequentially
-        if (isPlainObject(configs)) {
-            configs = [configs];
-        }
-        for (const config of configs) {
-            const include = config.include;
-            const exclude = config.exclude;
-            const hasInclude = !isNil(include);
-            const hasExclude = !isNil(exclude);
-            const configHash = objectHash(config, { algorithm: 'md5' });
-            let indices;
-            const nAtoms = this.atomicNumbers.length;
-            if (hasInclude && hasExclude) {
-                throw Error("Only provide include or exclude, not both.");
-            }
-            else if (hasInclude) {
-                indices = include;
-            }
-            else if (hasExclude) {
-                const excludeSet = new Set(exclude);
-                indices = range(nAtoms).filter(x => !excludeSet.has(x));
-            }
-            else {
-                indices = range(nAtoms);
-            }
-            // Create/update visuals representations of the 3D atoms
-            const meshMap = {};
-            for (const i of indices) {
-                this.updateAtom(i, meshMap, config, configHash);
-            }
         }
     }
     /**
@@ -1857,8 +1889,12 @@ export class StructureViewer extends Viewer {
                         const num1 = this.atomNumbers[i];
                         const num2 = this.atomNumbers[j];
                         const distance = pos2.clone().sub(pos1).length();
-                        const radii1 = this.options.atoms.scale * this.getRadii(num1);
-                        const radii2 = this.options.atoms.scale * this.getRadii(num2);
+                        const configHashI = this.atomConfigMap[i];
+                        const configHashJ = this.atomConfigMap[j];
+                        const configI = this.configMap[configHashI];
+                        const configJ = this.configMap[configHashJ];
+                        const radii1 = configI.scale * this.getRadii(num1);
+                        const radii2 = configJ.scale * this.getRadii(num2);
                         if (distance <= this.options.bonds.threshold * 1.1 * (radii1 + radii2)) {
                             this.addBond(i, j, pos1, pos2, bondMaterial);
                         }
@@ -1917,73 +1953,57 @@ export class StructureViewer extends Viewer {
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
      */
-    updateAtom(index, mesh, config, configHash) {
-        var _a, _b, _c;
-        // See if atom already exists. If not, create it.
-        const atomGroup = this.atoms.getObjectByName(`atom${index}`);
+    updateAtom(index, config, configHash) {
+        var _a, _b;
+        // See if a mesh for this atom already exists. If not create it,
+        // otherwise reuse an existing mesh. Reusing meshes speeds up the
+        // creation significantly.
         const atomicNumber = this.atomicNumbers[index];
-        if (isNil(atomGroup)) {
-            // The mesh created by each distinct config will be stored for
-            // reuse.  This speeds up the creation significantly.
-            const position = this.positions[index];
-            const hash = `${configHash}_${atomicNumber}`;
-            const exists = hash in mesh;
-            if (!exists) {
-                mesh[hash] = {};
-                // Atom 
-                const atomGeometry = this.createAtomGeometry(config, atomicNumber);
-                const atomMaterial = this.createAtomMaterial(config, atomicNumber);
-                const atom = new THREE.Mesh(atomGeometry, atomMaterial);
-                mesh[hash].atom = atom;
-                // Atom outline
-                if ((_a = config === null || config === void 0 ? void 0 : config.outline) === null || _a === void 0 ? void 0 : _a.enabled) {
-                    const outlineGeometry = this.createAtomOutlineGeometry(config, atomicNumber);
-                    const outlineMaterial = this.createAtomOutlineMaterial(config);
-                    const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
-                    mesh[hash].outline = outline;
-                }
+        const position = this.positions[index];
+        const hash = `${configHash}_${atomicNumber}`;
+        const mesh = this.meshMap[hash];
+        if (isNil(mesh)) {
+            this.meshMap[hash] = {};
+            // Atom 
+            const atomGeometry = this.createAtomGeometry(config, atomicNumber);
+            const atomMaterial = this.createAtomMaterial(config, atomicNumber);
+            const atom = new THREE.Mesh(atomGeometry, atomMaterial);
+            this.meshMap[hash].atom = atom;
+            // Atom outline
+            if ((_a = config === null || config === void 0 ? void 0 : config.outline) === null || _a === void 0 ? void 0 : _a.enabled) {
+                const outlineGeometry = this.createAtomOutlineGeometry(config, atomicNumber);
+                const outlineMaterial = this.createAtomOutlineMaterial(config);
+                const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
+                this.meshMap[hash].outline = outline;
             }
-            const imesh = mesh[hash];
-            const true_pos = new THREE.Vector3();
-            true_pos.copy(position);
-            // Put all atoms visuals inside a named group
-            const group = new THREE.Group();
-            group.name = "atom" + index;
-            const atom = imesh["atom"].clone();
-            atom.name = "fill";
-            group.add(atom);
-            if ((_b = config === null || config === void 0 ? void 0 : config.outline) === null || _b === void 0 ? void 0 : _b.enabled) {
-                const outline = imesh["outline"].clone();
-                this.atomOutlines.push(outline);
-                outline.name = "outline";
-                group.add(outline);
-            }
-            group.position.copy(true_pos);
-            this.atoms.add(group);
-            this.atomFills.push(atom);
-            this.atomNumbers.push(atomicNumber);
-            // Always after adding an atom the bond information should be updated.
-            this.updateBonds = true;
-            // If atom already exists, update its visuals.
         }
-        else {
-            if (!isNil(config.color))
-                atomGroup.getObjectByName(`fill`).material.color.set(this.getColor(config, atomicNumber));
-            if (!isNil(config.opacity)) {
-                if (config.opacity === 0) {
-                    atomGroup.visible = false;
-                }
-                else {
-                    atomGroup.visible = true;
-                    atomGroup.getObjectByName(`outline`).material.opacity = config.opacity;
-                    atomGroup.getObjectByName(`outline`).material.transparent = config.opacity !== 1;
-                    atomGroup.getObjectByName(`fill`).material.opacity = config.opacity;
-                    atomGroup.getObjectByName(`fill`).material.transparent = config.opacity !== 1;
-                }
-            }
-            if (!isNil((_c = config === null || config === void 0 ? void 0 : config.outline) === null || _c === void 0 ? void 0 : _c.color))
-                atomGroup.getObjectByName(`outline`).material.color.set(config.outline.color);
+        // Remove old representation if one exists
+        const atomGroup = this.atomsObject.getObjectByName(`atom${index}`);
+        if (!isNil(atomGroup)) {
+            atomGroup.removeFromParent();
         }
+        // Add the new representation
+        const imesh = this.meshMap[hash];
+        const true_pos = new THREE.Vector3();
+        true_pos.copy(position);
+        // Put all atoms visuals inside a named group
+        const group = new THREE.Group();
+        group.name = "atom" + index;
+        const atom = imesh["atom"].clone();
+        atom.name = "fill";
+        group.add(atom);
+        if ((_b = config === null || config === void 0 ? void 0 : config.outline) === null || _b === void 0 ? void 0 : _b.enabled) {
+            const outline = imesh["outline"].clone();
+            this.atomOutlines.push(outline);
+            outline.name = "outline";
+            group.add(outline);
+        }
+        group.position.copy(true_pos);
+        this.atomsObject.add(group);
+        this.atomFills.push(atom);
+        this.atomNumbers.push(atomicNumber);
+        // Always after adding an atom the bond information should be updated.
+        this.updateBonds = true;
     }
     createAtomGeometry(config, atomicNumber) {
         // Calculate the amount of segments that are needed to reach a

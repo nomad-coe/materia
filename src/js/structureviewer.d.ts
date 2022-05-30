@@ -18,8 +18,11 @@ export declare class StructureViewer extends Viewer {
     atomicRadii: Array<number>;
     elementColors: Array<string>;
     translation: THREE.Vector3;
+    meshMap: any;
+    atomConfigMap: any;
+    configMap: any;
     root: THREE.Object3D;
-    atoms: THREE.Object3D;
+    atomsObject: THREE.Object3D;
     convCell: THREE.Object3D;
     primCell: THREE.Object3D;
     bonds: THREE.Object3D;
@@ -250,7 +253,7 @@ export declare class StructureViewer extends Viewer {
      *   automated detection of bonds. This can be disabled through
      *   options.bonds.enabled.
      */
-    load(structure: any): boolean;
+    load(structure: any, render?: boolean): boolean;
     /**
      * Calculates the center of points.
      */
@@ -284,13 +287,25 @@ export declare class StructureViewer extends Viewer {
      */
     translate(translation: number[], render?: boolean): void;
     /**
+     * Creates/updates representation for the atoms based on the given list of
+     * configs.
+     *
+     * @param configs - Array of styling configurations to apply.
+     */
+    atoms(configs: any): void;
+    /**
      * Set the position for atoms in the currently loaded structure.
      */
     setPositions(positions: number[][], fractional?: boolean, render?: boolean): void;
     /**
      * Gets the positions for atoms in the currently loaded structure.
      */
-    getPositions(fractional?: boolean): any[];
+    getPositions(fractional?: boolean): Array<THREE.Vector3>;
+    /**
+     * Get the positions of atoms in the global coordinate system.
+     * @returns
+     */
+    getPositionsGlobal(): Array<THREE.Vector3>;
     /**
      * Converts a list of list of numbers into vectors.
      *
@@ -385,13 +400,6 @@ export declare class StructureViewer extends Viewer {
      */
     createAtoms(positions: any, labels: any, pbc: Array<boolean>, fractional?: boolean): void;
     /**
-     * Creates/updates representation for the atoms based on the given list of
-     * configs.
-     *
-     * @param configs - Array of styling configurations to apply.
-     */
-    setAtoms(configs: any): void;
-    /**
      * Creates bonds between the atoms based on radii and distance.
      *
      * @param bonds - A Nx2 list of atom indices specifying the bonded atoms. Alternatively
@@ -416,11 +424,11 @@ export declare class StructureViewer extends Viewer {
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
      */
-    updateAtom(index: number, mesh: any, config: any, configHash: any): void;
-    createAtomGeometry(config: any, atomicNumber: any): any;
-    createAtomMaterial(config: any, atomicNumber: any): any;
-    createAtomOutlineGeometry(config: any, atomicNumber: any): any;
-    createAtomOutlineMaterial(config: any): any;
+    updateAtom(index: number, config: any, configHash: string): void;
+    createAtomGeometry(config: any, atomicNumber: number): THREE.SphereGeometry;
+    createAtomMaterial(config: any, atomicNumber: number): THREE.Material;
+    createAtomOutlineGeometry(config: any, atomicNumber: number): THREE.SphereGeometry;
+    createAtomOutlineMaterial(config: any): THREE.Material;
     render(): void;
     /**
      * Used to get a number of repetitions that are needed for the given

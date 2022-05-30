@@ -1,5 +1,5 @@
 import { OrthographicControls } from "./orthographiccontrols";
-import { isArray, merge, mergeWith, cloneDeep } from "lodash";
+import { merge } from "lodash";
 import * as THREE from "three";
 /**
  * Abstract base class for visualizing 3D scenes with three.js.
@@ -66,34 +66,7 @@ export class Viewer {
      * source object.
      */
     fillOptions(source, target) {
-        return mergeWith(target, source, (objValue, srcValue, key, object, source, stack) => {
-            if (key === 'atoms' && isArray(srcValue)) {
-                const newList = [];
-                for (const atoms of srcValue) {
-                    newList.push(merge(cloneDeep(objValue), atoms));
-                }
-                return newList;
-            }
-            return undefined;
-        });
-        // Overrride with settings from user and child class
-        // function eachRecursive(source, target) {
-        //     for (const k in source) {
-        //         // Find variable in default settings
-        //         if (source[k] !== null && isPlainObject(source[k])) {
-        //             // If the current level is not defined in the target, it is
-        //             // initialized with empty object.
-        //             if (target[k] === undefined) {
-        //                 target[k] = {}
-        //             }
-        //             eachRecursive(source[k], target[k]);
-        //         } else {
-        //             // We store each leaf property into the default settings
-        //             target[k] = source[k];
-        //         }
-        //     }
-        // }
-        // eachRecursive(source, target);
+        return merge(target, source);
     }
     /**
      * This function will set up all the basics for visualization: scenes,
