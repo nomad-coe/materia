@@ -195,7 +195,6 @@ export class OrthographicControls {
             }
         }
     }
-    ;
     /**
       * Used to update the controlled object after the user has manipulated the
       * scene. Will also request a new render if the manipulation has changed

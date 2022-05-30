@@ -283,7 +283,7 @@ export class OrthographicControls {
 				this._zoomStart.copy( this._zoomEnd );
 			}
 		}
-	};
+	}
 
     /**
       * Used to update the controlled object after the user has manipulated the
@@ -309,7 +309,7 @@ export class OrthographicControls {
 
         let delta = this._lastPosition.distanceToSquared( this.object.position );
 		if ( delta > EPS || this._zoomed) {
-			this.dispatchEvent( changeEvent );
+			this.dispatchEvent(changeEvent);
 			this._lastPosition.copy( this.object.position );
 			this._zoomed = false;
 		}
@@ -338,7 +338,7 @@ export class OrthographicControls {
 		this.object.lookAt( this.rotationCenter );
 		this.object.zoom = this.zoom0;
         this.object.updateProjectionMatrix();
-		this._lastPosition.copy( this.object.position );
+		this._lastPosition.copy(this.object.position);
 	}
 
 	dispose() {
