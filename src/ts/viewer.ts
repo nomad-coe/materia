@@ -289,14 +289,14 @@ export abstract class Viewer {
     /**
      * Used to reset the original view.
      */
-    saveReset() : void {
+    saveCameraReset() : void {
         this.controls.saveReset();
     }
 
     /**
      * Used to reset the original view.
      */
-    reset() : void {
+    resetCamera() : void {
         this.controls.reset();
     }
 

@@ -71,11 +71,11 @@ export declare abstract class Viewer {
     /**
      * Used to reset the original view.
      */
-    saveReset(): void;
+    saveCameraReset(): void;
     /**
      * Used to reset the original view.
      */
-    reset(): void;
+    resetCamera(): void;
     setupControls(): void;
     /**
      * Creates 8 corner points for the given cuboid.

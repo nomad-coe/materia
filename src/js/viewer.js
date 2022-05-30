@@ -250,13 +250,13 @@ export class Viewer {
     /**
      * Used to reset the original view.
      */
-    saveReset() {
+    saveCameraReset() {
         this.controls.saveReset();
     }
     /**
      * Used to reset the original view.
      */
-    reset() {
+    resetCamera() {
         this.controls.reset();
     }
     /*
