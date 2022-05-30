@@ -244,7 +244,6 @@ export class OrthographicControls {
         this.object.lookAt(this.rotationCenter);
         this.object.zoom = this.zoom0;
         this.object.updateProjectionMatrix();
-        this.dispatchEvent(changeEvent);
         this._lastPosition.copy(this.object.position);
     }
     dispose() {

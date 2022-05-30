@@ -318,7 +318,7 @@ export class OrthographicControls {
     /**
      * Saves the current configuration as the reset configuration.
      */
-	saveReset() {
+	saveReset() : void {
 		this.rotationCenter0.copy( this.rotationCenter );
 		this.position0.copy( this.object.position );
 		this.up0.copy( this.object.up );
@@ -328,10 +328,9 @@ export class OrthographicControls {
     /**
      * Loads the last saved reset state.
      */
-	reset() {
+	reset() : void {
 		this._state = STATE.NONE;
 		this._prevState = STATE.NONE;
-
 		this.rotationCenter.copy( this.rotationCenter0 );
 		this.object.position.copy( this.position0 );
 		this.object.up.copy( this.up0 );
@@ -339,9 +338,6 @@ export class OrthographicControls {
 		this.object.lookAt( this.rotationCenter );
 		this.object.zoom = this.zoom0;
         this.object.updateProjectionMatrix();
-
-		this.dispatchEvent( changeEvent );
-
 		this._lastPosition.copy( this.object.position );
 	}
 
