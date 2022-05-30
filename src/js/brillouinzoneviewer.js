@@ -48,7 +48,7 @@ export class BrillouinZoneViewer extends Viewer {
      * @param {*} data.kpoints List of pairs of labels and reciprocal
      * lattice coordinates for specific k-points that should be shown.
      */
-    load(data, render = true) {
+    load(data) {
         var _a, _b, _c, _d, _e, _f;
         // Deep copy the structure for reloading
         this.data = data;
@@ -80,7 +80,6 @@ export class BrillouinZoneViewer extends Viewer {
         if (this.options.view.autoFit) {
             super.fitViewToContent();
         }
-        render && this.render();
         return true;
     }
     /**
@@ -156,7 +155,7 @@ export class BrillouinZoneViewer extends Viewer {
      * options. Defaults to true. You should only disable this setting if you
      * plan to do a render manually afterwards.
      */
-    setOptions(options, render = true, reload = true) {
+    setOptions(options, reload = true) {
         var _a, _b, _c;
         // The default settings object
         const defaultOptions = {
@@ -235,9 +234,6 @@ export class BrillouinZoneViewer extends Viewer {
             }
             if (((_a = options === null || options === void 0 ? void 0 : options.renderer) === null || _a === void 0 ? void 0 : _a.background) !== undefined) {
                 this.setBackgroundColor((_b = options === null || options === void 0 ? void 0 : options.renderer) === null || _b === void 0 ? void 0 : _b.background.color, (_c = options === null || options === void 0 ? void 0 : options.renderer) === null || _c === void 0 ? void 0 : _c.background.opacity);
-            }
-            if (render) {
-                this.render();
             }
         }
     }
@@ -499,7 +495,7 @@ export class BrillouinZoneViewer extends Viewer {
      * array containing four numbers: [x, y, z, angle]. The rotations are
      * applied in the given order.
      */
-    rotateView(rotations, render = true) {
+    rotateView(rotations) {
         if (rotations === undefined) {
             return;
         }
@@ -510,11 +506,8 @@ export class BrillouinZoneViewer extends Viewer {
             this.rotateAroundWorldAxis(this.zone, basis, angle);
             this.rotateAroundWorldAxis(this.info, basis, angle);
         }
-        if (render) {
-            this.render();
-        }
     }
-    alignView(alignments, render = true) {
+    alignView(alignments) {
         // Determine segment direction
         const segmentVector = new THREE.Vector3();
         const nPoints = this.labelPoints.children.length;
@@ -535,7 +528,7 @@ export class BrillouinZoneViewer extends Viewer {
         // List the objects whose matrix needs to be updated
         const objects = [this.zone, this.info];
         // Rotate
-        super.alignView(alignments, directions, objects, render);
+        super.alignView(alignments, directions, objects);
     }
     createCircle(position, diameter, color) {
         // Configure canvas

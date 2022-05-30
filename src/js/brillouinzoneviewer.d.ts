@@ -25,7 +25,7 @@ export declare class BrillouinZoneViewer extends Viewer {
      * @param {*} data.kpoints List of pairs of labels and reciprocal
      * lattice coordinates for specific k-points that should be shown.
      */
-    load(data: object, render?: boolean): boolean;
+    load(data: object): boolean;
     /**
      * Used to setup the visualization options.
      *
@@ -99,7 +99,7 @@ export declare class BrillouinZoneViewer extends Viewer {
      * options. Defaults to true. You should only disable this setting if you
      * plan to do a render manually afterwards.
      */
-    setOptions(options: any, render?: boolean, reload?: boolean): void;
+    setOptions(options: any, reload?: boolean): void;
     createBrillouinZone(basis: number[][], segments: number[][][], kpoints: [string, number[]][]): void;
     getCornerPoints(): {
         points: any[];
@@ -110,7 +110,7 @@ export declare class BrillouinZoneViewer extends Viewer {
      * array containing four numbers: [x, y, z, angle]. The rotations are
      * applied in the given order.
      */
-    rotateView(rotations: number[], render?: boolean): void;
-    alignView(alignments: string[][], render?: boolean): void;
+    rotateView(rotations: number[]): void;
+    alignView(alignments: string[][]): void;
     createCircle(position: THREE.Vector3, diameter: number, color: string): THREE.Object3D;
 }
