@@ -258,8 +258,8 @@ export class Viewer {
      */
     resetCamera() {
         this.controls.reset();
-        this.camera.updateProjectionMatrix();
-        this.scenes.forEach((scene) => scene.updateMatrixWorld());
+        // For some reason a render is required here...
+        this.render();
     }
     /*
      * Used to setup the controls that allow interacting with the visualization

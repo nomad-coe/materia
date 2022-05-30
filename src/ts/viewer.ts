@@ -298,8 +298,8 @@ export abstract class Viewer {
      */
     resetCamera() : void {
         this.controls.reset();
-        this.camera.updateProjectionMatrix();
-        this.scenes.forEach((scene) => scene.updateMatrixWorld());
+        // For some reason a render is required here...
+        this.render()
     }
 
     /*
