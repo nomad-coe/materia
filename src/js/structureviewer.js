@@ -944,21 +944,34 @@ export class StructureViewer extends Viewer {
      * @param centerPos - The center position as a cartesian vector.
      */
     centerView(position, render = true) {
+        this.translation = position;
         const invertedPos = position.multiplyScalar(-1);
         this.container.position.copy(invertedPos);
         this.infoContainer.position.copy(invertedPos);
         render && this.render();
     }
     /**
-     * This will automatically fit the given atoms to the rendering area with
-     * the given margin.
+     * Centers the view at the COP of the fiven atomic indices.
+     * @param centerPos - The center position as a cartesian vector.
      */
-    fitViewToAtoms(indices, margin = 0, render = true) {
+    centerViewToAtoms(indices, render = true) {
+        const points = indices.map(i => this.positions[i]);
+        const center = this.calculateCOP(points);
+        this.centerView(center, false);
+        render && this.render();
+    }
+    /**
+     * Sets the camera to point at the atomic indices by centering the view to
+     * their COP and zooming the camera so that all atoms fit with the given
+     * margin.
+     */
+    zoomToAtoms(indices, margin = 0, render = true) {
         const points = indices.map(i => this.positions[i]);
         const center = this.calculateCOP(points);
         const radiusMargin = Math.max(...indices.map(i => this.getRadii(this.atomicNumbers[i])));
         this.centerView(center, false);
-        this.fitViewToPoints(points, radiusMargin + margin, false);
+        const p = points.map(p => p.clone().add(this.translation));
+        this.fitViewToPoints(p, radiusMargin + margin, false);
         render && this.render();
     }
     /**
@@ -1925,10 +1938,16 @@ export class StructureViewer extends Viewer {
             if (!isNil(config.color))
                 atomGroup.getObjectByName(`fill`).material.color.set(this.getColor(config, atomicNumber));
             if (!isNil(config.opacity)) {
-                atomGroup.getObjectByName(`outline`).material.opacity = config.opacity;
-                atomGroup.getObjectByName(`outline`).material.transparent = config.opacity !== 1;
-                atomGroup.getObjectByName(`fill`).material.opacity = config.opacity;
-                atomGroup.getObjectByName(`fill`).material.transparent = config.opacity !== 1;
+                if (config.opacity === 0) {
+                    atomGroup.visible = false;
+                }
+                else {
+                    atomGroup.visible = true;
+                    atomGroup.getObjectByName(`outline`).material.opacity = config.opacity;
+                    atomGroup.getObjectByName(`outline`).material.transparent = config.opacity !== 1;
+                    atomGroup.getObjectByName(`fill`).material.opacity = config.opacity;
+                    atomGroup.getObjectByName(`fill`).material.transparent = config.opacity !== 1;
+                }
             }
             if (!isNil((_c = config === null || config === void 0 ? void 0 : config.outline) === null || _c === void 0 ? void 0 : _c.color))
                 atomGroup.getObjectByName(`outline`).material.color.set(config.outline.color);

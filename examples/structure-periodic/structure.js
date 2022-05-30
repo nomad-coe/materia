@@ -93,27 +93,3 @@ var bulk = {
 };
 
 viewer.load(bulk);
-
-const colors = [
-  "#ff0000",
-  "#00ff00",
-  "#0000ff",
-]
-
-setInterval(() => {
-  viewer.setOptions({
-    atoms: [{
-      exclude: [1],
-      opacity: 0.0
-    }]
-  }, false)
-  viewer.setOptions({
-    cell: {
-      enabled: false,
-    },
-    latticeConstants: {
-      enabled: false,
-    }
-  }, false)
-  viewer.fitViewToAtoms([1], 0.4)
-}, 1000)

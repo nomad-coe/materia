@@ -189,7 +189,7 @@ export class Viewer {
     webglAvailable() {
         let w = window;
         try {
-            let canvas = document.createElement('canvas');
+            const canvas = document.createElement('canvas');
             return !!(w.WebGLRenderingContext && (canvas.getContext('webgl') ||
                 canvas.getContext('experimental-webgl')));
         }
@@ -228,9 +228,9 @@ export class Viewer {
      * Used to setup and position the camera.
      */
     setupCamera() {
-        let aspectRatio = this.rootElement.clientWidth / this.rootElement.clientHeight;
-        let width = this.cameraWidth;
-        let height = width / aspectRatio;
+        const aspectRatio = this.rootElement.clientWidth / this.rootElement.clientHeight;
+        const width = this.cameraWidth;
+        const height = width / aspectRatio;
         this.camera = new THREE.OrthographicCamera(width / -2, width / 2, height / 2, height / -2, -100, 1000);
         this.camera.name = "camera";
         this.camera.position.z = 20;

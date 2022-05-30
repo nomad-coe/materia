@@ -15,6 +15,7 @@
     "structure-finite": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/structure-finite/structure.html\"",
     "structure-2d": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/structure-2d/structure.html\"",
     "structure-1d": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/structure-1d/structure.html\"",
+    "topology": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/topology/structure.html\"",
     "build": "gulp build"
   },
   "dependencies": {

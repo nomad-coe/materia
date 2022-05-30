@@ -9,7 +9,7 @@ import * as THREE from "three"
 export class StructureViewer extends Viewer {
     structure:unknown;                    // The visualized structure
     atomPos:number[][];                   // Contains the positions of the visualized atoms
-    positions:number[][];                 // Contains the positions of the visualized atoms
+    positions:THREE.Vector3[];            // Contains the positions of the visualized atoms
     atomicNumbers:number[];               // Contains the atomic numbers of the visualized atoms
     atomNumbers:number[];                 // Contains the atomic numbers of the visualized atoms
     B:THREE.Matrix3;
@@ -20,6 +20,7 @@ export class StructureViewer extends Viewer {
     maxRadii: number;
     atomicRadii:Array<number> = [];       // Contains the atomic radii
     elementColors:Array<string> = [];     // Contains the element colors
+    translation:THREE.Vector3             // Translation vector that has been applied to shift the view
 
     root:THREE.Object3D;                  // three.js root object in the scene
     atoms:THREE.Object3D;                 // three.js object for storing the atoms
@@ -29,7 +30,7 @@ export class StructureViewer extends Viewer {
     latticeConstants:any;                 // Contains visuals for lattice parameters
     container:any;                        // Contains visuals
     infoContainer:any;                    // Contains visuals
-    elements:Object;                      // Contains information about the elements included in the structure
+    elements:any;                         // Contains information about the elements included in the structure
     sceneStructure:any;
     sceneInfo:any;
 
@@ -723,6 +724,7 @@ export class StructureViewer extends Viewer {
      * @param centerPos - The center position as a cartesian vector.
      */
     centerView(position:THREE.Vector3, render=true) : void {
+        this.translation = position
         const invertedPos = position.multiplyScalar(-1)
         this.container.position.copy(invertedPos);
         this.infoContainer.position.copy(invertedPos);
@@ -730,15 +732,28 @@ export class StructureViewer extends Viewer {
     }
 
     /**
-     * This will automatically fit the given atoms to the rendering area with
-     * the given margin.
+     * Centers the view at the COP of the fiven atomic indices.
+     * @param centerPos - The center position as a cartesian vector.
      */
-    fitViewToAtoms(indices:Array<number>, margin=0, render=true): void {
+    centerViewToAtoms(indices:Array<number>, render=true) : void {
+        const points = indices.map(i => this.positions[i])
+        const center = this.calculateCOP(points)
+        this.centerView(center, false)
+        render && this.render();
+    }
+
+    /**
+     * Sets the camera to point at the atomic indices by centering the view to
+     * their COP and zooming the camera so that all atoms fit with the given
+     * margin.
+     */
+    zoomToAtoms(indices:Array<number>, margin=0, render=true): void {
         const points = indices.map(i => this.positions[i])
         const center = this.calculateCOP(points)
         const radiusMargin = Math.max(...indices.map(i => this.getRadii(this.atomicNumbers[i])))
         this.centerView(center, false)
-        this.fitViewToPoints(points, radiusMargin + margin, false)
+        const p = points.map(p => p.clone().add(this.translation))
+        this.fitViewToPoints(p, radiusMargin + margin, false)
         render && this.render()
     }
 
@@ -1782,10 +1797,15 @@ export class StructureViewer extends Viewer {
         } else {
             if (!isNil(config.color)) atomGroup.getObjectByName(`fill`).material.color.set(this.getColor(config, atomicNumber))
             if (!isNil(config.opacity)) {
-                atomGroup.getObjectByName(`outline`).material.opacity = config.opacity
-                atomGroup.getObjectByName(`outline`).material.transparent = config.opacity !== 1
-                atomGroup.getObjectByName(`fill`).material.opacity = config.opacity
-                atomGroup.getObjectByName(`fill`).material.transparent = config.opacity !== 1
+                if (config.opacity === 0) {
+                    atomGroup.visible = false
+                } else {
+                    atomGroup.visible = true
+                    atomGroup.getObjectByName(`outline`).material.opacity = config.opacity
+                    atomGroup.getObjectByName(`outline`).material.transparent = config.opacity !== 1
+                    atomGroup.getObjectByName(`fill`).material.opacity = config.opacity
+                    atomGroup.getObjectByName(`fill`).material.transparent = config.opacity !== 1
+                }
             }
             if (!isNil(config?.outline?.color)) atomGroup.getObjectByName(`outline`).material.color.set(config.outline.color)
         }
@@ -1916,7 +1936,7 @@ export class StructureViewer extends Viewer {
 	  'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og' // Og = 118
 	];
 
-    elementNumbers:object = {
+    elementNumbers:any = {
         [this.label_missing]: 0, 'H': 1,  'He': 2, 'Li': 3, 'Be': 4,
         'B': 5,  'C': 6,  'N': 7,  'O': 8,  'F': 9,
         'Ne': 10, 'Na': 11, 'Mg': 12, 'Al': 13, 'Si': 14,

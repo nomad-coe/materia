@@ -214,10 +214,10 @@ export abstract class Viewer {
     /**
      * This will check if WegGL is available on the current browser.
      */
-    webglAvailable() {
+    webglAvailable() : boolean {
         let w:any = window;
 		try {
-			let canvas = document.createElement( 'canvas' );
+			const canvas = document.createElement( 'canvas' );
 			return !!( w.WebGLRenderingContext && (
 				canvas.getContext( 'webgl' ) ||
 				canvas.getContext( 'experimental-webgl' ) )
@@ -231,7 +231,7 @@ export abstract class Viewer {
      * This will setup the three.js renderer object. Uses WebGL by default, can
      * use a canvas fallback is WegGL is not available.
      */
-    setupRenderer() {
+    setupRenderer() : void {
         // Create the renderer. The "alpha: true" enables to set a background color.
         this.renderer = new THREE.WebGLRenderer({
             alpha: true,
@@ -260,10 +260,10 @@ export abstract class Viewer {
     /*
      * Used to setup and position the camera.
      */
-    setupCamera() {
-        let aspectRatio = this.rootElement.clientWidth/this.rootElement.clientHeight;
-        let width = this.cameraWidth;
-        let height = width/aspectRatio;
+    setupCamera() : void {
+        const aspectRatio = this.rootElement.clientWidth/this.rootElement.clientHeight;
+        const width = this.cameraWidth;
+        const height = width/aspectRatio;
         this.camera = new THREE.OrthographicCamera(width/-2, width/2, height/2, height/-2, -100, 1000 );
         this.camera.name = "camera";
         this.camera.position.z = 20;

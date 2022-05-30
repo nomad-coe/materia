@@ -6,7 +6,7 @@ import * as THREE from "three";
 export declare class StructureViewer extends Viewer {
     structure: unknown;
     atomPos: number[][];
-    positions: number[][];
+    positions: THREE.Vector3[];
     atomicNumbers: number[];
     atomNumbers: number[];
     B: THREE.Matrix3;
@@ -17,6 +17,7 @@ export declare class StructureViewer extends Viewer {
     maxRadii: number;
     atomicRadii: Array<number>;
     elementColors: Array<string>;
+    translation: THREE.Vector3;
     root: THREE.Object3D;
     atoms: THREE.Object3D;
     convCell: THREE.Object3D;
@@ -25,7 +26,7 @@ export declare class StructureViewer extends Viewer {
     latticeConstants: any;
     container: any;
     infoContainer: any;
-    elements: Object;
+    elements: any;
     sceneStructure: any;
     sceneInfo: any;
     lights: Array<any>;
@@ -209,7 +210,7 @@ export declare class StructureViewer extends Viewer {
      * Returns information about the elements included in the structure.
      * @returns {Object} The current options.
      */
-    getElementInfo(): Object;
+    getElementInfo(): any;
     /**
      * Hides or shows the lattice parameter labels.
      */
@@ -260,10 +261,16 @@ export declare class StructureViewer extends Viewer {
      */
     centerView(position: THREE.Vector3, render?: boolean): void;
     /**
-     * This will automatically fit the given atoms to the rendering area with
-     * the given margin.
+     * Centers the view at the COP of the fiven atomic indices.
+     * @param centerPos - The center position as a cartesian vector.
      */
-    fitViewToAtoms(indices: Array<number>, margin?: number, render?: boolean): void;
+    centerViewToAtoms(indices: Array<number>, render?: boolean): void;
+    /**
+     * Sets the camera to point at the atomic indices by centering the view to
+     * their COP and zooming the camera so that all atoms fit with the given
+     * margin.
+     */
+    zoomToAtoms(indices: Array<number>, margin?: number, render?: boolean): void;
     /**
      * Translate the atoms.
      *
@@ -412,7 +419,7 @@ export declare class StructureViewer extends Viewer {
     getRepetitions(latticeVector: any, targetSize: any): number;
     label_missing: string;
     elementNames: string[];
-    elementNumbers: object;
+    elementNumbers: any;
     radii_unknown: number;
     covalentRadii: number[];
     color_unknown: string;
