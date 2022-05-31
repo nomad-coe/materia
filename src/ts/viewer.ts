@@ -54,6 +54,10 @@ export abstract class Viewer {
                 fitMargin: 0.5,
             },
             renderer: {
+                pixelRatioScale: 1,
+                antialias: {
+                    enabled: true,
+                },
                 background: {
                     color: "#ffffff",
                     opacity: 0,
@@ -206,14 +210,20 @@ export abstract class Viewer {
     setupRenderer() : void {
         // Create the renderer. The "alpha: true" enables to set a background color.
         this.renderer = new THREE.WebGLRenderer({
-            alpha: true,
-            antialias: true,
-        });
-        this.renderer.shadowMap.enabled = false;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this.renderer.setSize(this.rootElement.clientWidth, this.rootElement.clientHeight);
-        this.renderer.setClearColor(this.options.renderer.background.color, this.options.renderer.background.opacity);
-        this.rootElement.appendChild(this.renderer.domElement);
+            // Alpha channel is disabled whenever a non-opaque background is in
+            // use. Performance optimization.
+            alpha: this.options.renderer.background.opacity !== 1,
+            // Antialiasing incurs a small performance penalty.
+            antialias: this.options.renderer.antialias.enabled,
+        })
+        // pixelRatio directly affects the number of pixels that the canvas is
+        // rendering.
+        this.renderer.setPixelRatio(window.devicePixelRatio * this.options.renderer.pixelRatioScale)
+        this.renderer.shadowMap.enabled = false
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+        this.renderer.setSize(this.rootElement.clientWidth, this.rootElement.clientHeight)
+        this.renderer.setClearColor(this.options.renderer.background.color, this.options.renderer.background.opacity)
+        this.rootElement.appendChild(this.renderer.domElement)
 
         // This is set so that multiple scenes can be used, see
         // http://stackoverflow.com/questions/12666570/how-to-change-the-zorder-of-object-with-threejs/12666937#12666937

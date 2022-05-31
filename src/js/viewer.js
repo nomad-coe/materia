@@ -48,6 +48,10 @@ export class Viewer {
                 fitMargin: 0.5,
             },
             renderer: {
+                pixelRatioScale: 1,
+                antialias: {
+                    enabled: true,
+                },
                 background: {
                     color: "#ffffff",
                     opacity: 0,
@@ -177,9 +181,15 @@ export class Viewer {
     setupRenderer() {
         // Create the renderer. The "alpha: true" enables to set a background color.
         this.renderer = new THREE.WebGLRenderer({
-            alpha: true,
-            antialias: true,
+            // Alpha channel is disabled whenever a non-opaque background is in
+            // use. Performance optimization.
+            alpha: this.options.renderer.background.opacity !== 1,
+            // Antialiasing incurs a small performance penalty.
+            antialias: this.options.renderer.antialias.enabled,
         });
+        // pixelRatio directly affects the number of pixels that the canvas is
+        // rendering.
+        this.renderer.setPixelRatio(window.devicePixelRatio * this.options.renderer.pixelRatioScale);
         this.renderer.shadowMap.enabled = false;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setSize(this.rootElement.clientWidth, this.rootElement.clientHeight);

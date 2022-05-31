@@ -510,6 +510,23 @@ export class StructureViewer extends Viewer {
                     label: "γ",
                 },
             },
+            atoms: {
+                material: {
+                    phong: {
+                        shininess: 30,
+                    }
+                },
+                outline: {
+                    enabled: true,
+                    color: "#000000",
+                    size: 0.025,
+                },
+                opacity: 1,
+                color: "Jmol",
+                radius: "covalent",
+                scale: 1,
+                smoothness: 165,
+            },
             bonds: {
                 enabled: true,
                 material: {
@@ -998,23 +1015,6 @@ export class StructureViewer extends Viewer {
      */
     atoms(configs) {
         // Update configs sequentially
-        const def = {
-            material: {
-                phong: {
-                    shininess: 30,
-                }
-            },
-            outline: {
-                enabled: true,
-                color: "#000000",
-                size: 0.025,
-            },
-            opacity: 1,
-            color: "Jmol",
-            radius: "covalent",
-            scale: 1,
-            smoothness: 165,
-        };
         if (isNil(configs)) {
             configs = [{}];
         }
@@ -1022,7 +1022,7 @@ export class StructureViewer extends Viewer {
             configs = [configs];
         }
         for (let config of configs) {
-            config = merge(def, cloneDeep(config));
+            config = merge(cloneDeep(this.options.atoms), cloneDeep(config));
             const include = config.include;
             const exclude = config.exclude;
             const hasInclude = !isNil(include);

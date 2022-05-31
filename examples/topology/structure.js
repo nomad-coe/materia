@@ -58,9 +58,15 @@ let options = {
     threshold: 1.0,
     smoothness: 155,
   },
-  // atoms: {
-  //   outline: {enabled: false}
-  // }
+  atoms: {
+    outline: {enabled: false},
+    smoothness: 150
+  },
+  renderer: {
+    pixelRatioScale: 0.75,
+    antialias: {enabled: false},
+    background: {color: "#ffffff", opacity: 1}
+  }
 };
 
 // Initialize viewer and load structure
