@@ -215,6 +215,8 @@ export abstract class Viewer {
             alpha: this.options.renderer.background.opacity !== 1,
             // Antialiasing incurs a small performance penalty.
             antialias: this.options.renderer.antialias.enabled,
+            preserveDrawingBuffer: false,
+            powerPreference: 'high-performance'
         })
         // pixelRatio directly affects the number of pixels that the canvas is
         // rendering.
