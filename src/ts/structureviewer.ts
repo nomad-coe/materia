@@ -753,20 +753,19 @@ export class StructureViewer extends Viewer {
      */
     fit(positions:any, margin=0) : void {
         if (positions === 'full') {
-          this.fitViewToContent(false)
+          this.fitViewToContent()
         } else if (isArray(positions)) {
             let points
             let addedMargin = 0
             if (isNumber(positions[0])) {
                 const atomGlobalPos = this.getPositionsGlobal()
-                console.log(atomGlobalPos[0])
                 points = positions.map(i => atomGlobalPos[i])
                 addedMargin = Math.max(...positions.map(i => this.getRadii(this.atomicNumbers[i])))
             } else {
                 points = this.toVectors(positions)
                 points = points.map(p => p.clone().add(this.translation))
             }
-            this.fitViewToPoints(points, margin + addedMargin, false)
+            this.fitViewToPoints(points, margin + addedMargin)
         } else {
             throw Error("Invalid fit positions.")
         }
