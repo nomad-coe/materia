@@ -314,7 +314,7 @@ export class Viewer {
      * Center the camera so that the the given points fit the view with the
      * given margin.
      */
-    fitViewToPoints(points, margin, render = true) {
+    fitViewToPoints(points, margin) {
         // Make sure that all transforms are updated
         this.scenes.forEach((scene) => scene.updateMatrixWorld());
         // Project all 8 corners of the normalized cell into screen space and
@@ -388,16 +388,15 @@ export class Viewer {
         const newZoom = Math.min(zoomRight, zoomLeft, zoomUp, zoomDown);
         this.camera.zoom = newZoom;
         this.camera.updateProjectionMatrix();
-        render && this.render();
     }
     /**
      * This will automatically fit the structure to the given rendering area.
      * Will also leave a small margin.
      */
-    fitViewToContent(render = true) {
+    fitViewToContent() {
         const { points, margin } = this.getCornerPoints();
         const finalMargin = this.options.view.fitMargin + margin;
-        this.fitViewToPoints(points, finalMargin, render);
+        this.fitViewToPoints(points, finalMargin);
     }
     /*
      * Get the current zoom level for the visualization.

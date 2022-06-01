@@ -362,7 +362,7 @@ export abstract class Viewer {
      * Center the camera so that the the given points fit the view with the
      * given margin.
      */
-    fitViewToPoints(points:Array<THREE.Vector3>, margin:number, render=true): void {
+    fitViewToPoints(points:Array<THREE.Vector3>, margin:number): void {
         // Make sure that all transforms are updated
         this.scenes.forEach((scene) => scene.updateMatrixWorld());
 
@@ -440,17 +440,16 @@ export abstract class Viewer {
         const newZoom = Math.min(zoomRight, zoomLeft, zoomUp, zoomDown)
         this.camera.zoom = newZoom
         this.camera.updateProjectionMatrix();
-        render && this.render()
     }
 
     /**
      * This will automatically fit the structure to the given rendering area.
      * Will also leave a small margin.
      */
-    fitViewToContent(render=true): void {
+    fitViewToContent(): void {
         const {points, margin} = this.getCornerPoints()
         const finalMargin = this.options.view.fitMargin + margin
-        this.fitViewToPoints(points, finalMargin, render)
+        this.fitViewToPoints(points, finalMargin)
     }
 
     /*

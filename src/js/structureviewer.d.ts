@@ -303,7 +303,6 @@ export declare class StructureViewer extends Viewer {
     getPositions(fractional?: boolean): Array<THREE.Vector3>;
     /**
      * Get the positions of atoms in the global coordinate system.
-     * @returns
      */
     getPositionsGlobal(): Array<THREE.Vector3>;
     /**

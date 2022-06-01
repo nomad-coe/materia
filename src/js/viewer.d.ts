@@ -88,12 +88,12 @@ export declare abstract class Viewer {
      * Center the camera so that the the given points fit the view with the
      * given margin.
      */
-    fitViewToPoints(points: Array<THREE.Vector3>, margin: number, render?: boolean): void;
+    fitViewToPoints(points: Array<THREE.Vector3>, margin: number): void;
     /**
      * This will automatically fit the structure to the given rendering area.
      * Will also leave a small margin.
      */
-    fitViewToContent(render?: boolean): void;
+    fitViewToContent(): void;
     getZoom(): number;
     /**
      * Sets the zoom level for the visualization.

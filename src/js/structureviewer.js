@@ -725,7 +725,6 @@ export class StructureViewer extends Viewer {
         this.bonds = undefined;
         this.atomPos = undefined;
         this.positions = undefined;
-        this.atomNumbers = undefined;
         this.atomicNumbers = undefined;
         this.latticeConstants = undefined;
         this.B = undefined;
@@ -984,6 +983,7 @@ export class StructureViewer extends Viewer {
             let addedMargin = 0;
             if (isNumber(positions[0])) {
                 const atomGlobalPos = this.getPositionsGlobal();
+                console.log(atomGlobalPos[0]);
                 points = positions.map(i => atomGlobalPos[i]);
                 addedMargin = Math.max(...positions.map(i => this.getRadii(this.atomicNumbers[i])));
             }
@@ -1108,16 +1108,13 @@ export class StructureViewer extends Viewer {
     }
     /**
      * Get the positions of atoms in the global coordinate system.
-     * @returns
      */
     getPositionsGlobal() {
-        // Transform positions to world coordinates
-        const atoms = this.atomsObject.children;
-        this.atomsObject.updateMatrixWorld();
-        const nAtoms = atoms.length;
+        const nAtoms = this.positions.length;
         const worldPos = [];
+        this.atomsObject.updateMatrixWorld();
         for (let i = 0; i < nAtoms; ++i) {
-            const atom = atoms[i];
+            const atom = this.atomsObject.getObjectByName(`atom${i}`);
             const wPos = new THREE.Vector3();
             atom.getWorldPosition(wPos);
             worldPos.push(wPos);
@@ -1472,21 +1469,10 @@ export class StructureViewer extends Viewer {
             this.Bi = new THREE.Matrix3().copy(B).invert();
         }
     }
+    // The atom positions will be used as visualization boundaries
     getCornerPoints() {
-        // The atom positions will be used as visualization boundaries
-        this.atomsObject.updateMatrixWorld();
-        const atoms = this.atomsObject.children;
-        // Transform positions to world coordinates
-        const nAtoms = atoms.length;
-        const worldPos = [];
-        for (let i = 0; i < nAtoms; ++i) {
-            const atom = atoms[i];
-            const wPos = new THREE.Vector3();
-            atom.getWorldPosition(wPos);
-            worldPos.push(wPos);
-        }
         return {
-            points: worldPos,
+            points: this.getPositionsGlobal(),
             margin: this.maxRadii
         };
     }
@@ -1771,7 +1757,6 @@ export class StructureViewer extends Viewer {
         // Delete old atoms
         this.atomsObject.remove(...this.atomsObject.children);
         this.elements = {};
-        this.atomNumbers = [];
         this.atomFills = [];
         this.atomOutlines = [];
         // Determine the periodicity handling
@@ -1871,8 +1856,8 @@ export class StructureViewer extends Viewer {
                     if (j > i) {
                         const pos1 = atomPos[i];
                         const pos2 = atomPos[j];
-                        const num1 = this.atomNumbers[i];
-                        const num2 = this.atomNumbers[j];
+                        const num1 = this.atomicNumbers[i];
+                        const num2 = this.atomicNumbers[j];
                         const distance = pos2.clone().sub(pos1).length();
                         const configHashI = this.atomConfigMap[i];
                         const configHashJ = this.atomConfigMap[j];
@@ -1986,7 +1971,6 @@ export class StructureViewer extends Viewer {
         group.position.copy(true_pos);
         this.atomsObject.add(group);
         this.atomFills.push(atom);
-        this.atomNumbers.push(atomicNumber);
         // Always after adding an atom the bond information should be updated.
         this.updateBonds = true;
     }
