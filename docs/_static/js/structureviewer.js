@@ -1,36 +1,6 @@
-// Find the element in which the visualizer will be embedded into. It
-// determines the visualization canvas size.
-let canvas = document.getElementById("canvas");
-
-// Viewer options
-let options = {
-  layout: {
-    viewCenter: "COC",
-    periodicity: "none",
-    viewRotation: {
-      align: {
-          top: "c",
-          right: "b",
-      },
-      rotations: [
-          [0, 1, 0, 60],
-          [1, 0, 0, 30],
-      ],
-    }
-  },
-  bonds: {
-    enabled: true
-  },
-  cell: {
-    enabled: true
-  },
-  latticeConstants: {
-    enabled: true
-  }
-};
-
 // Initialize viewer
-let viewer = new materia.StructureViewer(canvas, options);
+let targetElem = document.getElementById("visualizationCanvas")
+var viewer = new materia.StructureViewer(targetElem)
 
 // Define structure and load into viewer
 let nacl = {
@@ -52,5 +22,26 @@ let nacl = {
     ],
     fractional: true,
     pbc: [true, true, true],
+    wrap: 'none'
 };
 viewer.load(nacl);
+
+// Setup viewer initial state
+viewer.align([
+  ["up", "c"],
+  ["right", "b"],
+])
+viewer.rotate([
+    [0, 1, 0, 60],
+    [1, 0, 0, 30],
+])
+viewer.atoms()
+viewer.bonds()
+viewer.cell()
+viewer.latticeConstants()
+viewer.center('COC')
+viewer.fit('full', 0.5)
+viewer.controls()
+
+// Render final result
+viewer.render()

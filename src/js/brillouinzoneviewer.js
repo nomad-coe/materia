@@ -152,86 +152,84 @@ export class BrillouinZoneViewer extends Viewer {
      * plan to do a render manually afterwards.
      */
     setOptions(options, reload = true) {
-        var _a, _b, _c;
         // The default settings object
-        const defaultOptions = {
-            controls: {
-                rotateSpeed: 40,
-                enablePan: false
-            },
-            view: {
-                fitMargin: 0.075,
-            },
-            basis: {
-                offset: 0.02,
-                font: "Arial",
-                size: 0.03,
-                stroke: {
-                    width: 0.06,
-                    color: "#000",
-                },
-                a: {
-                    label: "a",
-                },
-                b: {
-                    label: "b",
-                },
-                c: {
-                    label: "c",
-                },
-            },
-            segments: {
-                color: "#E56400",
-                linewidth: 0.0025,
-            },
-            kpoints: {
-                point: {
-                    enabled: true,
-                    size: 0.01,
-                    color: "#E56400",
-                },
-                label: {
-                    enabled: true,
-                    font: "Arial",
-                    size: 0.025,
-                    color: "#E56400",
-                    offset2D: [0, -0.75],
-                    stroke: {
-                        width: 0.06,
-                        color: "#000",
-                    },
-                }
-            },
-            faces: {
-                color: "#ddd",
-                opacity: 0.7,
-                outline: {
-                    width: 0.002,
-                    color: "#999",
-                },
-            },
-        };
-        // Upon first call, fill the missing values with default options
-        if (Object.keys(this.options).length === 0) {
-            this.fillOptions(options, defaultOptions);
-            super.setOptions(defaultOptions);
-            // On subsequent calls update only the given values and simply do a full
-            // reload for the structure. This is not efficient by any means for most
-            // settings but gets the job done for now.
-        }
-        else {
-            this.fillOptions(options, this.options);
-            super.setOptions(this.options);
-            // Reload structure if requested. TODO: Implement smart partial updates.
-            if (reload) {
-                if (this.data !== undefined) {
-                    this.load(this.data);
-                }
-            }
-            if (((_a = options === null || options === void 0 ? void 0 : options.renderer) === null || _a === void 0 ? void 0 : _a.background) !== undefined) {
-                this.setBackgroundColor((_b = options === null || options === void 0 ? void 0 : options.renderer) === null || _b === void 0 ? void 0 : _b.background.color, (_c = options === null || options === void 0 ? void 0 : options.renderer) === null || _c === void 0 ? void 0 : _c.background.opacity);
-            }
-        }
+        // const defaultOptions = {
+        //     controls: {
+        //         rotateSpeed: 40,
+        //         enablePan: false
+        //     },
+        //     view: {
+        //         fitMargin: 0.075,
+        //     },
+        //     basis: {
+        //         offset: 0.02,
+        //         font: "Arial",
+        //         size: 0.03,
+        //         stroke: {
+        //             width: 0.06,
+        //             color: "#000",
+        //         },
+        //         a: {
+        //             label: "a",
+        //         },
+        //         b: {
+        //             label: "b",
+        //         },
+        //         c: {
+        //             label: "c",
+        //         },
+        //     },
+        //     segments: {
+        //         color: "#E56400",
+        //         linewidth: 0.0025,
+        //     },
+        //     kpoints: {
+        //         point: {
+        //             enabled: true,
+        //             size: 0.01,
+        //             color: "#E56400",
+        //         },
+        //         label: {
+        //             enabled: true,
+        //             font: "Arial",
+        //             size: 0.025,
+        //             color: "#E56400",
+        //             offset2D: [0, -0.75],
+        //             stroke: {
+        //                 width: 0.06,
+        //                 color: "#000",
+        //             },
+        //         }
+        //     },
+        //     faces: {
+        //         color: "#ddd",
+        //         opacity: 0.7,
+        //         outline: {
+        //             width: 0.002,
+        //             color: "#999",
+        //         },
+        //     },
+        // }
+        // // Upon first call, fill the missing values with default options
+        // if (Object.keys(this.options).length === 0) {
+        //     this.fillOptions(options, defaultOptions);
+        //     super.setOptions(defaultOptions);
+        // // On subsequent calls update only the given values and simply do a full
+        // // reload for the structure. This is not efficient by any means for most
+        // // settings but gets the job done for now.
+        // } else {
+        //     this.fillOptions(options, this.options);
+        //     super.setOptions(this.options);
+        //     // Reload structure if requested. TODO: Implement smart partial updates.
+        //     if (reload) {
+        //         if (this.data !== undefined) {
+        //             this.load(this.data);
+        //         }
+        //     }
+        //     if (options?.renderer?.background !== undefined) {
+        //         this.setBackgroundColor(options?.renderer?.background.color, options?.renderer?.background.opacity)
+        //     }
+        // }
     }
     /*
      * Used to create the representation for the first Brillouin Zone.

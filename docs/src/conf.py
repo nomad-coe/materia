@@ -59,7 +59,10 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx_js',
+    'sphinx.ext.autosectionlabel',
 ]
+
+autosectionlabel_prefix_document = True
 
 # JSDoc extension
 js_source_path = '../../src/js/'

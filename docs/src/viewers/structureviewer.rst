@@ -1,11 +1,12 @@
 Structure Viewer
 ================
 
-Try out the interactive visualizer below. Controls are as follows:
+Try out the interactive visualizer below. Default controls are as follows:
 
  - Rotate: Drag with left mouse button held down
  - Pan: Drag with right mouse button held down
  - Zoom: Mousewheel
+ - Reset: Double click
 
 .. raw:: html
 
@@ -34,8 +35,9 @@ The general workflow for producing a visualization is as follows:
  - Create an instance of the viewer, which is at some point attached to an HTML
    element.
  - Load an atomic structure using the :func:`StructureViewer.load`-method.
- - Modify the initial view using the functions documented in the API, this may
-   contain e.g. translations, rotations, centerings, fitting, zooming etc.
+ - Modify the initial view using the functions documented in the
+   :ref:`viewers/structureviewer:API`, this may contain e.g. translations,
+   rotations, centerings, fits, zooming etc.
  - Render the result on the HTML host element at any point using the
    :func:`Viewer.render` method.
  - Do any modifications dynamically according to your applications state, do not
@@ -43,31 +45,44 @@ The general workflow for producing a visualization is as follows:
 
 Constructor
 -----------
-In the constructor :class:`Viewer` you can define the host element (this can also be changed at
-any point using the :func:`Viewer.changeHostElement` method) together
-with a set of fixed options that control the rendering.
+In the constructor :class:`Viewer` you can define the host element (this can
+also be changed at any point using the :func:`Viewer.changeHostElement` method)
+together with a set of fixed options that control the rendering.
 
 Loading a structure
 -------------------
 You can load a new atomic structure to the viewer by calling the
 :func:`StructureViewer.load` method. Check the API for the supported parameters.
 Notice that this method will simply create the atomic positions for the given
-structure, and will not yet display anything. See configuration and render for
-more information on how to display the structure.
+structure, and will not yet display anything. See
+:ref:`viewers/structureviewer:Configuration` and
+:ref:`viewers/structureviewer:Render` for more information on how to display the
+structure.
 
 Configuration
 -------------
 You can dynamically alter the visualization at any point by chaining the
-provided functions calls. You can see the supported API at the bottom of the
-page. Notice that all of these functions will change the visualization state
-internally, but will not yet render the result on screen, see render on how to
-produce the final result.
+provided functions calls. Check out the :ref:`viewers/structureviewer:API` for
+the supported functions. Notice that all of these functions will change the
+visualization state internally, but will not yet render the result on screen,
+see :ref:`viewers/structureviewer:Render` on how to produce the final result.
 
 Render
 ------
 You can control when the structure gets rendered on screen by manually calling
 the :func:`Viewer.render` method. This way you can modify any number of options
 without any screen flickering by only calling render when you are finished.
+
+Tips
+----
+ - If you are not seeing your changes updated on the screen, or they are updated
+   only after interacting with the structure, double check that you have called
+   :func:`Viewer.render` after your changes.
+ - When the HTML element containing the canvas change size, you may want to
+   refit the canvas to it using :func:`Viewer.fitCanvas`.
+ - You can change the visualization canvas at any point by calling
+   :func:`Viewer.changeHostElement`. Remember to refit the canvas after this
+   with :func:`Viewer.fitCanvas`.
 
 API
 ---

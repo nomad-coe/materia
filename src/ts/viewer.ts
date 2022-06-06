@@ -15,16 +15,16 @@ export abstract class Viewer {
     options:any = {};                     // Options for the viewer. Can be e.g. used to control which settings are enabled
 
     /**
-     * @param {Object} hostElement is the html element where the
-     *     visualization canvas will be appended.
+     * @param {any} hostElement is the html element where the visualization
+     *   canvas will be appended.
      * @param {Object} options An object that can hold custom settings for the viewer.
-     * @param {string} options.renderer.pixelRatioScale Scaling factor for the pixel ratio.
-     * @param {string} options.renderer.antialias.enabled Whether antialiasing is enabled
-     * @param {string} options.renderer.background.color Color of the background.
-     * @param {number} options.renderer.background.opacity Opacity of the background.
+     * @param {string} options.renderer.pixelRatioScale Scaling factor for the pixel ratio. Defaults to 1.
+     * @param {string} options.renderer.antialias.enabled Whether antialiasing is enabled. Defaults to true.
+     * @param {string} options.renderer.background.color Color of the background. Defaults to "#fff".
+     * @param {number} options.renderer.background.opacity Opacity of the background. Defaults to 0.
      * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
      * by atoms onto others. Note that enabling this increases the computational
-     * cost for doing the visualization.
+     * cost for doing the visualization. Defaults to false
      */
     constructor(public hostElement:any, options={}) {
         // Check that OpenGL is available, otherwise throw an exception
@@ -41,7 +41,7 @@ export abstract class Viewer {
 
     setOptions(options: Record<string, unknown>): void {
         // The default settings object
-        const defaultOptions =  {
+        const def =  {
             view: {
                 autoFit: true,
                 autoResize: true,
@@ -52,26 +52,17 @@ export abstract class Viewer {
                     enabled: true,
                 },
                 background: {
-                    color: "#ffffff",
+                    color: "#fff",
                     opacity: 0,
                 },
                 shadows: {
                     enabled: false,
-                },
+                }
             }
         }
 
         // Save custom settings
-        this.fillOptions(options, defaultOptions);
-        this.options = defaultOptions;
-    }
-
-    /**
-     * Used to recursively fill the target options with options stored in the
-     * source object.
-     */
-    fillOptions(source: any, target: any): void {
-        return merge(target, source)
+        this.options = merge(cloneDeep(def), cloneDeep(options))
     }
 
     /**
@@ -257,6 +248,9 @@ export abstract class Viewer {
 
     /**
      * Used to setup the DOM element where the viewer will be displayed.
+     * 
+     * @param {any} hostElement The HTML element into which this viewer is loaded.
+     * @param {boolean} resize Whether to resize the canvas to fit the new host.
      */
     changeHostElement(hostElement:any, resize=true) : void {
         // If no host element currently specified, don't do anything

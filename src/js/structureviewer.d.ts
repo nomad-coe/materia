@@ -63,19 +63,22 @@ export declare class StructureViewer extends Viewer {
      *   rows of a 3x3 array.
      * @param {boolean[]} structure.pbc The periodic boundary conditions for
      *   the structure as a list of three boolean values for each lattice
-     *   vector direction.
+     *   vector direction. Defaults to [false, false, false].
      * @param {number[][]} structure.bonds Optional manually set bonds. Provide a
      *   list of atomic index pairs, each pair specifying a bond between atoms.
      *   If these bonds are not specified, the visualizer will by default use an
      *   automated detection of bonds. This can be disabled through
      *   options.bonds.enabled.
-     * @param {(string|number[])} structure.wrap How atomic positions are
+     * @param {(string|number[])} structure.wrap.type How atomic positions are
      * wrapped in periodic systems. Available options are:
      *    - "none": Visualized as is.
      *    - "wrap": Positions wrapped within unit cell.
      *    - "boundary": Positions that are on the cell boundaries are repeated.
      *    - [a, b, c]: Positions are repeated along each lattice vector the
      *      given amount of times.
+     * Defaults to 'none'
+     * @param {(string|number[])} structure.wrap.tolerance The wrapping
+     *   tolerance in angstroms. Defaults to 1e-8.
      */
     load(structure: any): boolean;
     /**
@@ -97,6 +100,7 @@ export declare class StructureViewer extends Viewer {
      *   - 'full': Fit the full view
      *   - Array<Number>: An array of atomic indices, the COP will be used.
      *   - Array<Array<Number>>: An array of positions, the COP will be used.
+     * @param {number} margin - Margin to apply, given in angstroms.
      */
     fit(positions: any, margin?: number): void;
     /**
@@ -179,19 +183,18 @@ export declare class StructureViewer extends Viewer {
      *
      * @param {boolean} options A Javascript object containing the options. See
      *   below for the subparameters.
-     * @param {boolean} options.enabled Show bonds.
+     * @param {boolean} options.enabled Show bonds. Defaults to true.
      * @param {any} options.include The atom indices to take into account when
-     *   creating bonds. Either provide a array or leave undefined to include all.
-     * @param {string} options.color Color of bonds.
-     * @param {number} options.radius Bond radius.
+     *   creating bonds. Either provide a array or leave undefined to include
+     *   all. Defaults to undefined.
+     * @param {string} options.color Color of bonds. Defaults to "#ffffff".
+     * @param {number} options.radius Bond radius. Defaults to 0.08.
      * @param {number} options.smoothness A value between 0-180 that
      *   controls the number of polygons. Used as the angle between adjacent
      *   cylinder/sphere sectors that indirectly controls the number of
-     *   polygons.
-     * @param {number} options.material.phong.shininess Shininess of the
-     * bond material (for phong material)
-     * @param {number} options.material.toon.tones Tone-steps for toon
-     * material.
+     *   polygons. Defaults to 145.
+     * @param {number} options.material.phong.shininess Shininess of the bond
+     *   material. Defaults to 30.
      * @param {number} options.threshold Controls the automatic
      *   detection of bonds between atoms. If custom bonds have not been
      *   specified for the structure, bonds will be detected automatically with
@@ -199,79 +202,94 @@ export declare class StructureViewer extends Viewer {
      *   this.options.bonds.threshold * 1.1 * (radius1 + radius2)
      * @param {boolean} options.outline.enabled Used to enable or disable a
      *   fixed color outline around the bond. Notice that enabling the
-     *   outline incurs a performance penalty.
-     * @param {string} options.outline.color Outline color.
-     * @param {number} options.outline.size Outline size.
+     *   outline incurs a performance penalty. Defaults to true.
+     * @param {string} options.outline.color Outline color. Defaults to
+     *   "#000000".
+     * @param {number} options.outline.size Outline size. Defaults to 0.025.
      */
     bonds(options: any): void;
     /**
      * Returns the color for the given atomic number.
-     * @param {boolean} options.enabled Show unit cell wireframe.
-     * @param {boolean} options.color Unit cell wireframe color.
-     * @param {boolean} options.linewidth Unit cell wireframe line width.
-     * @param {boolean} options.dashSize Unit cell wireframe dash size.
+     * @param {boolean} options.enabled Show unit cell wireframe. Defaults to true.
+     * @param {boolean} options.color Unit cell wireframe color. Defaults to "#000000".
+     * @param {boolean} options.linewidth Unit cell wireframe line width. Defaults to 1.5.
+     * @param {boolean} options.dashSize Unit cell wireframe dash size. Defaults to 0.
      * Provide a value > 0 for a dashed line.
-     * @param {boolean} options.gapSize Unit cell wireframe dash size.
+     * @param {boolean} options.gapSize Unit cell wireframe dash size. Defaults to 0.
      * Provide a value > 0 for a dashed line.
      * @param {boolean} options.periodicity Periodicity of the cell. The
-     * non-periodic directions will be flattened.
+     * non-periodic directions will be flattened. Defaults to [true, true, true].
      *
      */
     cell(options: any): void;
     /**
      * Visualizes the lattice constants using the given visualization options.
      *
-     * @param {boolean} options.enabled Show lattice parameters
-     * @param {boolean} options.periodicity Periodicity of the lattice
-     * @param {string} options.font Font size for lattice
+     * @param {boolean} options.enabled Show lattice parameters. Defaults to true.
+     * @param {boolean} options.periodicity Periodicity of the lattice. Defaults
+     *   to [true, true, true]:
+     * @param {string} options.font Font size for lattice constants. Defaults to 0.7.
      * constants. Applied as default to all labels, can be overridden
      * individually for each lattice constant.
-     * @param {string} options.color Font color for lattice
-     * constants. Applied as default to all labels, can be overridden
-     * individually for each lattice constant.
+     * @param {string} options.color Font color for lattice constants. Applied
+     * as default to all labels, can be overridden individually for each lattice
+     * constant. Defaults to
      * @param {string} options.stroke.color Font stroke color
-     * for lattice constants. Applied as default to all labels, can be
-     * overridden individually for each lattice constant.
+     *   for lattice constants. Defaults to "#000". Applied as default to all
+     *   labels, can be overridden individually for each lattice constant.
      * @param {string} options.stroke.width Font stroke width
-     * for lattice constants. Applied as default to all labels, can be
-     * overridden individually for each lattice constant.
-     * @param {string} options.a.color Font color
-     * @param {string} options.a.font Font family
-     * @param {number} options.a.size Font size
-     * @param {number} options.a.stroke.width Font stroke width
-     * @param {string} options.a.stroke.color Font stroke color
-     * @param {string} options.b.color Font color
-     * @param {string} options.b.font Font family
-     * @param {number} options.b.size Font size
-     * @param {number} options.b.stroke.width Font stroke width
-     * @param {string} options.b.stroke.color Font stroke color
-     * @param {string} options.c.color Font color
-     * @param {string} options.c.font Font family
-     * @param {number} options.c.size Font size
-     * @param {number} options.c.stroke.width Font stroke width
-     * @param {string} options.c.stroke.color Font stroke color
-     * @param {string} options.alpha.color Font color
-     * @param {string} options.alpha.font Font family
-     * @param {number} options.alpha.size Font size
-     * @param {number} options.alpha.stroke.width Font stroke width
-     * @param {string} options.alpha.stroke.color Font stroke color
-     * @param {string} options.beta.color Font color
-     * @param {string} options.beta.font Font family
-     * @param {number} options.beta.size Font size
-     * @param {number} options.beta.stroke.width Font stroke width
-     * @param {string} options.beta.stroke.color Font stroke color
-     * @param {string} options.gamma.color Font color
-     * @param {string} options.gamma.font Font family
-     * @param {number} options.gamma.size Font size
-     * @param {number} options.gamma.stroke.width Font stroke width
-     * @param {string} options.gamma.stroke.color Font stroke color
-     *
+     *   for lattice constants. Defaults to "#000". Applied as default to all
+     *   labels, can be overridden individually for each lattice constant.
+     * @param {string} options.a.enabled Whether to display this lattice
+     *   contant. Defaults to true.
+     * @param {string} options.a.color Font color. Defaults to "#C52929".
+     * @param {string} options.a.font Font family. Defaults to "Arial".
+     * @param {number} options.a.size Font size. Defaults to 0.7.
+     * @param {number} options.a.label The label to display. Defaults to "a".
+     * @param {number} options.a.stroke.width Font stroke width. Defaults to 0.06.
+     * @param {string} options.a.stroke.color Font stroke color. Defaults to "#000".
+     * @param {string} options.b.enabled Whether to display this lattice
+     *   contant. Defaults to true.
+     * @param {string} options.b.color Font color. Defaults to "#47A823".
+     * @param {string} options.b.font Font family. Defaults to "Arial".
+     * @param {number} options.b.size Font size. Defaults to 0.7.
+     * @param {number} options.b.label The label to display. Defaults to "b".
+     * @param {number} options.b.stroke.width Font stroke width. Defaults to 0.06.
+     * @param {string} options.b.stroke.color Font stroke color. Defaults to "#000".
+     * @param {string} options.c.enabled Whether to display this lattice
+     *   contant. Defaults to true.
+     * @param {string} options.c.color Font color. Defaults to "#3B5796".
+     * @param {string} options.c.font Font family. Defaults to "Arial".
+     * @param {number} options.c.size Font size. Defaults to 0.7.
+     * @param {number} options.c.label The label to display. Defaults to "c".
+     * @param {number} options.c.stroke.width Font stroke width. Defaults to 0.06.
+     * @param {string} options.c.stroke.color Font stroke color. Defaults to "#000".
+     * @param {string} options.alpha.enabled Whether to display this lattice
+     *   contant. Defaults to true.
+     * @param {string} options.alpha.color Font color. Defaults to "#ffffff".
+     * @param {string} options.alpha.font Font family. Defaults to "Arial".
+     * @param {number} options.alpha.size Font size. Defaults to 0.7.
+     * @param {number} options.alpha.label The label to display. Defaults to "α".
+     * @param {number} options.alpha.stroke.width Font stroke width. Defaults to 0.06.
+     * @param {string} options.alpha.stroke.color Font stroke color. Defaults to "#000".
+     * @param {string} options.beta.enabled Whether to display this lattice
+     *   contant. Defaults to true.
+     * @param {string} options.beta.color Font color. Defaults to "#ffffff".
+     * @param {string} options.beta.font Font family. Defaults to "Arial".
+     * @param {number} options.beta.size Font size. Defaults to 0.7.
+     * @param {number} options.beta.label The label to display. Defaults to "β".
+     * @param {number} options.beta.stroke.width Font stroke width. Defaults to 0.06.
+     * @param {string} options.beta.stroke.color Font stroke color. Defaults to "#000".
+     * @param {string} options.gamma.enabled Whether to display this lattice
+     *   contant. Defaults to true.
+     * @param {string} options.gamma.color Font color. Defaults to "#ffffff".
+     * @param {string} options.gamma.font Font family. Defaults to "Arial".
+     * @param {number} options.gamma.size Font size. Defaults to 0.7.
+     * @param {number} options.gamma.label The label to display. Defaults to "γ".
+     * @param {number} options.gamma.stroke.width Font stroke width. Defaults to 0.06.
+     * @param {string} options.gamma.stroke.color Font stroke color. Defaults to "#000".
      */
     latticeConstants(options: any): void;
-    /**
-     * Set the position for atoms in the currently loaded structure.
-     */
-    setPositions(positions: number[][], fractional?: boolean): void;
     /**
      * Gets the positions for atoms in the currently loaded structure.
      */
@@ -338,14 +356,14 @@ export declare class StructureViewer extends Viewer {
     /**
      * Used to add periodic repetitions of atoms at the unit cell boundary.
      */
-    addBoundaryAtoms(fracPos: any, labels: any): void;
+    addBoundaryAtoms(fracPos: any, labels: any, tolerance: any): void;
     /**
      * Creates representation for all the given atoms.
      *
      * @param positions - Positions of the atoms
      * @param labels - The element numbers for the atoms
      */
-    createAtoms(positions: any, labels: any, pbc: Array<boolean>, fractional?: boolean, wrap?: string): void;
+    createAtoms(positions: any, labels: any, pbc: Array<boolean>, fractional: boolean, wrap: any): void;
     /**
      * Used to check if the given fractional position component is almost the
      * given target value with a tolerance given in cartesian corodinates.

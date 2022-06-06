@@ -1,44 +1,29 @@
-// Find the element in which the visualizer will be enbedded into
-let targetElem = document.getElementById("visualizationCanvas")
-
-// Viewer options
-let options = {
-  bonds: {
-    enabled: true,
-    material: {
-        phong: {
-          shininess: 30,
-        }
-    },
-    radius: 0.08,
-    threshold: 1.0,
-    smoothness: 155,
-  }
-}
-
 // Initialize viewer
+let targetElem = document.getElementById("visualizationCanvas")
 var viewer = new materia.StructureViewer(targetElem)
 
-// Define structure and load it into the viewer
-let positions = [
-    [0, 0, 0],
-    [0.60, 0.60, 0.60],
-    [1, 1, 1],
-];
-let species = ['H', 'O', 'H'];
-var bulk = {
-    "species": species,
-    "cell": [
-        [1, 0, 0.0],
-        [0.0, 1, 0],
-        [0, 0.0, 1]
+// Define structure and load into viewer
+let structure = {
+    species: [11, 17, 11, 17, 11, 17, 11, 17],
+    cell: [
+        [5.6402, 0.0, 0.0],
+        [0.0, 5.6402, 0.0],
+        [0.0, 0.0, 5.6402]
     ],
-    "positions": positions,
-    "fractional": true,
-    "pbc": [true, true, true],
-    "wrap": 'none'
+    positions: [
+        [0.0, 0.5, 0.0],
+        [0.0, 0.5, 0.5],
+        [0.0, 0.0, 0.5],
+        [0.0, 0.0, 0.0],
+        [0.5, 0.5, 0.5],
+        [0.5, 0.5, 0.0],
+        [0.5, 0.0, 0.0],
+        [0.5, 0.0, 0.5]
+    ],
+    fractional: true,
+    pbc: [true, true, true],
 };
-viewer.load(bulk)
+viewer.load(structure)
 
 // Setup viewer initial state
 viewer.align([
@@ -52,29 +37,7 @@ viewer.rotate([
 viewer.atoms()
 viewer.bonds()
 viewer.cell()
-viewer.latticeConstants({
-    enabled: true,
-    font: "Arial",
-    size: 0.8,
-    a: {
-        color: "#C52929",
-    },
-    b: {
-        color: "#47A823",
-    },
-    c: {
-        color: "#3B5796",
-    },
-    alpha: {
-        color: "#ffffff",
-    },
-    beta: {
-        color: "#ffffff",
-    },
-    gamma: {
-        color: "#ffffff",
-    },
-})
+viewer.latticeConstants()
 viewer.center('COC')
 viewer.fit('full', 0.5)
 viewer.controls()
