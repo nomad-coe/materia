@@ -3,6 +3,7 @@ export declare class OrthographicControls {
     enablePan: boolean;
     enableZoom: boolean;
     enableRotate: boolean;
+    resetOnDoubleClick: boolean;
     staticMoving: boolean;
     rotateSpeed: number;
     zoomSpeed: number;
@@ -69,6 +70,7 @@ export declare class OrthographicControls {
     mousedown(event: any): void;
     mousemove(event: any): void;
     mouseup(event: any): void;
+    dblclick(event: any): void;
     mousewheel(event: any): void;
     touchstart(event: any): void;
     touchmove(event: any): void;

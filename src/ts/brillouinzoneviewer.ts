@@ -64,7 +64,7 @@ export class BrillouinZoneViewer extends Viewer {
      * @param {*} data.kpoints List of pairs of labels and reciprocal
      * lattice coordinates for specific k-points that should be shown.
      */
-    load(data: object): boolean {
+    load(data:any): boolean {
         // Deep copy the structure for reloading
         this.data = data;
 
@@ -76,7 +76,6 @@ export class BrillouinZoneViewer extends Viewer {
         this.setupScenes();
         this.setupLights();
         this.setupCamera();
-        this.setupControls();
 
         // Add the Brillouin zone and the k-point path
         const basis = data["basis"];
@@ -96,9 +95,6 @@ export class BrillouinZoneViewer extends Viewer {
         }
         this.rotateView(this.options?.layout?.viewRotation?.rotations);
 
-        if (this.options.view.autoFit) {
-            super.fitViewToContent();
-        }
         return true;
     }
 

@@ -59,7 +59,6 @@ export class BrillouinZoneViewer extends Viewer {
         this.setupScenes();
         this.setupLights();
         this.setupCamera();
-        this.setupControls();
         // Add the Brillouin zone and the k-point path
         const basis = data["basis"];
         const segments = data["segments"];
@@ -77,9 +76,6 @@ export class BrillouinZoneViewer extends Viewer {
             this.alignView((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.layout) === null || _b === void 0 ? void 0 : _b.viewRotation) === null || _c === void 0 ? void 0 : _c.alignments);
         }
         this.rotateView((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.viewRotation) === null || _f === void 0 ? void 0 : _f.rotations);
-        if (this.options.view.autoFit) {
-            super.fitViewToContent();
-        }
         return true;
     }
     /**

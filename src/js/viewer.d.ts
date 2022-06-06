@@ -6,7 +6,7 @@ export declare abstract class Viewer {
     hostElement: any;
     camera: any;
     renderer: any;
-    controls: any;
+    controlsObject: any;
     scene: any;
     scenes: any[];
     cameraWidth: number;
@@ -16,6 +16,13 @@ export declare abstract class Viewer {
      * @param {Object} hostElement is the html element where the
      *     visualization canvas will be appended.
      * @param {Object} options An object that can hold custom settings for the viewer.
+     * @param {string} options.renderer.pixelRatioScale Scaling factor for the pixel ratio.
+     * @param {string} options.renderer.antialias.enabled Whether antialiasing is enabled
+     * @param {string} options.renderer.background.color Color of the background.
+     * @param {number} options.renderer.background.opacity Opacity of the background.
+     * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
+     * by atoms onto others. Note that enabling this increases the computational
+     * cost for doing the visualization.
      */
     constructor(hostElement: any, options?: {});
     setOptions(options: Record<string, unknown>): void;
@@ -30,7 +37,6 @@ export declare abstract class Viewer {
      */
     setup(): void;
     abstract setupLights(): void;
-    abstract getCornerPoints(): any;
     setupScenes(): void;
     clear(): void;
     clearScenes(): void;
@@ -67,7 +73,7 @@ export declare abstract class Viewer {
     /**
      * Used to setup the DOM element where the viewer will be displayed.
      */
-    changeHostElement(hostElement: any, refit?: boolean, render?: boolean): void;
+    changeHostElement(hostElement: any, resize?: boolean): void;
     /**
      * Used to reset the original view.
      */
@@ -76,7 +82,21 @@ export declare abstract class Viewer {
      * Used to reset the original view.
      */
     resetCamera(): void;
-    setupControls(): void;
+    /**
+     * Used to setup the controls that allow interacting with the visualization
+     * with mouse.
+     *
+     * @param {Object} options An object containing the control options. See
+     *   below for the subparameters.
+     * @param {string} options.zoom.enabled Is zoom enabled
+     * @param {string} options.zoom.speed Zoom speed
+     * @param {string} options.rotation.enabled Is rotation enabled
+     * @param {string} options.rotation.speed Rotation speed
+     * @param {string} options.pan.enabled Is panning enabled
+     * @param {string} options.pan.speed Pan speed
+     * @param {string} options.resetOnDoubleClick Whether to reset the camera on double click.
+     */
+    controls(options: any): void;
     /**
      * Creates 8 corner points for the given cuboid.
      *
@@ -89,20 +109,25 @@ export declare abstract class Viewer {
      * given margin.
      */
     fitViewToPoints(points: Array<THREE.Vector3>, margin: number): void;
-    /**
-     * This will automatically fit the structure to the given rendering area.
-     * Will also leave a small margin.
-     */
-    fitViewToContent(): void;
     getZoom(): number;
     /**
      * Sets the zoom level for the visualization.
      *
      * @param zoom - The wanted zoom level as a floating point number.
      */
-    setZoom(zoom: number): void;
-    resizeCanvasToHostElement(): void;
-    onWindowResize(): void;
+    zoom(zoom: number): void;
+    /**
+     * Resizes the WebGL canvas to the host element.
+     */
+    fitCanvas(): void;
+    /**
+     * Used to render all the scenes that are present. The scenes will be
+     * rendered on top of each other, so make sure that they are in the right
+     * order.
+     *
+     * This approach is copied from
+     * http://stackoverflow.com/questions/12666570/how-to-change-the-zorder-of-object-with-threejs/12666937#12666937
+     */
     render(): void;
     /**
      * Helper function for creating a cylinder mesh.

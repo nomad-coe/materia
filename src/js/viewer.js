@@ -1,5 +1,5 @@
 import { OrthographicControls } from "./orthographiccontrols";
-import { merge } from "lodash";
+import { merge, isNil, cloneDeep } from "lodash";
 import * as THREE from "three";
 /**
  * Abstract base class for visualizing 3D scenes with three.js.
@@ -9,6 +9,13 @@ export class Viewer {
      * @param {Object} hostElement is the html element where the
      *     visualization canvas will be appended.
      * @param {Object} options An object that can hold custom settings for the viewer.
+     * @param {string} options.renderer.pixelRatioScale Scaling factor for the pixel ratio.
+     * @param {string} options.renderer.antialias.enabled Whether antialiasing is enabled
+     * @param {string} options.renderer.background.color Color of the background.
+     * @param {number} options.renderer.background.opacity Opacity of the background.
+     * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
+     * by atoms onto others. Note that enabling this increases the computational
+     * cost for doing the visualization.
      */
     constructor(hostElement, options = {}) {
         this.hostElement = hostElement;
@@ -24,28 +31,14 @@ export class Viewer {
         this.setupRenderer();
         this.setupScenes();
         this.setupCamera();
-        this.setupControls();
-        this.changeHostElement(hostElement, false, false);
-        if (this.options.view.autoResize) {
-            window.addEventListener('resize', this.onWindowResize.bind(this), false);
-        }
+        this.changeHostElement(hostElement);
     }
     setOptions(options) {
         // The default settings object
         const defaultOptions = {
-            controls: {
-                enableZoom: true,
-                enableRotate: true,
-                enablePan: true,
-                panSpeed: 10,
-                zoomSpeed: 0.2,
-                rotateSpeed: 2.5,
-                zoomLevel: 1,
-            },
             view: {
                 autoFit: true,
                 autoResize: true,
-                fitMargin: 0.5,
             },
             renderer: {
                 pixelRatioScale: 1,
@@ -81,7 +74,6 @@ export class Viewer {
         this.setupScenes();
         this.setupLights();
         this.setupCamera();
-        this.setupControls();
     }
     /*
      * Used to setup the scenes. This default implementation will create a
@@ -99,7 +91,7 @@ export class Viewer {
     clear() {
         this.clearScenes();
         this.scenes = null;
-        this.controls = null;
+        this.controlsObject = null;
         this.camera = null;
     }
     /*
@@ -238,9 +230,9 @@ export class Viewer {
     /**
      * Used to setup the DOM element where the viewer will be displayed.
      */
-    changeHostElement(hostElement, refit = true, render = true) {
+    changeHostElement(hostElement, resize = true) {
         // If no host element currently specified, don't do anything
-        if (hostElement === undefined) {
+        if (isNil(hostElement)) {
             return;
         }
         // If a previous target element is set, remove it
@@ -251,46 +243,77 @@ export class Viewer {
         }
         // Setup the new targetElement
         hostElement.appendChild(this.rootElement);
-        this.resizeCanvasToHostElement();
-        if (refit) {
-            this.fitViewToContent();
-        }
-        if (render) {
-            this.render();
+        if (resize) {
+            this.fitCanvas();
         }
     }
     /**
      * Used to reset the original view.
      */
     saveCameraReset() {
-        this.controls.saveReset();
+        if (isNil(this.controlsObject)) {
+            throw Error("Could not save camera reset as controls are not set. Please call the controls()-method first.");
+        }
+        this.controlsObject.saveReset();
     }
     /**
      * Used to reset the original view.
      */
     resetCamera() {
-        this.controls.reset();
+        if (isNil(this.controlsObject)) {
+            throw Error("Could not reset as controls are not set. Please call the controls()-method first.");
+        }
+        this.controlsObject.reset();
         // For some reason a render is required here...
         this.render();
     }
-    /*
+    /**
      * Used to setup the controls that allow interacting with the visualization
      * with mouse.
+     *
+     * @param {Object} options An object containing the control options. See
+     *   below for the subparameters.
+     * @param {string} options.zoom.enabled Is zoom enabled
+     * @param {string} options.zoom.speed Zoom speed
+     * @param {string} options.rotation.enabled Is rotation enabled
+     * @param {string} options.rotation.speed Rotation speed
+     * @param {string} options.pan.enabled Is panning enabled
+     * @param {string} options.pan.speed Pan speed
+     * @param {string} options.resetOnDoubleClick Whether to reset the camera on double click.
      */
-    setupControls() {
+    controls(options) {
+        // Merge with default options
+        const def = {
+            zoom: {
+                enabled: true,
+                speed: 0.2
+            },
+            rotation: {
+                enabled: true,
+                speed: 2.5
+            },
+            pan: {
+                enabled: true,
+                speed: 10
+            },
+            resetOnDoubleClick: true
+        };
+        const optionsFinal = merge(cloneDeep(def), cloneDeep(options));
+        // Setup new controls object
         const controls = new OrthographicControls(this.camera, this.rootElement);
-        controls.rotateSpeed = this.options.controls.rotateSpeed;
+        controls.rotateSpeed = optionsFinal.rotation.speed;
         controls.rotationCenter = new THREE.Vector3();
-        controls.zoomSpeed = this.options.controls.zoomSpeed;
-        controls.panSpeed = this.options.controls.panSpeed;
-        controls.enableZoom = this.options.controls.enableZoom;
-        controls.enablePan = this.options.controls.enablePan;
-        controls.enableRotate = this.options.controls.enableRotate;
+        controls.zoomSpeed = optionsFinal.zoom.speed;
+        controls.panSpeed = optionsFinal.pan.speed;
+        controls.enableZoom = optionsFinal.zoom.enabled;
+        controls.enablePan = optionsFinal.pan.enabled;
+        controls.enableRotate = optionsFinal.rotation.enabled;
+        controls.resetOnDoubleClick = optionsFinal.resetOnDoubleClick;
         controls.staticMoving = true;
         controls.dynamicDampingFactor = 0.25;
         controls.keys = [65, 83, 68];
         controls.addEventListener('change', this.render.bind(this));
-        this.controls = controls;
+        this.controlsObject = controls;
     }
     /**
      * Creates 8 corner points for the given cuboid.
@@ -325,7 +348,7 @@ export class Viewer {
         const cornerPos = [];
         const nPos = points.length;
         // Default the zoom to 1 for the projection
-        this.camera.zoom = this.options.controls.zoomLevel;
+        this.camera.zoom = 1;
         this.camera.updateProjectionMatrix();
         // Calculate margin size in screen space
         const screenOrigin = new THREE.Vector3(0, 0, 0);
@@ -389,15 +412,6 @@ export class Viewer {
         this.camera.zoom = newZoom;
         this.camera.updateProjectionMatrix();
     }
-    /**
-     * This will automatically fit the structure to the given rendering area.
-     * Will also leave a small margin.
-     */
-    fitViewToContent() {
-        const { points, margin } = this.getCornerPoints();
-        const finalMargin = this.options.view.fitMargin + margin;
-        this.fitViewToPoints(points, finalMargin);
-    }
     /*
      * Get the current zoom level for the visualization.
      */
@@ -409,14 +423,14 @@ export class Viewer {
      *
      * @param zoom - The wanted zoom level as a floating point number.
      */
-    setZoom(zoom) {
+    zoom(zoom) {
         this.camera.zoom = zoom;
         this.camera.updateProjectionMatrix();
     }
-    /*
-     * Callback function that is invoked when the window is resized.
+    /**
+     * Resizes the WebGL canvas to the host element.
      */
-    resizeCanvasToHostElement() {
+    fitCanvas() {
         const aspectRatio = this.rootElement.clientWidth / this.rootElement.clientHeight;
         const width = this.cameraWidth;
         const height = width / aspectRatio;
@@ -426,17 +440,11 @@ export class Viewer {
         this.camera.bottom = -height / 2;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.rootElement.clientWidth, this.rootElement.clientHeight);
-        this.controls.handleResize();
-        this.render();
-    }
-    onWindowResize() {
-        this.resizeCanvasToHostElement();
-        if (this.options.view.autoFit) {
-            this.fitViewToContent();
+        if (!isNil(this.controlsObject)) {
+            this.controlsObject.handleResize();
         }
-        this.render();
     }
-    /*
+    /**
      * Used to render all the scenes that are present. The scenes will be
      * rendered on top of each other, so make sure that they are in the right
      * order.

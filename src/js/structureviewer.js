@@ -1,6 +1,6 @@
 import { Viewer } from "./viewer";
 import objectHash from '../js/object_hash.js';
-import { isNumber, isArray, isPlainObject, isNil, range, size, merge, cloneDeep } from "lodash";
+import { isNumber, isArray, isPlainObject, isNil, range, merge, cloneDeep } from "lodash";
 import * as THREE from "three";
 /**
  * Class for visualizing an atomic structure.
@@ -8,7 +8,6 @@ import * as THREE from "three";
 export class StructureViewer extends Viewer {
     constructor() {
         super(...arguments);
-        this.updateBonds = false;
         this.atomicRadii = []; // Contains the atomic radii
         this.elementColors = []; // Contains the element colors
         this.meshMap = {}; // Contains mappings from hashes to THREE.js meshes.
@@ -295,392 +294,11 @@ export class StructureViewer extends Viewer {
         this.scenes.push(this.sceneInfo);
     }
     /**
-     * Used to setup the visualization options.
-     *
-     * @param {boolean} options A Javascript object containing the options. See
-     *   below for the subparameters.
-     *
-     * @param {(string|number[])} options.layout.periodicity How periodicity
-     *   is handled in the visualization. Available options are:
-     *    - "none": Visualized as is.
-     *    - "wrap": Positions wrapped within unit cell.
-     *    - "boundary": Positions that are on the cell boundaries are repeated.
-     *    - [a, b, c]: Positions are repeated along each lattice vector the
-     *      given amount of times.
-     * @param {number[]} options.layout.translation A fixed cartesian
-     *   translation to be applied to the atoms.
-     * @param {string} options.layout.viewCenter Determines how the view is
-     *   initially centered. Available options are:
-     *    - "COC": Center of cell.
-     *    - "COP": Center of atom positions.
-     * @param {string} options.layout.viewRotation.alignment.top Optional alignment
-     * indicating which lattice basis vector should point upwards. Possible
-     * values are: "a", "b", "c", "-a", "-b", "-c".
-     * @param {string} options.layout.viewRotation.align.right Optional alignment
-     * indicating which lattice basis vector should point to the right (more
-     * precisely: the cross-product of options.layout.viewRotation.align.top
-     * and options.layout.viewRotation.align.right will point away from the
-     * screen.). Possible values are: "a", "b", "c", "-a", "-b", "-c".
-     * @param {string[][]} options.layout.viewRotation.alignments Optional
-     * alignments for the basis vectors. You can define two alignments for any two
-     * axis vectors. E.g. [["up", "c"], ["right", "b"]] will force the third basis
-     * vector to point exactly up, and the second basis vector to as close to right
-     * as possible.
-     * @param {number[][]} options.layout.viewRotation.rotations Optional
-     * rotations that are applied after the alignments have been done (see
-     * options.layout.viewRotation.alignments). The rotations are given as a list of
-     * 4-element arrays containing the rotations axis and rotation angle in
-     * degrees. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with
-     * respect to the x-coordinate. If multiple rotations are specified, they
-     * will be applied in the given order. Notice that these rotations are
-     * applied with respect to a global coordinate system, not the coordinate
-     * system of the structure. In this global coordinate system [1, 0, 0]
-     * points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away
-     * from the screen.
-     * @param {boolean} options.latticeConstants.enabled Show lattice parameters
-     * @param {string} options.latticeConstants.font Font size for lattice
-     * constants. Applied as default to all labels, can be overridden
-     * individually for each lattice constant.
-     * @param {string} options.latticeConstants.color Font color for lattice
-     * constants. Applied as default to all labels, can be overridden
-     * individually for each lattice constant.
-     * @param {string} options.latticeConstants.stroke.color Font stroke color
-     * for lattice constants. Applied as default to all labels, can be
-     * overridden individually for each lattice constant.
-     * @param {string} options.latticeConstants.stroke.width Font stroke width
-     * for lattice constants. Applied as default to all labels, can be
-     * overridden individually for each lattice constant.
-     * @param {string} options.latticeConstants.a.color Font color
-     * @param {string} options.latticeConstants.a.font Font family
-     * @param {number} options.latticeConstants.a.size Font size
-     * @param {number} options.latticeConstants.a.stroke.width Font stroke width
-     * @param {string} options.latticeConstants.a.stroke.color Font stroke color
-     * @param {string} options.latticeConstants.b.color Font color
-     * @param {string} options.latticeConstants.b.font Font family
-     * @param {number} options.latticeConstants.b.size Font size
-     * @param {number} options.latticeConstants.b.stroke.width Font stroke width
-     * @param {string} options.latticeConstants.b.stroke.color Font stroke color
-     * @param {string} options.latticeConstants.c.color Font color
-     * @param {string} options.latticeConstants.c.font Font family
-     * @param {number} options.latticeConstants.c.size Font size
-     * @param {number} options.latticeConstants.c.stroke.width Font stroke width
-     * @param {string} options.latticeConstants.c.stroke.color Font stroke color
-     * @param {string} options.latticeConstants.alpha.color Font color
-     * @param {string} options.latticeConstants.alpha.font Font family
-     * @param {number} options.latticeConstants.alpha.size Font size
-     * @param {number} options.latticeConstants.alpha.stroke.width Font stroke width
-     * @param {string} options.latticeConstants.alpha.stroke.color Font stroke color
-     * @param {string} options.latticeConstants.beta.color Font color
-     * @param {string} options.latticeConstants.beta.font Font family
-     * @param {number} options.latticeConstants.beta.size Font size
-     * @param {number} options.latticeConstants.beta.stroke.width Font stroke width
-     * @param {string} options.latticeConstants.beta.stroke.color Font stroke color
-     * @param {string} options.latticeConstants.gamma.color Font color
-     * @param {string} options.latticeConstants.gamma.font Font family
-     * @param {number} options.latticeConstants.gamma.size Font size
-     * @param {number} options.latticeConstants.gamma.stroke.width Font stroke width
-     * @param {string} options.latticeConstants.gamma.stroke.color Font stroke color
-     *
-     * @param {boolean} options.cell.enabled Show unit cell wireframe.
-     * @param {boolean} options.cell.color Unit cell wireframe color.
-     * @param {boolean} options.cell.linewidth Unit cell wireframe line width.
-     * @param {boolean} options.cell.dashSize Unit cell wireframe dash size.
-     * Provide a value > 0 for a dashed line.
-     * @param {boolean} options.cell.gapSize Unit cell wireframe dash size.
-     * Provide a value > 0 for a dashed line.
-     *
-     * @param {boolean} options.bonds.enabled Show bonds.
-     * @param {string} options.bonds.color Color of bonds.
-     * @param {number} options.bonds.radius Bond radius.
-     * @param {number} options.bonds.smoothness A value between 0-180 that
-     *   controls the number of polygons. Used as the angle between adjacent
-     *   cylinder/sphere sectors that indirectly controls the number of
-     *   polygons.
-     * @param {number} options.bonds.material.phong.shininess Shininess of the
-     * bond material (for phong material)
-     * @param {number} options.bonds.material.toon.tones Tone-steps for toon
-     * material.
-     * @param {number} options.bonds.threshold Controls the automatic
-     *   detection of bonds between atoms. If custom bonds have not been
-     *   specified for the structure, bonds will be detected automatically with
-     *   the following criteria: distance <=
-     *   this.options.bonds.threshold * 1.1 * (radius1 + radius2)
-     * @param {boolean} options.bonds.outline.enabled Used to enable or disable a
-     *   fixed color outline around the bond. Notice that enabling the
-     *   outline incurs a performance penalty.
-     * @param {string} options.bonds.outline.color Outline color.
-     * @param {number} options.bonds.outline.size Outline size.
-     *
-     * @param {object || list} options.atoms Object, or array of objects
-     * containing options for atom visualization. If an array is given, the
-     * options are added sequentially in order. See below for the subparameters.
-     * @param {number} options.atoms.smoothness A value between 0-180 that
-     *   controls the number of polygons. Used as the angle between adjacent
-     *   cylinder/sphere sectors that indirectly controls the number of
-     *   polygons.
-     * @param {number} options.atoms.opacity The opacity of the atom
-     * @param {number} options.atoms.material.phong.shininess Shininess of the
-     * atom material (for phong material)
-     * @param {number} options.atoms.material.toon.tones Tone-steps for toon
-     * material
-     * @param {string|number[]} options.atoms.radii The radius to use for the
-     * atom.  Defaults to covalent radii. Available options are:
-     *
-     *   - "covalent": Covalent radius from DOI:10.1039/B801115J.
-     *   - Radius in angstrom.
-     *
-     * @param {string|string[]} options.atoms.color The color to use. Available
-     * options are:
-     *
-     *   - "Jmol" (default): Jmol color.
-     *   - Hexadecimal color, e.g. '#ffffff'
-     *
-     * @param {number} options.atoms.scale Scaling factor for the atomic radii.
-     * Used to scale the given radius.
-     * @param {boolean} options.atoms.outline.enabled Used to enable or disable a
-     *   fixed color outline around the atom. Notice that enabling the
-     *   outline incurs a performance penalty.
-     * @param {string} options.atoms.outline.color Outline color.
-     * @param {number} options.atoms.outline.size Outline size.
-     *
-     * @param {string} options.renderer.background.color Color of the background.
-     * @param {number} options.renderer.background.opacity Opacity of the background.
-     * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
-     * by atoms onto others. Note that enabling this increases the
-     * computational cost for doing the visualization.
-     * @param {boolean} render Whether to perform a render after setting the
-     * options. Defaults to true. You should only disable this setting if you
-     * plan to do a render manually afterwards.
-     */
-    setOptions(options) {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
-        const defaultOptions = {
-            view: {
-                fitMargin: 0.5,
-            },
-            layout: {
-                periodicity: "none",
-                translation: [0, 0, 0],
-                viewCenter: "COP",
-                wrapTolerance: 0.05,
-            },
-            cell: {
-                enabled: true,
-                color: "#000000",
-                linewidth: 1.5,
-                dashSize: 0,
-                gapSize: 0
-            },
-            latticeConstants: {
-                enabled: true,
-                font: "Arial",
-                size: 0.7,
-                stroke: {
-                    width: 0.06,
-                    color: "#000",
-                },
-                a: {
-                    enabled: true,
-                    color: "#C52929",
-                    label: "a",
-                },
-                b: {
-                    enabled: true,
-                    color: "#47A823",
-                    label: "b",
-                },
-                c: {
-                    enabled: true,
-                    color: "#3B5796",
-                    label: "c",
-                },
-                alpha: {
-                    enabled: true,
-                    color: "#ffffff",
-                    label: "α",
-                },
-                beta: {
-                    enabled: true,
-                    color: "#ffffff",
-                    label: "β",
-                },
-                gamma: {
-                    enabled: true,
-                    color: "#ffffff",
-                    label: "γ",
-                },
-            },
-            atoms: {
-                material: {
-                    phong: {
-                        shininess: 30,
-                    }
-                },
-                outline: {
-                    enabled: true,
-                    color: "#000000",
-                    size: 0.025,
-                },
-                opacity: 1,
-                color: "Jmol",
-                radius: "covalent",
-                scale: 1,
-                smoothness: 165,
-            },
-            bonds: {
-                enabled: true,
-                material: {
-                    phong: {
-                        shininess: 30,
-                    }
-                },
-                outline: {
-                    enabled: true,
-                    color: "#000000",
-                    size: 0.025,
-                },
-                color: "#ffffff",
-                radius: 0.08,
-                threshold: 1,
-                smoothness: 145,
-            }
-        };
-        // Upon first call, fill the missing values with default options
-        if (Object.keys(this.options).length === 0) {
-            this.fillOptions(options, defaultOptions);
-            super.setOptions(defaultOptions);
-            // On subsequent calls update only the given values and simply do a full
-            // reload for the structure. This is not efficient by any means for most
-            // settings but gets the job done for now.
-        }
-        else {
-            // Handle changes in atoms. These can be only changed alone and only
-            // a subset of properties are supported.
-            if (!isNil(options.atoms)) {
-                if (size(options) !== 1) {
-                    throw Error("When changing style options for atoms, please do not update other properties simultaneously.");
-                }
-                this.atoms(options.atoms);
-            }
-            else {
-                this.fillOptions(options, this.options);
-                super.setOptions(this.options);
-                // Check if a full structure reload is required
-                if (this.needFullReload(options) && this.structure !== undefined) {
-                    this.load(this.structure);
-                }
-                else {
-                    if (((_a = options === null || options === void 0 ? void 0 : options.latticeConstants) === null || _a === void 0 ? void 0 : _a.enabled) !== undefined) {
-                        this.toggleLatticeConstants(options.latticeConstants.enabled);
-                    }
-                    if (((_b = options === null || options === void 0 ? void 0 : options.cell) === null || _b === void 0 ? void 0 : _b.enabled) !== undefined) {
-                        this.toggleCell(options.cell.enabled);
-                    }
-                    if (((_c = options === null || options === void 0 ? void 0 : options.bonds) === null || _c === void 0 ? void 0 : _c.enabled) !== undefined) {
-                        this.toggleBonds(options.bonds.enabled);
-                    }
-                    if (((_e = (_d = options === null || options === void 0 ? void 0 : options.renderer) === null || _d === void 0 ? void 0 : _d.shadows) === null || _e === void 0 ? void 0 : _e.enabled) !== undefined) {
-                        this.toggleShadows(options.renderer.shadows.enabled);
-                    }
-                }
-                if (((_f = options === null || options === void 0 ? void 0 : options.renderer) === null || _f === void 0 ? void 0 : _f.background) !== undefined) {
-                    this.setBackgroundColor((_g = options === null || options === void 0 ? void 0 : options.renderer) === null || _g === void 0 ? void 0 : _g.background.color, (_h = options === null || options === void 0 ? void 0 : options.renderer) === null || _h === void 0 ? void 0 : _h.background.opacity);
-                }
-            }
-        }
-    }
-    /**
-     * Used to determine if a full realod of the structure is needed given the
-     * updated options.
-     * @param {*} options The updated options.
-     */
-    needFullReload(options) {
-        // Options that do not require a full reload
-        const noReload = {
-            cell: {
-                enabled: true,
-            },
-            latticeConstants: {
-                enabled: true,
-            },
-            bonds: {
-                enabled: true,
-            },
-            shadows: {
-                enabled: true,
-            }
-        };
-        // Check it anything else is defined besides the options that do not need
-        // a full reload.
-        // Overrride with settings from user and child class
-        function eachRecursive(source, target) {
-            for (const k in source) {
-                // Find variable in default settings
-                if (source[k] !== null && Object.prototype.toString.call(source[k]) === "[object Object]") {
-                    // If the current level is not defined in the target, it is
-                    // initialized with empty object.
-                    if (target[k] === undefined) {
-                        return true;
-                    }
-                    const update = eachRecursive(source[k], target[k]);
-                    if (update) {
-                        return true;
-                    }
-                }
-                else {
-                    if (target[k] === undefined) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        return eachRecursive(options, noReload);
-    }
-    /**
-     * Returns the currently set options.
-     * @returns {Object} The current options.
-     */
-    getOptions() {
-        return this.options;
-    }
-    /**
      * Returns information about the elements included in the structure.
      * @returns {Object} The current options.
      */
     getElementInfo() {
         return this.elements;
-    }
-    /**
-     * Hides or shows the lattice parameter labels.
-     */
-    toggleLatticeConstants(value) {
-        if (this.latticeConstants !== undefined) {
-            this.latticeConstants.visible = value;
-            this.angleArcs.visible = value;
-        }
-    }
-    /**
-     * Hides or shows the cell.
-     */
-    toggleCell(value) {
-        if (this.convCell !== undefined) {
-            this.convCell.visible = value;
-        }
-        if (this.primCell !== undefined) {
-            this.primCell.visible = value;
-        }
-    }
-    /**
-     * Hides or shows the bonds.
-     */
-    toggleBonds(value) {
-        if (value) {
-            this.createBonds();
-        }
-        if (this.bonds !== undefined) {
-            this.bonds.visible = value;
-        }
     }
     /**
      * Hides or shows the shadows.
@@ -722,11 +340,11 @@ export class StructureViewer extends Viewer {
         this.atomsObject = undefined;
         this.convCell = undefined;
         this.primCell = undefined;
-        this.bonds = undefined;
+        this.bondsObject = undefined;
         this.atomPos = undefined;
         this.positions = undefined;
         this.atomicNumbers = undefined;
-        this.latticeConstants = undefined;
+        this.latticeConstantsGroup = undefined;
         this.B = undefined;
         this.Bi = undefined;
         this.basisVectors = undefined;
@@ -756,9 +374,15 @@ export class StructureViewer extends Viewer {
      *   If these bonds are not specified, the visualizer will by default use an
      *   automated detection of bonds. This can be disabled through
      *   options.bonds.enabled.
+     * @param {(string|number[])} structure.wrap How atomic positions are
+     * wrapped in periodic systems. Available options are:
+     *    - "none": Visualized as is.
+     *    - "wrap": Positions wrapped within unit cell.
+     *    - "boundary": Positions that are on the cell boundaries are repeated.
+     *    - [a, b, c]: Positions are repeated along each lattice vector the
+     *      given amount of times.
      */
     load(structure) {
-        var _a, _b, _c, _d, _e, _f;
         // Clear all the old data
         this.clear();
         this.setup();
@@ -768,7 +392,6 @@ export class StructureViewer extends Viewer {
         this.setupScenes();
         this.setupLights();
         this.setupCamera();
-        this.setupControls();
         // Determine the radii to be used
         this.atomicRadii = this.covalentRadii;
         // Determine the atom colors to be used
@@ -778,6 +401,7 @@ export class StructureViewer extends Viewer {
         const positions = structure["positions"];
         const species = structure["species"];
         const cell = structure["cell"];
+        const wrap = structure["wrap"];
         let periodicity = structure["pbc"];
         let bonds = structure["bonds"];
         if (!positions) {
@@ -785,7 +409,7 @@ export class StructureViewer extends Viewer {
             return false;
         }
         if (!species) {
-            console.log("No species  given to the structure viewer.");
+            console.log("No species given to the structure viewer.");
             return false;
         }
         // Determine the atomicNumbers if not given
@@ -815,15 +439,15 @@ export class StructureViewer extends Viewer {
         this.container = new THREE.Object3D();
         this.infoContainer = new THREE.Object3D();
         this.atomsObject = new THREE.Object3D();
-        this.bonds = new THREE.Object3D();
+        this.bondsObject = new THREE.Object3D();
         this.container.add(this.atomsObject);
-        this.container.add(this.bonds);
+        this.container.add(this.bondsObject);
         this.angleArcs = new THREE.Object3D();
         this.root.add(this.container);
         this.sceneStructure.add(this.root);
         this.sceneInfo.add(this.infoContainer);
-        this.latticeConstants = new THREE.Object3D();
-        this.container.add(this.latticeConstants);
+        this.latticeConstantsGroup = new THREE.Object3D();
+        this.container.add(this.latticeConstantsGroup);
         // Create a set of fractional and cartesian positions
         this.createBasisVectors(cell);
         let fracPos = [];
@@ -839,71 +463,17 @@ export class StructureViewer extends Viewer {
                 fracPos = this.toScaled(cartPos, true);
             }
         }
-        // Determine the periodicity and setup the vizualization accordingly
-        let nPeriodic = 0;
-        const periodicIndices = [];
-        const p1 = periodicity[0];
-        const p2 = periodicity[1];
-        const p3 = periodicity[2];
-        if (p1 && p2 && p3) {
-            nPeriodic = 3;
-        }
-        else if (!p1 && !p2 && !p3) {
-            nPeriodic = 0;
-        }
-        else {
-            for (let dim = 0; dim < 3; ++dim) {
-                const p1 = periodicity[dim];
-                const p2 = periodicity[(dim + 1) % 3];
-                const p3 = periodicity[(dim + 2) % 3];
-                if (p1 && !p2 && !p3) {
-                    nPeriodic = 1;
-                    periodicIndices.push(dim);
-                    break;
-                }
-                else if (p1 && p2 && !p3) {
-                    nPeriodic = 2;
-                    periodicIndices.push(dim);
-                    periodicIndices.push((dim + 1) % 3);
-                    break;
-                }
-            }
-        }
         // Valid cell basis
         if (this.B !== undefined) {
-            this.createConventionalCell(periodicity, this.options.cell.enabled);
-            this.createLatticeConstants(this.basisVectors, periodicity, periodicIndices);
-            this.createAtoms(fracPos, atomicNumbers, periodicity, true);
+            this.createAtoms(fracPos, atomicNumbers, periodicity, true, wrap);
             // Cell with non-valid basis
         }
         else if (this.basisVectors !== undefined) {
-            this.createConventionalCell(periodicity, this.options.cell.enabled);
-            this.createLatticeConstants(this.basisVectors, periodicity, periodicIndices);
-            this.createAtoms(cartPos, atomicNumbers, periodicity, false);
+            this.createAtoms(cartPos, atomicNumbers, periodicity, false, wrap);
             // No cell at all
         }
         else {
-            this.createAtoms(cartPos, atomicNumbers, periodicity, false);
-        }
-        // Create the styles
-        this.atoms(this.options.atoms);
-        // Create bonds
-        this.createBonds(bonds);
-        // Setup the view center. Center of positions takes into account also
-        // the repeated positions and positions created at the cell boundaries.
-        const viewCenter = this.options.layout.viewCenter;
-        this.center(viewCenter);
-        // Translate the system according to given option
-        this.translate(this.options.layout.translation);
-        // Zoom according to given option
-        this.setZoom(this.options.controls.zoomLevel);
-        // Set view alignment and rotation
-        if (this.basisVectors !== undefined) {
-            this.alignView((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.layout) === null || _b === void 0 ? void 0 : _b.viewRotation) === null || _c === void 0 ? void 0 : _c.alignments);
-        }
-        this.rotateView((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.viewRotation) === null || _f === void 0 ? void 0 : _f.rotations);
-        if (this.options.view.autoFit) {
-            this.fit('full');
+            this.createAtoms(cartPos, atomicNumbers, periodicity, false, wrap);
         }
         this.toggleShadows(this.options.renderer.shadows.enabled);
         return true;
@@ -955,15 +525,8 @@ export class StructureViewer extends Viewer {
         else {
             throw Error("Invalid center positions.");
         }
-        this.centerView(centerPos);
-    }
-    /**
-     * Centers the visualization around a specific point.
-     * @param centerPos - The center position as a cartesian vector.
-     */
-    centerView(position) {
-        this.translation = position;
-        const invertedPos = position.multiplyScalar(-1);
+        this.translation = centerPos;
+        const invertedPos = centerPos.multiplyScalar(-1);
         this.container.position.copy(invertedPos);
         this.infoContainer.position.copy(invertedPos);
     }
@@ -975,12 +538,13 @@ export class StructureViewer extends Viewer {
      *   - Array<Array<Number>>: An array of positions, the COP will be used.
      */
     fit(positions, margin = 0) {
+        let points;
+        let addedMargin = 0;
         if (positions === 'full') {
-            this.fitViewToContent();
+            points = this.getPositionsGlobal();
+            addedMargin = this.maxRadii;
         }
         else if (isArray(positions)) {
-            let points;
-            let addedMargin = 0;
             if (isNumber(positions[0])) {
                 const atomGlobalPos = this.getPositionsGlobal();
                 points = positions.map(i => atomGlobalPos[i]);
@@ -990,11 +554,11 @@ export class StructureViewer extends Viewer {
                 points = this.toVectors(positions);
                 points = points.map(p => p.clone().add(this.translation));
             }
-            this.fitViewToPoints(points, margin + addedMargin);
         }
         else {
             throw Error("Invalid fit positions.");
         }
+        this.fitViewToPoints(points, margin + addedMargin);
     }
     /**
      * Translate the atoms.
@@ -1004,24 +568,128 @@ export class StructureViewer extends Viewer {
     translate(translation) {
         const vec = new THREE.Vector3().fromArray(translation);
         this.atomsObject.position.add(vec);
-        this.bonds.position.add(vec);
+        this.bondsObject.position.add(vec);
+    }
+    /**
+     * Rotates the structure.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. The
+     * rotations are given as a list of 4-element arrays containing the
+     * rotations axis and rotation angle in degrees. E.g. [[1, 0, 0, 90]] would
+     * apply a 90 degree rotation with respect to the x-coordinate. If multiple
+     * rotations are specified, they will be applied in the given order. Notice
+     * that these rotations are applied with respect to a global coordinate
+     * system, not the coordinate system of the structure. In this global
+     * coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards
+     * and [0, 0, 1] points away from the screen. The rotations are applied in
+     * the given order.
+     */
+    rotate(rotations) {
+        if (rotations === undefined) {
+            return;
+        }
+        for (const r of rotations) {
+            const basis = new THREE.Vector3(r[0], r[1], r[2]);
+            basis.normalize();
+            const angle = r[3] / 180 * Math.PI;
+            this.rotateAroundWorldAxis(this.root, basis, angle);
+            this.rotateAroundWorldAxis(this.sceneInfo, basis, angle);
+        }
+    }
+    /**
+     * Used to rotate the structure based of the alignment of the basis cell
+     * vectors with respect to the cartesian axes.
+     *
+     * @param alignments List of  up to two alignments for any two axis vectors.
+     * E.g. [["up", "c"], ["right", "b"]] will force the third basis vector to
+     * point exactly up, and the second basis vector to as close to right as
+     * possible. The alignments are applied in the given order.
+     */
+    align(alignments) {
+        // Define available directions
+        const directions = {
+            "a": this.basisVectors[0].clone(),
+            "-a": this.basisVectors[0].clone().negate(),
+            "b": this.basisVectors[1].clone(),
+            "-b": this.basisVectors[1].clone().negate(),
+            "c": this.basisVectors[2].clone(),
+            "-c": this.basisVectors[2].clone().negate(),
+        };
+        // List the objects whose matrix needs to be updated
+        const objects = [this.root, this.sceneInfo];
+        // Rotate
+        super.alignView(alignments, directions, objects);
     }
     /**
      * Creates/updates representation for the atoms based on the given list of
-     * configs.
+     * options. Notice that you can select the targeted atoms using the
+     * include/exclude options and also provide several configurations at once
+     * using a list.
      *
-     * @param configs - Array of styling configurations to apply.
+     * @param {object} options A Javascript object, or array of
+     *   objects containing the visualizaiton options. See below for the
+     *   subparameters.
+     * @param {number} options.include List of atomic indices to target with
+     * these options.
+     * @param {number} options.exclude List of atomic indices to exclude from
+     * these options.
+     * @param {number} options.smoothness A value between 0-180 that
+     *   controls the number of polygons. Used as the angle between adjacent
+     *   cylinder/sphere sectors that indirectly controls the number of
+     *   polygons.
+     * @param {number} options.opacity The opacity of the atom
+     * @param {number} options.material.phong.shininess Shininess of the
+     * atom material (for phong material)
+     * @param {number} options.material.toon.tones Tone-steps for toon
+     * material
+     * @param {string|number[]} options.radii The radius to use for the
+     * atom.  Defaults to covalent radii. Available options are:
+     *
+     *   - "covalent": Covalent radius from DOI:10.1039/B801115J.
+     *   - Radius in angstrom.
+     *
+     * @param {string|string[]} options.color The color to use. Available
+     * options are:
+     *
+     *   - "Jmol" (default): Jmol color.
+     *   - Hexadecimal color, e.g. '#ffffff'
+     *
+     * @param {number} options.scale Scaling factor for the atomic radii.
+     * Used to scale the given radius.
+     * @param {boolean} options.outline.enabled Used to enable or disable a
+     *   fixed color outline around the atom. Notice that enabling the
+     *   outline incurs a performance penalty.
+     * @param {string} options.outline.color Outline color.
+     * @param {number} options.outline.size Outline size.
      */
-    atoms(configs) {
+    atoms(options) {
         // Update configs sequentially
-        if (isNil(configs)) {
-            configs = [{}];
+        if (isNil(options)) {
+            options = [{}];
         }
-        else if (isPlainObject(configs)) {
-            configs = [configs];
+        else if (isPlainObject(options)) {
+            options = [options];
         }
-        for (let config of configs) {
-            config = merge(cloneDeep(this.options.atoms), cloneDeep(config));
+        for (let config of options) {
+            const def = {
+                material: {
+                    phong: {
+                        shininess: 30,
+                    }
+                },
+                outline: {
+                    enabled: true,
+                    color: "#000000",
+                    size: 0.025,
+                },
+                opacity: 1,
+                color: "Jmol",
+                radius: "covalent",
+                scale: 1,
+                smoothness: 165,
+            };
+            config = merge(cloneDeep(def), cloneDeep(config));
             const include = config.include;
             const exclude = config.exclude;
             const hasInclude = !isNil(include);
@@ -1056,238 +724,332 @@ export class StructureViewer extends Viewer {
         }
     }
     /**
-     * Set the position for atoms in the currently loaded structure.
-     */
-    setPositions(positions, fractional = false) {
-        // Check the periodicity setting. You can only call this function if no
-        // additional atoms need to be created through the periodicity setting.
-        if (this.options.layout.periodicity !== "none" && this.options.layout.periodicity !== "wrap") {
-            throw "Setting new positions is not allowed when options.layout.periodicity != 'none'/'wrap'.";
-        }
-        // Convert to vectors
-        const vecPos = this.toVectors(positions);
-        if (this.options.layout.periodicity === "wrap") {
-            this.wrap(vecPos, fractional);
-        }
-        if (fractional) {
-            this.toCartesian(vecPos, false);
-        }
-        for (let i = 0, size = vecPos.length; i < size; ++i) {
-            const position = vecPos[i];
-            const atom = this.getAtom(i);
-            atom.position.copy(position);
-        }
-        this.updateBonds = true;
-        this.createBonds();
-    }
-    /**
-     * Gets the positions for atoms in the currently loaded structure.
-     */
-    getPositions(fractional = false) {
-        let positions = [];
-        const atoms = this.atomsObject.children;
-        const nAtoms = atoms.length;
-        if (fractional) {
-            const cartPos = [];
-            for (let i = 0; i < nAtoms; ++i) {
-                const atom = atoms[i];
-                const position = atom.position.clone();
-                cartPos.push(position);
-            }
-            positions = this.toScaled(cartPos);
-        }
-        else {
-            for (let i = 0; i < nAtoms; ++i) {
-                const atom = atoms[i];
-                const position = atom.position.clone();
-                positions.push(position);
-            }
-        }
-        return positions;
-    }
-    /**
-     * Get the positions of atoms in the global coordinate system.
-     */
-    getPositionsGlobal() {
-        const nAtoms = this.positions.length;
-        const worldPos = [];
-        this.atomsObject.updateMatrixWorld();
-        for (let i = 0; i < nAtoms; ++i) {
-            const atom = this.atomsObject.getObjectByName(`atom${i}`);
-            const wPos = new THREE.Vector3();
-            atom.getWorldPosition(wPos);
-            worldPos.push(wPos);
-        }
-        return worldPos;
-    }
-    /**
-     * Converts a list of list of numbers into vectors.
+     * Creates/updates bond representation based on the given config.
      *
-     * @param positions
-     * @param copy
-     * @returns
+     * @param {boolean} options A Javascript object containing the options. See
+     *   below for the subparameters.
+     * @param {boolean} options.enabled Show bonds.
+     * @param {any} options.include The atom indices to take into account when
+     *   creating bonds. Either provide a array or leave undefined to include all.
+     * @param {string} options.color Color of bonds.
+     * @param {number} options.radius Bond radius.
+     * @param {number} options.smoothness A value between 0-180 that
+     *   controls the number of polygons. Used as the angle between adjacent
+     *   cylinder/sphere sectors that indirectly controls the number of
+     *   polygons.
+     * @param {number} options.material.phong.shininess Shininess of the
+     * bond material (for phong material)
+     * @param {number} options.material.toon.tones Tone-steps for toon
+     * material.
+     * @param {number} options.threshold Controls the automatic
+     *   detection of bonds between atoms. If custom bonds have not been
+     *   specified for the structure, bonds will be detected automatically with
+     *   the following criteria: distance <=
+     *   this.options.bonds.threshold * 1.1 * (radius1 + radius2)
+     * @param {boolean} options.outline.enabled Used to enable or disable a
+     *   fixed color outline around the bond. Notice that enabling the
+     *   outline incurs a performance penalty.
+     * @param {string} options.outline.color Outline color.
+     * @param {number} options.outline.size Outline size.
      */
-    toVectors(positions, copy = true) {
-        const vecPos = [];
-        for (let i = 0, size = positions.length; i < size; ++i) {
-            vecPos.push(new THREE.Vector3().fromArray(positions[i]));
+    bonds(options) {
+        // Remove old bonds
+        if (!isNil(this.bondsObject)) {
+            this.bondFills = [];
+            this.bondsObject.clear();
         }
-        if (copy) {
-            return vecPos;
-        }
-        positions = vecPos;
-    }
-    toCartesian(positions, copy = true) {
-        if (copy) {
-            const newPos = [];
-            for (let i = 0, size = positions.length; i < size; ++i) {
-                newPos.push(positions[i].clone().applyMatrix3(this.B));
-            }
-            return newPos;
-        }
-        else {
-            for (let i = 0, size = positions.length; i < size; ++i) {
-                positions[i].applyMatrix3(this.B);
-            }
-        }
-    }
-    toScaled(positions, copy = true) {
-        if (copy) {
-            const newPos = [];
-            for (let i = 0, size = positions.length; i < size; ++i) {
-                newPos.push(positions[i].clone().applyMatrix3(this.Bi));
-            }
-            return newPos;
-        }
-        else {
-            for (let i = 0, size = positions.length; i < size; ++i) {
-                positions[i].applyMatrix3(this.Bi);
-            }
-        }
-    }
-    /**
-     * Get a specific atom as defined by a js Group.
-     *
-     * @param index - Index of the atom.
-     * @return THREE.js Group containing the visuals for the atom. The position
-     * of the atom is determined by the position of the group.
-     */
-    getAtom(index) {
-        return this.atomsObject.getObjectByName(`atom${index}`);
-    }
-    /**
-     * Set the zoom level
-     *
-     * @param zoomLevel - The zoom level as a scalar.
-     */
-    setZoom(zoomLevel) {
-        this.camera.zoom = zoomLevel;
-    }
-    setupLights() {
-        var _a, _b, _c, _d, _e, _f;
-        this.lights = [];
-        const shadowMapWidth = 2048;
-        const shadowBias = -0.001;
-        const shadowCutoff = 50;
-        // Key light
-        const keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
-        keyLight.shadow.mapSize.width = shadowMapWidth;
-        keyLight.shadow.mapSize.height = shadowMapWidth;
-        keyLight.shadow.bias = shadowBias; //fixes self-shadowing artifacts
-        // Fixes an issue with some shadows being cutoff. Is there a more robust solution?
-        keyLight.shadow.camera.left = -shadowCutoff;
-        keyLight.shadow.camera.right = shadowCutoff;
-        keyLight.shadow.camera.top = shadowCutoff;
-        keyLight.shadow.camera.bottom = -shadowCutoff;
-        keyLight.position.set(0, 0, 20);
-        this.sceneStructure.add(keyLight);
-        this.lights.push(keyLight);
-        // Fill light
-        const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
-        fillLight.shadow.mapSize.width = shadowMapWidth;
-        fillLight.shadow.mapSize.height = shadowMapWidth;
-        fillLight.shadow.bias = shadowBias;
-        fillLight.position.set(-20, 0, -20);
-        if (((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.atoms) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) === undefined) {
-            this.sceneStructure.add(fillLight);
-            this.lights.push(fillLight);
-        }
-        // Back light
-        const backLight = new THREE.DirectionalLight(0xffffff, 0.25);
-        backLight.shadow.mapSize.width = shadowMapWidth;
-        backLight.shadow.mapSize.height = shadowMapWidth;
-        backLight.shadow.bias = shadowBias;
-        backLight.position.set(20, 0, -20);
-        if (((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.atoms) === null || _e === void 0 ? void 0 : _e.material) === null || _f === void 0 ? void 0 : _f.toon) === undefined) {
-            this.sceneStructure.add(backLight);
-            this.lights.push(backLight);
-        }
-        // White ambient light.
-        const ambientLight = new THREE.AmbientLight(0x404040, 1.7); // soft white light
-        this.sceneStructure.add(ambientLight);
-    }
-    /**
-     * Create the visuals to show the lattice parameter labels.
-     */
-    createLatticeConstants(basis, periodicity, periodicIndices) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z;
-        if (!this.options.latticeConstants.enabled) {
+        // Define final options
+        const def = {
+            enabled: true,
+            material: {
+                phong: {
+                    shininess: 30,
+                }
+            },
+            outline: {
+                enabled: true,
+                color: "#000000",
+                size: 0.025,
+            },
+            color: "#ffffff",
+            radius: 0.08,
+            threshold: 1,
+            smoothness: 145
+        };
+        const optionsFinal = merge(cloneDeep(options || {}), cloneDeep(def));
+        // Do not create new ones if disabled
+        if (!optionsFinal.enabled) {
             return;
         }
+        // Create the list of final indices
+        const include = optionsFinal.include;
+        const exclude = optionsFinal.exclude;
+        const hasInclude = !isNil(include);
+        const hasExclude = !isNil(exclude);
+        let indices;
+        const nAtoms = this.atomicNumbers.length;
+        if (hasInclude && hasExclude) {
+            throw Error("Only provide include or exclude, not both.");
+        }
+        else if (hasInclude) {
+            indices = include;
+        }
+        else if (hasExclude) {
+            const excludeSet = new Set(exclude);
+            indices = range(nAtoms).filter(x => !excludeSet.has(x));
+        }
+        else {
+            indices = range(nAtoms);
+        }
+        // Create material once
+        let bondMaterial;
+        if (optionsFinal.material.toon) {
+            const nTones = optionsFinal.material.toon.tones;
+            const colors = new Uint8Array(nTones);
+            for (let c = 0; c <= nTones; c++) {
+                colors[c] = (c / nTones) * 256;
+            }
+            const gradientMap = new THREE.DataTexture(colors, colors.length, 1, THREE.LuminanceFormat);
+            gradientMap.minFilter = THREE.NearestFilter;
+            gradientMap.magFilter = THREE.NearestFilter;
+            gradientMap.generateMipmaps = false;
+            bondMaterial = new THREE.MeshToonMaterial({
+                color: optionsFinal.color,
+                gradientMap: gradientMap
+            });
+        }
+        else {
+            bondMaterial = new THREE.MeshPhongMaterial({
+                color: optionsFinal.color,
+                shininess: optionsFinal.material.phong.shininess
+            });
+        }
+        // Create bonds for all specified pairs
+        const atomPos = this.getPositions();
+        for (const i of indices) {
+            for (const j of indices) {
+                if (j > i) {
+                    const pos1 = atomPos[i];
+                    const pos2 = atomPos[j];
+                    const num1 = this.atomicNumbers[i];
+                    const num2 = this.atomicNumbers[j];
+                    const distance = pos2.clone().sub(pos1).length();
+                    const configHashI = this.atomConfigMap[i];
+                    const configHashJ = this.atomConfigMap[j];
+                    const configI = this.configMap[configHashI];
+                    const configJ = this.configMap[configHashJ];
+                    const radii1 = configI.scale * this.getRadii(num1);
+                    const radii2 = configJ.scale * this.getRadii(num2);
+                    if (distance <= optionsFinal.threshold * 1.1 * (radii1 + radii2)) {
+                        this.addBond(i, j, pos1, pos2, bondMaterial, optionsFinal);
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * Returns the color for the given atomic number.
+     * @param {boolean} options.enabled Show unit cell wireframe.
+     * @param {boolean} options.color Unit cell wireframe color.
+     * @param {boolean} options.linewidth Unit cell wireframe line width.
+     * @param {boolean} options.dashSize Unit cell wireframe dash size.
+     * Provide a value > 0 for a dashed line.
+     * @param {boolean} options.gapSize Unit cell wireframe dash size.
+     * Provide a value > 0 for a dashed line.
+     * @param {boolean} options.periodicity Periodicity of the cell. The
+     * non-periodic directions will be flattened.
+     *
+     */
+    cell(options) {
+        // Delete old instance
+        if (!isNil(this.convCell)) {
+            this.container.remove(this.convCell);
+        }
+        // Define final options
+        const def = {
+            enabled: true,
+            color: "#000000",
+            linewidth: 1.5,
+            dashSize: 0,
+            gapSize: 0,
+            periodicity: [true, true, true],
+        };
+        const optionsFinal = merge(cloneDeep(options || {}), cloneDeep(def));
+        // Create new instance
+        if (optionsFinal.enabled) {
+            const cell = this.createCell(new THREE.Vector3(), this.basisVectors, this.basisVectorCollapsed, optionsFinal.periodicity, optionsFinal.color, optionsFinal.linewidth, optionsFinal.dashSize, optionsFinal.gapSize);
+            this.convCell = cell;
+            this.container.add(this.convCell);
+        }
+    }
+    /**
+     * Visualizes the lattice constants using the given visualization options.
+     *
+     * @param {boolean} options.enabled Show lattice parameters
+     * @param {boolean} options.periodicity Periodicity of the lattice
+     * @param {string} options.font Font size for lattice
+     * constants. Applied as default to all labels, can be overridden
+     * individually for each lattice constant.
+     * @param {string} options.color Font color for lattice
+     * constants. Applied as default to all labels, can be overridden
+     * individually for each lattice constant.
+     * @param {string} options.stroke.color Font stroke color
+     * for lattice constants. Applied as default to all labels, can be
+     * overridden individually for each lattice constant.
+     * @param {string} options.stroke.width Font stroke width
+     * for lattice constants. Applied as default to all labels, can be
+     * overridden individually for each lattice constant.
+     * @param {string} options.a.color Font color
+     * @param {string} options.a.font Font family
+     * @param {number} options.a.size Font size
+     * @param {number} options.a.stroke.width Font stroke width
+     * @param {string} options.a.stroke.color Font stroke color
+     * @param {string} options.b.color Font color
+     * @param {string} options.b.font Font family
+     * @param {number} options.b.size Font size
+     * @param {number} options.b.stroke.width Font stroke width
+     * @param {string} options.b.stroke.color Font stroke color
+     * @param {string} options.c.color Font color
+     * @param {string} options.c.font Font family
+     * @param {number} options.c.size Font size
+     * @param {number} options.c.stroke.width Font stroke width
+     * @param {string} options.c.stroke.color Font stroke color
+     * @param {string} options.alpha.color Font color
+     * @param {string} options.alpha.font Font family
+     * @param {number} options.alpha.size Font size
+     * @param {number} options.alpha.stroke.width Font stroke width
+     * @param {string} options.alpha.stroke.color Font stroke color
+     * @param {string} options.beta.color Font color
+     * @param {string} options.beta.font Font family
+     * @param {number} options.beta.size Font size
+     * @param {number} options.beta.stroke.width Font stroke width
+     * @param {string} options.beta.stroke.color Font stroke color
+     * @param {string} options.gamma.color Font color
+     * @param {string} options.gamma.font Font family
+     * @param {number} options.gamma.size Font size
+     * @param {number} options.gamma.stroke.width Font stroke width
+     * @param {string} options.gamma.stroke.color Font stroke color
+     *
+     */
+    latticeConstants(options) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z;
+        // Delete old instance
+        this.latticeConstantsGroup.clear();
         this.axisLabels = [];
-        this.infoContainer.add(this.latticeConstants);
+        this.angleArcs.clear();
+        if (!options.enabled) {
+            return;
+        }
+        // Define final options
+        const def = {
+            enabled: true,
+            periodicity: [true, true, true],
+            font: "Arial",
+            size: 0.7,
+            stroke: {
+                width: 0.06,
+                color: "#000",
+            },
+            a: {
+                enabled: true,
+                color: "#C52929",
+                label: "a",
+            },
+            b: {
+                enabled: true,
+                color: "#47A823",
+                label: "b",
+            },
+            c: {
+                enabled: true,
+                color: "#3B5796",
+                label: "c",
+            },
+            alpha: {
+                enabled: true,
+                color: "#ffffff",
+                label: "α",
+            },
+            beta: {
+                enabled: true,
+                color: "#ffffff",
+                label: "β",
+            },
+            gamma: {
+                enabled: true,
+                color: "#ffffff",
+                label: "γ",
+            },
+        };
+        const optionsFinal = merge(cloneDeep(options || {}), cloneDeep(def));
+        // Determine the periodicity and setup the vizualization accordingly
+        const periodicIndices = [];
+        for (let dim = 0; dim < 3; ++dim) {
+            const p1 = optionsFinal.periodicity[dim];
+            const p2 = optionsFinal.periodicity[(dim + 1) % 3];
+            const p3 = optionsFinal.periodicity[(dim + 2) % 3];
+            if (p1 && !p2 && !p3) {
+                periodicIndices.push(dim);
+                break;
+            }
+            else if (p1 && p2 && !p3) {
+                periodicIndices.push(dim);
+                periodicIndices.push((dim + 1) % 3);
+                break;
+            }
+        }
+        // Create new instances
+        const basis = this.basisVectors;
+        this.axisLabels = [];
+        this.infoContainer.add(this.latticeConstantsGroup);
         this.infoContainer.add(this.angleArcs);
         const infoColor = 0x000000;
-        const axisMaterial = new THREE.LineBasicMaterial({
-            color: "#000000",
-            linewidth: 1.5
-        });
         const axisOffset = 1.3;
         let iBasis = -1;
         const cellBasisColors = [];
-        cellBasisColors.push(this.options.latticeConstants.a.color);
-        cellBasisColors.push(this.options.latticeConstants.b.color);
-        cellBasisColors.push(this.options.latticeConstants.c.color);
+        cellBasisColors.push(optionsFinal.a.color);
+        cellBasisColors.push(optionsFinal.b.color);
+        cellBasisColors.push(optionsFinal.c.color);
         const angleColors = [];
-        angleColors.push(this.options.latticeConstants.alpha.color);
-        angleColors.push(this.options.latticeConstants.beta.color);
-        angleColors.push(this.options.latticeConstants.gamma.color);
+        angleColors.push(optionsFinal.alpha.color);
+        angleColors.push(optionsFinal.beta.color);
+        angleColors.push(optionsFinal.gamma.color);
         const angleStrokeColors = [];
-        angleStrokeColors.push(((_b = (_a = this.options.latticeConstants.alpha) === null || _a === void 0 ? void 0 : _a.stroke) === null || _b === void 0 ? void 0 : _b.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.alpha.stroke.color);
-        angleStrokeColors.push(((_d = (_c = this.options.latticeConstants.beta) === null || _c === void 0 ? void 0 : _c.stroke) === null || _d === void 0 ? void 0 : _d.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.beta.stroke.color);
-        angleStrokeColors.push(((_f = (_e = this.options.latticeConstants.gamma) === null || _e === void 0 ? void 0 : _e.stroke) === null || _f === void 0 ? void 0 : _f.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.gamma.stroke.color);
+        angleStrokeColors.push(((_b = (_a = optionsFinal.alpha) === null || _a === void 0 ? void 0 : _a.stroke) === null || _b === void 0 ? void 0 : _b.color) === undefined ? optionsFinal.stroke.color : optionsFinal.alpha.stroke.color);
+        angleStrokeColors.push(((_d = (_c = optionsFinal.beta) === null || _c === void 0 ? void 0 : _c.stroke) === null || _d === void 0 ? void 0 : _d.color) === undefined ? optionsFinal.stroke.color : optionsFinal.beta.stroke.color);
+        angleStrokeColors.push(((_f = (_e = optionsFinal.gamma) === null || _e === void 0 ? void 0 : _e.stroke) === null || _f === void 0 ? void 0 : _f.color) === undefined ? optionsFinal.stroke.color : optionsFinal.gamma.stroke.color);
         const angleStrokeWidths = [];
-        angleStrokeWidths.push(((_h = (_g = this.options.latticeConstants.alpha) === null || _g === void 0 ? void 0 : _g.stroke) === null || _h === void 0 ? void 0 : _h.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.alpha.stroke.width);
-        angleStrokeWidths.push(((_k = (_j = this.options.latticeConstants.beta) === null || _j === void 0 ? void 0 : _j.stroke) === null || _k === void 0 ? void 0 : _k.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.beta.stroke.width);
-        angleStrokeWidths.push(((_m = (_l = this.options.latticeConstants.gamma) === null || _l === void 0 ? void 0 : _l.stroke) === null || _m === void 0 ? void 0 : _m.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.gamma.stroke.width);
-        const angleLabels = [this.options.latticeConstants.gamma.label, this.options.latticeConstants.alpha.label, this.options.latticeConstants.beta.label];
-        const axisLabels = [this.options.latticeConstants.a.label, this.options.latticeConstants.b.label, this.options.latticeConstants.c.label];
-        const angleEnableds = [this.options.latticeConstants.gamma.enabled, this.options.latticeConstants.alpha.enabled, this.options.latticeConstants.beta.enabled];
-        const axisEnableds = [this.options.latticeConstants.a.enabled, this.options.latticeConstants.b.enabled, this.options.latticeConstants.c.enabled];
+        angleStrokeWidths.push(((_h = (_g = optionsFinal.alpha) === null || _g === void 0 ? void 0 : _g.stroke) === null || _h === void 0 ? void 0 : _h.width) === undefined ? optionsFinal.stroke.width : optionsFinal.alpha.stroke.width);
+        angleStrokeWidths.push(((_k = (_j = optionsFinal.beta) === null || _j === void 0 ? void 0 : _j.stroke) === null || _k === void 0 ? void 0 : _k.width) === undefined ? optionsFinal.stroke.width : optionsFinal.beta.stroke.width);
+        angleStrokeWidths.push(((_m = (_l = optionsFinal.gamma) === null || _l === void 0 ? void 0 : _l.stroke) === null || _m === void 0 ? void 0 : _m.width) === undefined ? optionsFinal.stroke.width : optionsFinal.gamma.stroke.width);
+        const angleLabels = [optionsFinal.gamma.label, optionsFinal.alpha.label, optionsFinal.beta.label];
+        const axisLabels = [optionsFinal.a.label, optionsFinal.b.label, optionsFinal.c.label];
+        const angleEnableds = [optionsFinal.gamma.enabled, optionsFinal.alpha.enabled, optionsFinal.beta.enabled];
+        const axisEnableds = [optionsFinal.a.enabled, optionsFinal.b.enabled, optionsFinal.c.enabled];
         const axisFonts = [];
-        axisFonts.push(this.options.latticeConstants.a.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.a.font);
-        axisFonts.push(this.options.latticeConstants.b.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.b.font);
-        axisFonts.push(this.options.latticeConstants.c.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.c.font);
+        axisFonts.push(optionsFinal.a.font === undefined ? optionsFinal.font : optionsFinal.a.font);
+        axisFonts.push(optionsFinal.b.font === undefined ? optionsFinal.font : optionsFinal.b.font);
+        axisFonts.push(optionsFinal.c.font === undefined ? optionsFinal.font : optionsFinal.c.font);
         const axisFontSizes = [];
-        axisFontSizes.push(this.options.latticeConstants.a.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.a.size);
-        axisFontSizes.push(this.options.latticeConstants.b.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.b.size);
-        axisFontSizes.push(this.options.latticeConstants.c.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.c.size);
+        axisFontSizes.push(optionsFinal.a.size === undefined ? optionsFinal.size : optionsFinal.a.size);
+        axisFontSizes.push(optionsFinal.b.size === undefined ? optionsFinal.size : optionsFinal.b.size);
+        axisFontSizes.push(optionsFinal.c.size === undefined ? optionsFinal.size : optionsFinal.c.size);
         const strokeColors = [];
-        strokeColors.push(((_p = (_o = this.options.latticeConstants.a) === null || _o === void 0 ? void 0 : _o.stroke) === null || _p === void 0 ? void 0 : _p.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.a.stroke.color);
-        strokeColors.push(((_r = (_q = this.options.latticeConstants.b) === null || _q === void 0 ? void 0 : _q.stroke) === null || _r === void 0 ? void 0 : _r.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.b.stroke.color);
-        strokeColors.push(((_t = (_s = this.options.latticeConstants.c) === null || _s === void 0 ? void 0 : _s.stroke) === null || _t === void 0 ? void 0 : _t.color) === undefined ? this.options.latticeConstants.stroke.color : this.options.latticeConstants.c.stroke.color);
+        strokeColors.push(((_p = (_o = optionsFinal.a) === null || _o === void 0 ? void 0 : _o.stroke) === null || _p === void 0 ? void 0 : _p.color) === undefined ? optionsFinal.stroke.color : optionsFinal.a.stroke.color);
+        strokeColors.push(((_r = (_q = optionsFinal.b) === null || _q === void 0 ? void 0 : _q.stroke) === null || _r === void 0 ? void 0 : _r.color) === undefined ? optionsFinal.stroke.color : optionsFinal.b.stroke.color);
+        strokeColors.push(((_t = (_s = optionsFinal.c) === null || _s === void 0 ? void 0 : _s.stroke) === null || _t === void 0 ? void 0 : _t.color) === undefined ? optionsFinal.stroke.color : optionsFinal.c.stroke.color);
         const strokeWidths = [];
-        strokeWidths.push(((_v = (_u = this.options.latticeConstants.a) === null || _u === void 0 ? void 0 : _u.stroke) === null || _v === void 0 ? void 0 : _v.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.a.stroke.width);
-        strokeWidths.push(((_x = (_w = this.options.latticeConstants.b) === null || _w === void 0 ? void 0 : _w.stroke) === null || _x === void 0 ? void 0 : _x.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.b.stroke.width);
-        strokeWidths.push(((_z = (_y = this.options.latticeConstants.c) === null || _y === void 0 ? void 0 : _y.stroke) === null || _z === void 0 ? void 0 : _z.width) === undefined ? this.options.latticeConstants.stroke.width : this.options.latticeConstants.c.stroke.width);
+        strokeWidths.push(((_v = (_u = optionsFinal.a) === null || _u === void 0 ? void 0 : _u.stroke) === null || _v === void 0 ? void 0 : _v.width) === undefined ? optionsFinal.stroke.width : optionsFinal.a.stroke.width);
+        strokeWidths.push(((_x = (_w = optionsFinal.b) === null || _w === void 0 ? void 0 : _w.stroke) === null || _x === void 0 ? void 0 : _x.width) === undefined ? optionsFinal.stroke.width : optionsFinal.b.stroke.width);
+        strokeWidths.push(((_z = (_y = optionsFinal.c) === null || _y === void 0 ? void 0 : _y.stroke) === null || _z === void 0 ? void 0 : _z.width) === undefined ? optionsFinal.stroke.width : optionsFinal.c.stroke.width);
         const angleFonts = [];
-        angleFonts.push(this.options.latticeConstants.alpha.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.alpha.font);
-        angleFonts.push(this.options.latticeConstants.beta.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.beta.font);
-        angleFonts.push(this.options.latticeConstants.gamma.font === undefined ? this.options.latticeConstants.font : this.options.latticeConstants.gamma.font);
+        angleFonts.push(optionsFinal.alpha.font === undefined ? optionsFinal.font : optionsFinal.alpha.font);
+        angleFonts.push(optionsFinal.beta.font === undefined ? optionsFinal.font : optionsFinal.beta.font);
+        angleFonts.push(optionsFinal.gamma.font === undefined ? optionsFinal.font : optionsFinal.gamma.font);
         const angleFontSizes = [];
-        angleFontSizes.push(this.options.latticeConstants.alpha.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.alpha.size);
-        angleFontSizes.push(this.options.latticeConstants.beta.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.beta.size);
-        angleFontSizes.push(this.options.latticeConstants.gamma.size === undefined ? this.options.latticeConstants.size : this.options.latticeConstants.gamma.size);
+        angleFontSizes.push(optionsFinal.alpha.size === undefined ? optionsFinal.size : optionsFinal.alpha.size);
+        angleFontSizes.push(optionsFinal.beta.size === undefined ? optionsFinal.size : optionsFinal.beta.size);
+        angleFontSizes.push(optionsFinal.gamma.size === undefined ? optionsFinal.size : optionsFinal.gamma.size);
         // If 2D periodic, we save the periodic indices, and ensure a right
         // handed coordinate system.
         for (let iTrueBasis = 0; iTrueBasis < 3; ++iTrueBasis) {
@@ -1342,7 +1104,7 @@ export class StructureViewer extends Viewer {
                 labelOffset.multiplyScalar(0.8);
                 textPos.add(labelOffset);
                 const axisLabelSprite = this.createLabel(textPos, axisLabel, axisColor, axisFont, axisFontSize, new THREE.Vector2(0.0, 0.0), strokeWidth, strokeColor);
-                this.latticeConstants.add(axisLabelSprite);
+                this.latticeConstantsGroup.add(axisLabelSprite);
                 this.axisLabels.push(axisLabelSprite);
                 // Add basis vector colored line
                 const cellVectorMaterial = new THREE.MeshBasicMaterial({
@@ -1352,7 +1114,7 @@ export class StructureViewer extends Viewer {
                 });
                 const cellVector = basisVec1.clone();
                 const cellVectorLine = this.createCylinder(origin.clone(), cellVector.clone().add(origin), 0.09, 10, cellVectorMaterial);
-                this.latticeConstants.add(cellVectorLine);
+                this.latticeConstantsGroup.add(cellVectorLine);
                 // Add basis vector axis line
                 const cellAxisMaterial = new THREE.MeshBasicMaterial({
                     color: "#000000",
@@ -1360,7 +1122,7 @@ export class StructureViewer extends Viewer {
                 const axisStart = this.basisVectors[iTrueBasis].clone();
                 const axisEnd = axisStart.clone().multiplyScalar(1 + axisOffset / axisStart.length());
                 const cellAxisVectorLine = this.createCylinder(origin.clone(), axisEnd, 0.02, 10, cellAxisMaterial);
-                this.latticeConstants.add(cellAxisVectorLine);
+                this.latticeConstantsGroup.add(cellAxisVectorLine);
                 // Add axis arrow
                 const arrowGeometry = new THREE.CylinderGeometry(0, 0.10, 0.5, 12);
                 const arrowMaterial = new THREE.MeshBasicMaterial({
@@ -1371,7 +1133,7 @@ export class StructureViewer extends Viewer {
                     .multiplyScalar(1 + axisOffset / dir.length());
                 arrow.lookAt(new THREE.Vector3());
                 arrow.rotateX(-Math.PI / 2);
-                this.latticeConstants.add(arrow);
+                this.latticeConstantsGroup.add(arrow);
             }
             if (angleEnabled && !collapsed1 && !collapsed2) {
                 // Add angle label and curve
@@ -1427,11 +1189,168 @@ export class StructureViewer extends Viewer {
                 const angleLabelLen = angleLabelPos.length();
                 angleLabelPos.multiplyScalar(1 + 0.3 / angleLabelLen);
                 const angleLabelObj = this.createLabel(angleLabelPos, angleLabel.toString(), angleColor, angleFont, angleFontSize, new THREE.Vector2(0.0, 0.0), angleStrokeWidth, angleStrokeColor);
-                this.latticeConstants.add(angleLabelObj);
+                this.latticeConstantsGroup.add(angleLabelObj);
                 this.axisLabels.push(angleLabelObj);
                 this.angleArcs.add(arc);
             }
         }
+    }
+    /**
+     * Set the position for atoms in the currently loaded structure.
+     */
+    setPositions(positions, fractional = false) {
+        // Check the periodicity setting. You can only call this function if no
+        // additional atoms need to be created through the periodicity setting.
+        if (this.options.layout.periodicity !== "none" && this.options.layout.periodicity !== "wrap") {
+            throw "Setting new positions is not allowed when options.layout.periodicity != 'none'/'wrap'.";
+        }
+        // Convert to vectors
+        const vecPos = this.toVectors(positions);
+        if (this.options.layout.periodicity === "wrap") {
+            this.wrap(vecPos, fractional);
+        }
+        if (fractional) {
+            this.toCartesian(vecPos, false);
+        }
+        for (let i = 0, size = vecPos.length; i < size; ++i) {
+            const position = vecPos[i];
+            const atom = this.getAtom(i);
+            atom.position.copy(position);
+        }
+    }
+    /**
+     * Gets the positions for atoms in the currently loaded structure.
+     */
+    getPositions(fractional = false) {
+        let positions = [];
+        const atoms = this.atomsObject.children;
+        const nAtoms = atoms.length;
+        if (fractional) {
+            const cartPos = [];
+            for (let i = 0; i < nAtoms; ++i) {
+                const atom = atoms[i];
+                const position = atom.position.clone();
+                cartPos.push(position);
+            }
+            positions = this.toScaled(cartPos);
+        }
+        else {
+            for (let i = 0; i < nAtoms; ++i) {
+                const atom = atoms[i];
+                const position = atom.position.clone();
+                positions.push(position);
+            }
+        }
+        return positions;
+    }
+    /**
+     * Get the positions of atoms in the global coordinate system.
+     */
+    getPositionsGlobal() {
+        const nAtoms = this.positions.length;
+        const worldPos = [];
+        this.atomsObject.updateMatrixWorld();
+        for (let i = 0; i < nAtoms; ++i) {
+            const atom = this.atomsObject.getObjectByName(`atom${i}`);
+            const wPos = new THREE.Vector3();
+            atom.getWorldPosition(wPos);
+            worldPos.push(wPos);
+        }
+        return worldPos;
+    }
+    /**
+     * Converts a list of list of numbers into vectors.
+     *
+     * @param positions
+     * @returns {THREE.Vector3[]} The positions as an array of THREE.Vector3.
+     */
+    toVectors(positions) {
+        const vecPos = [];
+        for (let i = 0, size = positions.length; i < size; ++i) {
+            vecPos.push(new THREE.Vector3().fromArray(positions[i]));
+        }
+        return vecPos;
+    }
+    toCartesian(positions, copy = true) {
+        if (copy) {
+            const newPos = [];
+            for (let i = 0, size = positions.length; i < size; ++i) {
+                newPos.push(positions[i].clone().applyMatrix3(this.B));
+            }
+            return newPos;
+        }
+        else {
+            for (let i = 0, size = positions.length; i < size; ++i) {
+                positions[i].applyMatrix3(this.B);
+            }
+        }
+    }
+    toScaled(positions, copy = true) {
+        if (copy) {
+            const newPos = [];
+            for (let i = 0, size = positions.length; i < size; ++i) {
+                newPos.push(positions[i].clone().applyMatrix3(this.Bi));
+            }
+            return newPos;
+        }
+        else {
+            for (let i = 0, size = positions.length; i < size; ++i) {
+                positions[i].applyMatrix3(this.Bi);
+            }
+        }
+    }
+    /**
+     * Get a specific atom as defined by a js Group.
+     *
+     * @param index - Index of the atom.
+     * @return THREE.js Group containing the visuals for the atom. The position
+     * of the atom is determined by the position of the group.
+     */
+    getAtom(index) {
+        return this.atomsObject.getObjectByName(`atom${index}`);
+    }
+    setupLights() {
+        var _a, _b, _c, _d, _e, _f;
+        this.lights = [];
+        const shadowMapWidth = 2048;
+        const shadowBias = -0.001;
+        const shadowCutoff = 50;
+        // Key light
+        const keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
+        keyLight.shadow.mapSize.width = shadowMapWidth;
+        keyLight.shadow.mapSize.height = shadowMapWidth;
+        keyLight.shadow.bias = shadowBias; //fixes self-shadowing artifacts
+        // Fixes an issue with some shadows being cutoff. Is there a more robust solution?
+        keyLight.shadow.camera.left = -shadowCutoff;
+        keyLight.shadow.camera.right = shadowCutoff;
+        keyLight.shadow.camera.top = shadowCutoff;
+        keyLight.shadow.camera.bottom = -shadowCutoff;
+        keyLight.position.set(0, 0, 20);
+        this.sceneStructure.add(keyLight);
+        this.lights.push(keyLight);
+        // Fill light
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        fillLight.shadow.mapSize.width = shadowMapWidth;
+        fillLight.shadow.mapSize.height = shadowMapWidth;
+        fillLight.shadow.bias = shadowBias;
+        fillLight.position.set(-20, 0, -20);
+        if (((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.atoms) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) === undefined) {
+            this.sceneStructure.add(fillLight);
+            this.lights.push(fillLight);
+        }
+        // Back light
+        const backLight = new THREE.DirectionalLight(0xffffff, 0.25);
+        backLight.shadow.mapSize.width = shadowMapWidth;
+        backLight.shadow.mapSize.height = shadowMapWidth;
+        backLight.shadow.bias = shadowBias;
+        backLight.position.set(20, 0, -20);
+        if (((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.atoms) === null || _e === void 0 ? void 0 : _e.material) === null || _f === void 0 ? void 0 : _f.toon) === undefined) {
+            this.sceneStructure.add(backLight);
+            this.lights.push(backLight);
+        }
+        // White ambient light.
+        const ambientLight = new THREE.AmbientLight(0x404040, 1.7); // soft white light
+        this.sceneStructure.add(ambientLight);
     }
     /**
      * Creates a list of THREE.Vector3s from the given list of arrays.
@@ -1468,13 +1387,6 @@ export class StructureViewer extends Viewer {
             this.Bi = new THREE.Matrix3().copy(B).invert();
         }
     }
-    // The atom positions will be used as visualization boundaries
-    getCornerPoints() {
-        return {
-            points: this.getPositionsGlobal(),
-            margin: this.maxRadii
-        };
-    }
     /**
      * Returns the atomic radii for the given atomic number.
      *
@@ -1492,16 +1404,6 @@ export class StructureViewer extends Viewer {
         return config.color === 'Jmol'
             ? this.elementColors[atomicNumber] || this.color_unknown
             : config.color;
-    }
-    /**
-     * Create the conventional cell
-     *
-     */
-    createConventionalCell(periodicity, visible) {
-        const cell = this.createCell(new THREE.Vector3(), this.basisVectors, this.basisVectorCollapsed, periodicity, this.options.cell.color, this.options.cell.linewidth, this.options.cell.dashSize, this.options.cell.gapSize);
-        cell.visible = visible;
-        this.convCell = cell;
-        this.container.add(this.convCell);
     }
     /**
      * Creates outlines for a cell specified by the given basis vectors.
@@ -1588,38 +1490,6 @@ export class StructureViewer extends Viewer {
             }
         }
         return cell;
-    }
-    /**
-     * @param rotations The rotations as a list. Each rotation should be an
-     * array containing four numbers: [x, y, z, angle]. The rotations are
-     * applied in the given order.
-     */
-    rotateView(rotations) {
-        if (rotations === undefined) {
-            return;
-        }
-        for (const r of rotations) {
-            const basis = new THREE.Vector3(r[0], r[1], r[2]);
-            basis.normalize();
-            const angle = r[3] / 180 * Math.PI;
-            this.rotateAroundWorldAxis(this.root, basis, angle);
-            this.rotateAroundWorldAxis(this.sceneInfo, basis, angle);
-        }
-    }
-    alignView(alignments) {
-        // Define available directions
-        const directions = {
-            "a": this.basisVectors[0].clone(),
-            "-a": this.basisVectors[0].clone().negate(),
-            "b": this.basisVectors[1].clone(),
-            "-b": this.basisVectors[1].clone().negate(),
-            "c": this.basisVectors[2].clone(),
-            "-c": this.basisVectors[2].clone().negate(),
-        };
-        // List the objects whose matrix needs to be updated
-        const objects = [this.root, this.sceneInfo];
-        // Rotate
-        super.alignView(alignments, directions, objects);
     }
     /**
      * Used to add periodic repetitions of atoms.
@@ -1752,7 +1622,7 @@ export class StructureViewer extends Viewer {
      * @param positions - Positions of the atoms
      * @param labels - The element numbers for the atoms
      */
-    createAtoms(positions, labels, pbc, fractional = true) {
+    createAtoms(positions, labels, pbc, fractional = true, wrap = 'none') {
         // Delete old atoms
         this.atomsObject.remove(...this.atomsObject.children);
         this.elements = {};
@@ -1760,15 +1630,14 @@ export class StructureViewer extends Viewer {
         this.atomOutlines = [];
         // Determine the periodicity handling
         if (pbc.some(a => { return a === true; })) {
-            const periodicity = this.options.layout.periodicity;
-            if (periodicity === "wrap") {
+            if (wrap === "wrap") {
                 this.wrap(positions, fractional);
             }
-            else if (fractional && periodicity === "boundary") {
+            else if (fractional && wrap === "boundary") {
                 this.addBoundaryAtoms(positions, labels);
             }
-            else if (fractional && Array.isArray(periodicity)) {
-                this.repeat(periodicity, positions, labels);
+            else if (fractional && Array.isArray(wrap)) {
+                this.repeat(wrap, positions, labels);
             }
         }
         // Convert fractional to cartesian
@@ -1795,85 +1664,6 @@ export class StructureViewer extends Viewer {
         }
     }
     /**
-     * Creates bonds between the atoms based on radii and distance.
-     *
-     * @param bonds - A Nx2 list of atom indices specifying the bonded atoms. Alternatively
-     *                you can use "auto" to automatically create the bonds.
-     */
-    createBonds(bonds = "auto") {
-        var _a, _b, _c, _d, _e, _f, _g;
-        if (!this.options.bonds.enabled) {
-            return;
-        }
-        // See if the bonds need to be updated.
-        if (!this.updateBonds) {
-            return;
-        }
-        // Delete old bonds
-        this.bondFills = [];
-        this.bonds.remove(...this.bonds.children);
-        // Get current positions
-        const atomPos = this.getPositions();
-        // Create material once
-        let bondMaterial;
-        if ((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.bonds) === null || _b === void 0 ? void 0 : _b.material) === null || _c === void 0 ? void 0 : _c.toon) {
-            const nTones = (_g = (_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.bonds) === null || _e === void 0 ? void 0 : _e.material) === null || _f === void 0 ? void 0 : _f.toon) === null || _g === void 0 ? void 0 : _g.tones;
-            const colors = new Uint8Array(nTones);
-            for (let c = 0; c <= nTones; c++) {
-                colors[c] = (c / nTones) * 256;
-            }
-            const gradientMap = new THREE.DataTexture(colors, colors.length, 1, THREE.LuminanceFormat);
-            gradientMap.minFilter = THREE.NearestFilter;
-            gradientMap.magFilter = THREE.NearestFilter;
-            gradientMap.generateMipmaps = false;
-            bondMaterial = new THREE.MeshToonMaterial({
-                color: this.options.bonds.color,
-                gradientMap: gradientMap
-            });
-        }
-        else {
-            bondMaterial = new THREE.MeshPhongMaterial({
-                color: this.options.bonds.color,
-                shininess: this.options.bonds.material.phong.shininess
-            });
-        }
-        // Manual bonds
-        if (Array.isArray(bonds)) {
-            for (const bond of bonds) {
-                const i = bond[0];
-                const j = bond[1];
-                const pos1 = atomPos[i];
-                const pos2 = atomPos[j];
-                this.addBond(i, j, pos1, pos2, bondMaterial);
-            }
-            // Automatically detect bonds
-        }
-        else if (bonds === "auto") {
-            const nAtoms = atomPos.length;
-            for (let i = 0; i < nAtoms; ++i) {
-                for (let j = 0; j < nAtoms; ++j) {
-                    if (j > i) {
-                        const pos1 = atomPos[i];
-                        const pos2 = atomPos[j];
-                        const num1 = this.atomicNumbers[i];
-                        const num2 = this.atomicNumbers[j];
-                        const distance = pos2.clone().sub(pos1).length();
-                        const configHashI = this.atomConfigMap[i];
-                        const configHashJ = this.atomConfigMap[j];
-                        const configI = this.configMap[configHashI];
-                        const configJ = this.configMap[configHashJ];
-                        const radii1 = configI.scale * this.getRadii(num1);
-                        const radii2 = configJ.scale * this.getRadii(num2);
-                        if (distance <= this.options.bonds.threshold * 1.1 * (radii1 + radii2)) {
-                            this.addBond(i, j, pos1, pos2, bondMaterial);
-                        }
-                    }
-                }
-            }
-        }
-        this.updateBonds = false;
-    }
-    /**
      * Used to check if the given fractional position component is almost the
      * given target value with a tolerance given in cartesian corodinates.
      */
@@ -1893,10 +1683,10 @@ export class StructureViewer extends Viewer {
      * @param position - Position of the atom
      * @param atomicNumber - The atomic number for the added atom
      */
-    addBond(i, j, pos1, pos2, bondMaterial) {
+    addBond(i, j, pos1, pos2, bondMaterial, options) {
         // Bond
-        const radius = this.options.bonds.radius;
-        const targetAngle = this.options.bonds.smoothness;
+        const radius = options.radius;
+        const targetAngle = options.smoothness;
         const nSegments = Math.ceil(360 / (180 - targetAngle));
         const cylinder = this.createCylinder(pos1, pos2, radius, nSegments, bondMaterial);
         cylinder.name = "fill";
@@ -1906,15 +1696,15 @@ export class StructureViewer extends Viewer {
         group.name = "bond" + i + "-" + j;
         group.add(cylinder);
         // Bond outline
-        if (this.options.bonds.outline.enabled) {
-            const addition = this.options.bonds.outline.size;
+        if (options.outline.enabled) {
+            const addition = options.outline.size;
             const scale = addition / radius + 1;
-            const outlineMaterial = new THREE.MeshBasicMaterial({ color: this.options.bonds.outline.color, side: THREE.BackSide });
+            const outlineMaterial = new THREE.MeshBasicMaterial({ color: options.outline.color, side: THREE.BackSide });
             const outline = this.createCylinder(pos1, pos2, scale * radius, 10, outlineMaterial);
             outline.name = "outline";
             group.add(outline);
         }
-        this.bonds.add(group);
+        this.bondsObject.add(group);
     }
     /**
      * Creates atoms and directly adds them to the scene.
@@ -1970,8 +1760,6 @@ export class StructureViewer extends Viewer {
         group.position.copy(true_pos);
         this.atomsObject.add(group);
         this.atomFills.push(atom);
-        // Always after adding an atom the bond information should be updated.
-        this.updateBonds = true;
     }
     createAtomGeometry(config, atomicNumber) {
         // Calculate the amount of segments that are needed to reach a

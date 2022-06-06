@@ -1,35 +1,58 @@
 // Find the element in which the visualizer will be enbedded into
-let targetElem = document.getElementById("visualizationCanvas");
+let targetElem = document.getElementById("visualizationCanvas")
 
 // Viewer options
 let options = {
-  view: {
-    fitMargin: 0.5,
-  },
-  layout: {
-    periodicity: "none",
-    //translation: [0, 0, 0],
-    viewCenter: "COC",
-    viewRotation: {
-      alignments: [
-        ["up", "c"],
-        ["right", "b"],
-      ],
-      rotations: [
-          [0, 1, 0, 60],
-          [1, 0, 0, 30],
-      ],
-    }
-  },
-  outline: {
+  bonds: {
     enabled: true,
-    color: "#000000",
-    size: 0.025,
-  },
-  cell: {
-    enabled: true,
-  },
-  latticeConstants: {
+    material: {
+        phong: {
+          shininess: 30,
+        }
+    },
+    radius: 0.08,
+    threshold: 1.0,
+    smoothness: 155,
+  }
+}
+
+// Initialize viewer
+var viewer = new materia.StructureViewer(targetElem)
+
+// Define structure and load it into the viewer
+let positions = [
+    [0, 0, 0],
+    [0.60, 0.60, 0.60],
+    [1, 1, 1],
+];
+let species = ['H', 'O', 'H'];
+var bulk = {
+    "species": species,
+    "cell": [
+        [1, 0, 0.0],
+        [0.0, 1, 0],
+        [0, 0.0, 1]
+    ],
+    "positions": positions,
+    "fractional": true,
+    "pbc": [true, true, true],
+    "wrap": 'none'
+};
+viewer.load(bulk)
+
+// Setup viewer initial state
+viewer.align([
+  ["up", "c"],
+  ["right", "b"],
+])
+viewer.rotate([
+    [0, 1, 0, 60],
+    [1, 0, 0, 30],
+])
+viewer.atoms()
+viewer.bonds()
+viewer.cell()
+viewer.latticeConstants({
     enabled: true,
     font: "Arial",
     size: 0.8,
@@ -51,45 +74,10 @@ let options = {
     gamma: {
         color: "#ffffff",
     },
-  },
-  bonds: {
-    enabled: true,
-    material: {
-        phong: {
-          shininess: 30,
-        }
-    },
-    radius: 0.08,
-    threshold: 1.0,
-    smoothness: 155,
-  },
-  renderer: {
-    shadows: {
-      enabled: true
-    }
-  }
-};
+})
+viewer.center('COC')
+viewer.fit('full', 0.5)
+viewer.controls()
 
-// Initialize viewer and load structure
-var viewer = new materia.StructureViewer(targetElem, options);
-
-// Define structure and load it into the viewer
-let positions = [
-    [0, 0, 0],
-    [0.60, 0.60, 0.60],
-    [1, 1, 1],
-];
-let species = ['H', 'O', 'H'];
-var bulk = {
-    "species": species,
-    "cell": [
-        [1, 0, 0.0],
-        [0.0, 1, 0],
-        [0, 0.0, 1]
-    ],
-    "positions": positions,
-    "fractional": true,
-    "pbc": [true, true, true],
-};
-
-viewer.load(bulk);
+// Render final result
+viewer.render()

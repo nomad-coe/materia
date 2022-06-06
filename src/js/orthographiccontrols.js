@@ -61,6 +61,7 @@ export class OrthographicControls {
         this.domElement.addEventListener('touchmove', this.touchmove.bind(this), false);
         this.domElement.addEventListener('mousemove', this.mousemove.bind(this), false);
         this.domElement.addEventListener('mouseup', this.mouseup.bind(this), false);
+        this.domElement.addEventListener('dblclick', this.dblclick.bind(this), false);
         this.handleResize();
         // force an update at start
         this.update();
@@ -73,43 +74,44 @@ export class OrthographicControls {
             this.screen.height = window.innerHeight;
         }
         else {
-            var box = this.domElement.getBoundingClientRect();
+            const box = this.domElement.getBoundingClientRect();
             // adjustments come from similar code in the jquery offset() function
-            var d = this.domElement.ownerDocument.documentElement;
+            const d = this.domElement.ownerDocument.documentElement;
             this.screen.left = box.left + window.pageXOffset - d.clientLeft;
             this.screen.top = box.top + window.pageYOffset - d.clientTop;
             this.screen.width = box.width;
             this.screen.height = box.height;
         }
     }
-    ;
     handleEvent(event) {
         if (typeof this[event.type] == 'function') {
             this[event.type](event);
         }
     }
-    ;
     getMouseOnScreen(pageX, pageY) {
-        var vector = new THREE.Vector2();
+        const vector = new THREE.Vector2();
         vector.set((pageX - this.screen.left) / this.screen.width, (pageY - this.screen.top) / this.screen.width);
         return vector;
     }
-    ;
     getMouseOnCircle(pageX, pageY) {
-        var vector = new THREE.Vector2();
+        const vector = new THREE.Vector2();
         vector.set(((pageX - this.screen.width * 0.5 - this.screen.left) / (this.screen.width * 0.5)), ((this.screen.height + 2 * (this.screen.top - pageY)) / this.screen.width) // screen.width intentional
         );
         return vector;
     }
-    ;
     /**
       * Used to trigger rotation after a move has been detected and stored in
       * this.movePrev and this.moveCurr.
       */
     rotateCamera() {
-        var axis = new THREE.Vector3(), quaternion = new THREE.Quaternion(), eyeDirection = new THREE.Vector3(), objectUpDirection = new THREE.Vector3(), objectSidewaysDirection = new THREE.Vector3(), moveDirection = new THREE.Vector3(), angle;
+        const axis = new THREE.Vector3();
+        const quaternion = new THREE.Quaternion();
+        const eyeDirection = new THREE.Vector3();
+        const objectUpDirection = new THREE.Vector3();
+        const objectSidewaysDirection = new THREE.Vector3();
+        const moveDirection = new THREE.Vector3();
         moveDirection.set(this._moveCurr.x - this._movePrev.x, this._moveCurr.y - this._movePrev.y, 0);
-        angle = moveDirection.length();
+        let angle = moveDirection.length();
         if (angle) {
             this._eye.copy(this.object.position).sub(this.rotationCenter);
             eyeDirection.copy(this._eye).normalize();
@@ -119,7 +121,7 @@ export class OrthographicControls {
             objectSidewaysDirection.setLength(this._moveCurr.x - this._movePrev.x);
             moveDirection.copy(objectUpDirection.add(objectSidewaysDirection));
             axis.crossVectors(moveDirection, this._eye).normalize();
-            var zoomFactor = this.object.zoom;
+            const zoomFactor = this.object.zoom;
             angle *= this.rotateSpeed;
             angle /= zoomFactor;
             quaternion.setFromAxisAngle(axis, angle);
@@ -137,9 +139,8 @@ export class OrthographicControls {
         }
         this._movePrev.copy(this._moveCurr);
     }
-    ;
     zoomCamera() {
-        var factor;
+        let factor;
         if (this._state === STATE.TOUCH_ZOOM_PAN) {
             factor = this._touchZoomDistanceStart / this._touchZoomDistanceEnd;
             this._touchZoomDistanceStart = this._touchZoomDistanceEnd;
@@ -162,12 +163,11 @@ export class OrthographicControls {
             }
         }
     }
-    ;
     panCamera() {
-        var mouseChange = new THREE.Vector2(), objectUp = new THREE.Vector3(), pan = new THREE.Vector3();
+        const mouseChange = new THREE.Vector2(), objectUp = new THREE.Vector3(), pan = new THREE.Vector3();
         mouseChange.copy(this._panEnd).sub(this._panStart);
         if (mouseChange.lengthSq()) {
-            var zoomFactor = this.object.zoom;
+            const zoomFactor = this.object.zoom;
             mouseChange.multiplyScalar(this.panSpeed / zoomFactor);
             pan.copy(this._eye).cross(this.object.up).setLength(mouseChange.x);
             pan.add(objectUp.copy(this.object.up).setLength(mouseChange.y));
@@ -180,9 +180,7 @@ export class OrthographicControls {
                 this._panStart.add(mouseChange.subVectors(this._panEnd, this._panStart).multiplyScalar(this.dynamicDampingFactor));
             }
         }
-        ;
     }
-    ;
     checkDistances() {
         if (this.enableZoom || this.enablePan) {
             if (this._eye.lengthSq() > this.maxDistance * this.maxDistance) {
@@ -214,7 +212,7 @@ export class OrthographicControls {
         this.object.position.addVectors(this.rotationCenter, this._eye);
         this.checkDistances();
         this.object.lookAt(this.rotationCenter);
-        let delta = this._lastPosition.distanceToSquared(this.object.position);
+        const delta = this._lastPosition.distanceToSquared(this.object.position);
         if (delta > EPS || this._zoomed) {
             this.dispatchEvent(changeEvent);
             this._lastPosition.copy(this.object.position);
@@ -255,6 +253,7 @@ export class OrthographicControls {
         this.domElement.removeEventListener('touchmove', this.touchmove.bind(this), false);
         this.domElement.removeEventListener('mousemove', this.mousemove.bind(this), false);
         this.domElement.removeEventListener('mouseup', this.mouseup.bind(this), false);
+        this.domElement.removeEventListener('dblclick', this.dblclick.bind(this), false);
     }
     mousedown(event) {
         if (this.enabled === false)
@@ -308,6 +307,14 @@ export class OrthographicControls {
         document.removeEventListener('mouseup', this.mouseup.bind(this));
         this.dispatchEvent(endEvent);
     }
+    dblclick(event) {
+        if (this.enabled === false || !this.resetOnDoubleClick)
+            return;
+        event.preventDefault();
+        event.stopPropagation();
+        this.reset();
+        this.dispatchEvent(changeEvent);
+    }
     mousewheel(event) {
         if (this.enabled === false)
             return;
@@ -341,11 +348,11 @@ export class OrthographicControls {
                 break;
             default: // 2 or more
                 this._state = STATE.TOUCH_ZOOM_PAN;
-                var dx = event.touches[0].pageX - event.touches[1].pageX;
-                var dy = event.touches[0].pageY - event.touches[1].pageY;
+                const dx = event.touches[0].pageX - event.touches[1].pageX;
+                const dy = event.touches[0].pageY - event.touches[1].pageY;
                 this._touchZoomDistanceEnd = this._touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
-                var x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
-                var y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
+                const x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
+                const y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
                 this._panStart.copy(this.getMouseOnScreen(x, y));
                 this._panEnd.copy(this._panStart);
                 break;
@@ -363,11 +370,11 @@ export class OrthographicControls {
                 this._moveCurr.copy(this.getMouseOnCircle(event.touches[0].pageX, event.touches[0].pageY));
                 break;
             default: // 2 or more
-                var dx = event.touches[0].pageX - event.touches[1].pageX;
-                var dy = event.touches[0].pageY - event.touches[1].pageY;
+                const dx = event.touches[0].pageX - event.touches[1].pageX;
+                const dy = event.touches[0].pageY - event.touches[1].pageY;
                 this._touchZoomDistanceEnd = Math.sqrt(dx * dx + dy * dy);
-                var x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
-                var y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
+                const x = (event.touches[0].pageX + event.touches[1].pageX) / 2;
+                const y = (event.touches[0].pageY + event.touches[1].pageY) / 2;
                 this._panEnd.copy(this.getMouseOnScreen(x, y));
                 break;
         }
@@ -395,7 +402,7 @@ export class OrthographicControls {
     addEventListener(type, listener) {
         if (this._listeners === undefined)
             this._listeners = {};
-        var listeners = this._listeners;
+        const listeners = this._listeners;
         if (listeners[type] === undefined) {
             listeners[type] = [];
         }
@@ -406,16 +413,16 @@ export class OrthographicControls {
     hasEventListener(type, listener) {
         if (this._listeners === undefined)
             return false;
-        var listeners = this._listeners;
+        const listeners = this._listeners;
         return listeners[type] !== undefined && listeners[type].indexOf(listener) !== -1;
     }
     removeEventListener(type, listener) {
         if (this._listeners === undefined)
             return;
-        var listeners = this._listeners;
-        var listenerArray = listeners[type];
+        const listeners = this._listeners;
+        const listenerArray = listeners[type];
         if (listenerArray !== undefined) {
-            var index = listenerArray.indexOf(listener);
+            const index = listenerArray.indexOf(listener);
             if (index !== -1) {
                 listenerArray.splice(index, 1);
             }
@@ -424,14 +431,13 @@ export class OrthographicControls {
     dispatchEvent(event) {
         if (this._listeners === undefined)
             return;
-        var listeners = this._listeners;
-        var listenerArray = listeners[event.type];
+        const listeners = this._listeners;
+        const listenerArray = listeners[event.type];
         if (listenerArray !== undefined) {
-            var array = listenerArray.slice(0);
-            for (var i = 0, l = array.length; i < l; i++) {
+            const array = listenerArray.slice(0);
+            for (let i = 0, l = array.length; i < l; i++) {
                 array[i].call(this, event);
             }
         }
     }
 }
-;
