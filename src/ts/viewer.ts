@@ -13,6 +13,21 @@ export abstract class Viewer {
     cameraWidth = 10.0;                   // The default "width" of the camera
     rootElement:any;                      // A root html element that contains all visualization components
     options:any = {};                     // Options for the viewer. Can be e.g. used to control which settings are enabled
+    controlDefaults = {                   // Default controls settings
+        zoom: {
+            enabled: true,
+            speed: 0.2
+        },
+        rotation: {
+            enabled: true,
+            speed: 2.5
+        },
+        pan: {
+            enabled: true,
+            speed: 10
+        },
+        resetOnDoubleClick: true
+    }
 
     /**
      * @param {any} hostElement is the html element where the visualization
@@ -39,7 +54,7 @@ export abstract class Viewer {
         this.changeHostElement(hostElement)
     }
 
-    setOptions(options: Record<string, unknown>): void {
+    setOptions(options:any): void {
         // The default settings object
         const def =  {
             view: {
@@ -311,22 +326,7 @@ export abstract class Viewer {
      */
     controls(options:any) : void {
         // Merge with default options
-        const def = {
-            zoom: {
-                enabled: true,
-                speed: 0.2
-            },
-            rotation: {
-                enabled: true,
-                speed: 2.5
-            },
-            pan: {
-                enabled: true,
-                speed: 10
-            },
-            resetOnDoubleClick: true
-        }
-        const optionsFinal = merge(cloneDeep(def), cloneDeep(options))
+        const optionsFinal = merge(cloneDeep(this.controlDefaults), cloneDeep(options))
 
         // Setup new controls object
         const controls = new OrthographicControls(this.camera, this.rootElement)

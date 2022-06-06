@@ -22,6 +22,21 @@ export class Viewer {
         this.scenes = []; // A list of scenes that are rendered
         this.cameraWidth = 10.0; // The default "width" of the camera
         this.options = {}; // Options for the viewer. Can be e.g. used to control which settings are enabled
+        this.controlDefaults = {
+            zoom: {
+                enabled: true,
+                speed: 0.2
+            },
+            rotation: {
+                enabled: true,
+                speed: 2.5
+            },
+            pan: {
+                enabled: true,
+                speed: 10
+            },
+            resetOnDoubleClick: true
+        };
         // Check that OpenGL is available, otherwise throw an exception
         if (!this.webglAvailable()) {
             throw Error("WebGL is not supported on this browser, cannot display viewer.");
@@ -278,22 +293,7 @@ export class Viewer {
      */
     controls(options) {
         // Merge with default options
-        const def = {
-            zoom: {
-                enabled: true,
-                speed: 0.2
-            },
-            rotation: {
-                enabled: true,
-                speed: 2.5
-            },
-            pan: {
-                enabled: true,
-                speed: 10
-            },
-            resetOnDoubleClick: true
-        };
-        const optionsFinal = merge(cloneDeep(def), cloneDeep(options));
+        const optionsFinal = merge(cloneDeep(this.controlDefaults), cloneDeep(options));
         // Setup new controls object
         const controls = new OrthographicControls(this.camera, this.rootElement);
         controls.rotateSpeed = optionsFinal.rotation.speed;

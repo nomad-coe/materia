@@ -42,5 +42,4 @@ use this method to only update a subset of the options.
 API
 ---
 .. js:autofunction:: BrillouinZoneViewer#load
-.. js:autofunction:: BrillouinZoneViewer#setOptions
 

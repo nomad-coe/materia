@@ -12,6 +12,21 @@ export declare abstract class Viewer {
     cameraWidth: number;
     rootElement: any;
     options: any;
+    controlDefaults: {
+        zoom: {
+            enabled: boolean;
+            speed: number;
+        };
+        rotation: {
+            enabled: boolean;
+            speed: number;
+        };
+        pan: {
+            enabled: boolean;
+            speed: number;
+        };
+        resetOnDoubleClick: boolean;
+    };
     /**
      * @param {any} hostElement is the html element where the visualization
      *   canvas will be appended.
@@ -25,7 +40,7 @@ export declare abstract class Viewer {
      * cost for doing the visualization. Defaults to false
      */
     constructor(hostElement: any, options?: {});
-    setOptions(options: Record<string, unknown>): void;
+    setOptions(options: any): void;
     /**
      * This function will set up all the basics for visualization: scenes,
      * lights, camera and controls.

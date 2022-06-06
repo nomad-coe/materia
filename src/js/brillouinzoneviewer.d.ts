@@ -7,9 +7,26 @@ export declare class BrillouinZoneViewer extends Viewer {
     private sceneZone;
     private sceneInfo;
     private basis;
+    private segments;
+    private kpoints;
     private labelPoints;
     private basisVectors;
     private B;
+    controlDefaults: {
+        zoom: {
+            enabled: boolean;
+            speed: number;
+        };
+        rotation: {
+            enabled: boolean;
+            speed: number;
+        };
+        pan: {
+            enabled: boolean;
+            speed: number;
+        };
+        resetOnDoubleClick: boolean;
+    };
     setupScenes(): void;
     setupLights(): void;
     /**
@@ -27,7 +44,7 @@ export declare class BrillouinZoneViewer extends Viewer {
      */
     load(data: any): boolean;
     /**
-     * Used to setup the visualization options.
+     * Used to create the representation for the first Brillouin Zone.
      *
      * @param {object} options A Javascript object containing the options. See
      *   below for the subparameters.
@@ -91,26 +108,10 @@ export declare class BrillouinZoneViewer extends Viewer {
      * applied to the label of the third reciprocal lattice vector.
      * @param {string} options.basis.c.stroke.color Outline stroke color
      * applied to the label of the third reciprocal lattice vector.
-     *
-     * @param {string} options.renderer.background.color Color of the background.
-     * @param {number} options.renderer.background.opacity Opacity of the background.
-     *
-     * @param {boolean} render Whether to perform a render after setting the
-     * options. Defaults to true. You should only disable this setting if you
-     * plan to do a render manually afterwards.
      */
-    setOptions(options: any, reload?: boolean): void;
-    createBrillouinZone(basis: number[][], segments: number[][][], kpoints: [string, number[]][]): void;
-    getCornerPoints(): {
-        points: any[];
-        margin: number;
-    };
-    /**
-     * @param rotations The rotations as a list. Each rotation should be an
-     * array containing four numbers: [x, y, z, angle]. The rotations are
-     * applied in the given order.
-     */
-    rotateView(rotations: number[]): void;
-    alignView(alignments: string[][]): void;
+    brillouinZone(options: any): void;
+    fit(margin?: number): void;
+    rotate(rotations: number[]): void;
+    align(alignments: string[][]): void;
     createCircle(position: THREE.Vector3, diameter: number, color: string): THREE.Object3D;
 }

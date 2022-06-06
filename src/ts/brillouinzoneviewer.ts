@@ -2,6 +2,7 @@ import { Viewer } from "./viewer"
 import * as THREE from "three"
 import { getConvexGeometry } from './convexgeometry'
 import { MeshLine, MeshLineMaterial } from 'three.meshline'
+import { isNil, merge, cloneDeep } from "lodash"
 import voronoi from 'voronoi-diagram'
 
 /*
@@ -14,9 +15,26 @@ export class BrillouinZoneViewer extends Viewer {
     private sceneZone:any     // The scene containing the Brillouin zone mesh
     private sceneInfo:any     // The scene containing the information that is overlayed on top of the BZ
     private basis:any         // The reciprocal cell basis
+    private segments:any      // The segments
+    private kpoints:any       // The k points
     private labelPoints:any   // Contains the labels of special k-points
     private basisVectors:THREE.Vector3[]
     private B:THREE.Matrix3
+    controlDefaults = {  // Default controls settings
+        zoom: {
+            enabled: true,
+            speed: 0.2
+        },
+        rotation: {
+            enabled: true,
+            speed: 40
+        },
+        pan: {
+            enabled: true,
+            speed: 10
+        },
+        resetOnDoubleClick: true
+    }
 
     /*
      * Overrides the implementation from the base class, as we need two scenes:
@@ -78,28 +96,19 @@ export class BrillouinZoneViewer extends Viewer {
         this.setupCamera();
 
         // Add the Brillouin zone and the k-point path
-        const basis = data["basis"];
-        const segments = data["segments"];
-        const kpoints = data["kpoints"];
         this.basis = data["basis"];
-        if (!basis || !segments) {
+        this.segments = data["segments"];
+        this.kpoints = data["kpoints"];
+        if (!this.basis || !this.segments) {
             console.log("The data given for the Brillouin zone viewer is incomplete.")
             return false;
-        } else {
-            this.createBrillouinZone(basis, segments, kpoints);
         }
-
-        // Set view alignment and rotation
-        if (this.B !== undefined) {
-            this.alignView(this.options?.layout?.viewRotation?.alignments);
-        }
-        this.rotateView(this.options?.layout?.viewRotation?.rotations);
 
         return true;
     }
 
     /**
-     * Used to setup the visualization options.
+     * Used to create the representation for the first Brillouin Zone.
      *
      * @param {object} options A Javascript object containing the options. See
      *   below for the subparameters.
@@ -163,106 +172,74 @@ export class BrillouinZoneViewer extends Viewer {
      * applied to the label of the third reciprocal lattice vector.
      * @param {string} options.basis.c.stroke.color Outline stroke color
      * applied to the label of the third reciprocal lattice vector.
-     *
-     * @param {string} options.renderer.background.color Color of the background.
-     * @param {number} options.renderer.background.opacity Opacity of the background.
-     *
-     * @param {boolean} render Whether to perform a render after setting the
-     * options. Defaults to true. You should only disable this setting if you
-     * plan to do a render manually afterwards.
      */
-    setOptions(options: any, reload = true): void {
-        // The default settings object
-        // const defaultOptions = {
-        //     controls: {
-        //         rotateSpeed: 40,
-        //         enablePan: false
-        //     },
-        //     view: {
-        //         fitMargin: 0.075,
-        //     },
-        //     basis: {
-        //         offset: 0.02,
-        //         font: "Arial",
-        //         size: 0.03,
-        //         stroke: {
-        //             width: 0.06,
-        //             color: "#000",
-        //         },
-        //         a: {
-        //             label: "a",
-        //         },
-        //         b: {
-        //             label: "b",
-        //         },
-        //         c: {
-        //             label: "c",
-        //         },
-        //     },
-        //     segments: {
-        //         color: "#E56400",
-        //         linewidth: 0.0025,
-        //     },
-        //     kpoints: {
-        //         point: {
-        //             enabled: true,
-        //             size: 0.01,
-        //             color: "#E56400",
-        //         },
-        //         label: {
-        //             enabled: true,
-        //             font: "Arial",
-        //             size: 0.025,
-        //             color: "#E56400",
-        //             offset2D: [0, -0.75],
-        //             stroke: {
-        //                 width: 0.06,
-        //                 color: "#000",
-        //             },
-        //         }
-        //     },
-        //     faces: {
-        //         color: "#ddd",
-        //         opacity: 0.7,
-        //         outline: {
-        //             width: 0.002,
-        //             color: "#999",
-        //         },
-        //     },
-        // }
+    brillouinZone(options): void {
+        // Remove old viz
+        if (!isNil(this.info)) {
+            this.info.clear()
+        }
+        if (!isNil(this.zone)) {
+            this.zone.clear()
+        }
 
-        // // Upon first call, fill the missing values with default options
-        // if (Object.keys(this.options).length === 0) {
-        //     this.fillOptions(options, defaultOptions);
-        //     super.setOptions(defaultOptions);
-        // // On subsequent calls update only the given values and simply do a full
-        // // reload for the structure. This is not efficient by any means for most
-        // // settings but gets the job done for now.
-        // } else {
-        //     this.fillOptions(options, this.options);
-        //     super.setOptions(this.options);
+        // Define final options
+        const def = {
+            basis: {
+                offset: 0.02,
+                font: "Arial",
+                size: 0.03,
+                stroke: {
+                    width: 0.06,
+                    color: "#000",
+                },
+                a: {
+                    label: "a",
+                },
+                b: {
+                    label: "b",
+                },
+                c: {
+                    label: "c",
+                },
+            },
+            segments: {
+                color: "#E56400",
+                linewidth: 0.0025,
+            },
+            kpoints: {
+                point: {
+                    enabled: true,
+                    size: 0.01,
+                    color: "#E56400",
+                },
+                label: {
+                    enabled: true,
+                    font: "Arial",
+                    size: 0.025,
+                    color: "#E56400",
+                    offset2D: [0, -0.75],
+                    stroke: {
+                        width: 0.06,
+                        color: "#000",
+                    },
+                }
+            },
+            faces: {
+                color: "#ddd",
+                opacity: 0.7,
+                outline: {
+                    width: 0.002,
+                    color: "#999",
+                },
+            },
+        }
+        const optionsFinal = merge(cloneDeep(options || {}), cloneDeep(def))
 
-        //     // Reload structure if requested. TODO: Implement smart partial updates.
-        //     if (reload) {
-        //         if (this.data !== undefined) {
-        //             this.load(this.data);
-        //         }
-        //     }
-        //     if (options?.renderer?.background !== undefined) {
-        //         this.setBackgroundColor(options?.renderer?.background.color, options?.renderer?.background.opacity)
-        //     }
-        // }
-    }
-
-    /*
-     * Used to create the representation for the first Brillouin Zone.
-     */
-    createBrillouinZone(
-        basis:number[][],
-        segments:number[][][],
-        kpoints:[string, number[]][]): void {
 
         // Create list of reciprocal lattice points
+        const basis = this.basis
+        const segments = this.segments
+        const kpoints = this.kpoints
         const B = new THREE.Matrix3();
         const a = new THREE.Vector3().fromArray(basis[0])
         const b = new THREE.Vector3().fromArray(basis[1])
@@ -349,8 +326,8 @@ export class BrillouinZoneViewer extends Viewer {
         const group = new THREE.Group()
         group.name = "group"
         const meshMaterial = new THREE.MeshPhongMaterial( {
-            color : this.options.faces.color,
-            opacity: this.options.faces.opacity,
+            color : optionsFinal.faces.color,
+            opacity: optionsFinal.faces.opacity,
             transparent: true
         } );
         const mesh = new THREE.Mesh(geometry, meshMaterial);
@@ -366,9 +343,9 @@ export class BrillouinZoneViewer extends Viewer {
         this.zone.add(group)
 
         // Create edges as closed loops around each face
-        const edgeWidth = this.options.faces.outline.width
+        const edgeWidth = optionsFinal.faces.outline.width
         const edgeMaterial = new MeshLineMaterial({
-            color: this.options.faces.outline.color,
+            color: optionsFinal.faces.outline.color,
             lineWidth: edgeWidth,
             sizeAttenuation: true,
         });
@@ -388,27 +365,27 @@ export class BrillouinZoneViewer extends Viewer {
         }
 
         // Create the reciprocal space axes
-        const basisLabels = [this.options.basis.a.label, this.options.basis.b.label, this.options.basis.c.label];
+        const basisLabels = [optionsFinal.basis.a.label, optionsFinal.basis.b.label, optionsFinal.basis.c.label];
         const basisFonts = [];
-        basisFonts.push(this.options.basis.a?.font === undefined ? this.options.basis.font : this.options.basis.a.font);
-        basisFonts.push(this.options.basis.b?.font === undefined ? this.options.basis.font : this.options.basis.b.font);
-        basisFonts.push(this.options.basis.c?.font === undefined ? this.options.basis.font : this.options.basis.c.font);
+        basisFonts.push(optionsFinal.basis.a?.font === undefined ? optionsFinal.basis.font : optionsFinal.basis.a.font);
+        basisFonts.push(optionsFinal.basis.b?.font === undefined ? optionsFinal.basis.font : optionsFinal.basis.b.font);
+        basisFonts.push(optionsFinal.basis.c?.font === undefined ? optionsFinal.basis.font : optionsFinal.basis.c.font);
         const basisFontSizes = [];
-        basisFontSizes.push(this.options.basis.a?.size === undefined ? this.options.basis.size : this.options.basis.a.size);
-        basisFontSizes.push(this.options.basis.b?.size === undefined ? this.options.basis.size : this.options.basis.b.size);
-        basisFontSizes.push(this.options.basis.c?.size === undefined ? this.options.basis.size : this.options.basis.c.size);
+        basisFontSizes.push(optionsFinal.basis.a?.size === undefined ? optionsFinal.basis.size : optionsFinal.basis.a.size);
+        basisFontSizes.push(optionsFinal.basis.b?.size === undefined ? optionsFinal.basis.size : optionsFinal.basis.b.size);
+        basisFontSizes.push(optionsFinal.basis.c?.size === undefined ? optionsFinal.basis.size : optionsFinal.basis.c.size);
         const cellBasisColors = [];
-        cellBasisColors.push(this.options.basis.a?.color === undefined ? this.options.basis.color : this.options.basis.a.color);
-        cellBasisColors.push(this.options.basis.b?.color === undefined ? this.options.basis.color : this.options.basis.b.color);
-        cellBasisColors.push(this.options.basis.c?.color === undefined ? this.options.basis.color : this.options.basis.c.color);
+        cellBasisColors.push(optionsFinal.basis.a?.color === undefined ? optionsFinal.basis.color : optionsFinal.basis.a.color);
+        cellBasisColors.push(optionsFinal.basis.b?.color === undefined ? optionsFinal.basis.color : optionsFinal.basis.b.color);
+        cellBasisColors.push(optionsFinal.basis.c?.color === undefined ? optionsFinal.basis.color : optionsFinal.basis.c.color);
         const strokeColors = [];
-        strokeColors.push(this.options.basis.a?.stroke?.color === undefined ? this.options.basis.stroke.color : this.options.basis.a.stroke.color);
-        strokeColors.push(this.options.basis.b?.stroke?.color === undefined ? this.options.basis.stroke.color : this.options.basis.b.stroke.color);
-        strokeColors.push(this.options.basis.c?.stroke?.color === undefined ? this.options.basis.stroke.color : this.options.basis.c.stroke.color);
+        strokeColors.push(optionsFinal.basis.a?.stroke?.color === undefined ? optionsFinal.basis.stroke.color : optionsFinal.basis.a.stroke.color);
+        strokeColors.push(optionsFinal.basis.b?.stroke?.color === undefined ? optionsFinal.basis.stroke.color : optionsFinal.basis.b.stroke.color);
+        strokeColors.push(optionsFinal.basis.c?.stroke?.color === undefined ? optionsFinal.basis.stroke.color : optionsFinal.basis.c.stroke.color);
         const strokeWidths = [];
-        strokeWidths.push(this.options.basis.a?.stroke?.width === undefined ? this.options.basis.stroke.width : this.options.basis.a.stroke.width);
-        strokeWidths.push(this.options.basis.b?.stroke?.width === undefined ? this.options.basis.stroke.width : this.options.basis.b.stroke.width);
-        strokeWidths.push(this.options.basis.c?.stroke?.width === undefined ? this.options.basis.stroke.width : this.options.basis.c.stroke.width);
+        strokeWidths.push(optionsFinal.basis.a?.stroke?.width === undefined ? optionsFinal.basis.stroke.width : optionsFinal.basis.a.stroke.width);
+        strokeWidths.push(optionsFinal.basis.b?.stroke?.width === undefined ? optionsFinal.basis.stroke.width : optionsFinal.basis.b.stroke.width);
+        strokeWidths.push(optionsFinal.basis.c?.stroke?.width === undefined ? optionsFinal.basis.stroke.width : optionsFinal.basis.c.stroke.width);
         for (let iBasis=0; iBasis<3; ++iBasis) {
             const length = 0.7;
             const basisVector = basis[iBasis];
@@ -435,7 +412,7 @@ export class BrillouinZoneViewer extends Viewer {
             // Add an axis label
             const textPos = new THREE.Vector3()
                 .copy(dir)
-                .multiplyScalar(1+this.options.basis.offset/dir.length());
+                .multiplyScalar(1+optionsFinal.basis.offset/dir.length());
             const basisLabel = basisLabels[iBasis];
             const basisColor = cellBasisColors[iBasis];
             const basisFont = basisFonts[iBasis];
@@ -468,8 +445,8 @@ export class BrillouinZoneViewer extends Viewer {
         // that the segments are linear and the segment path is determined by
         // the start and end point.
         const kpathMaterial = new MeshLineMaterial({
-            color: this.options.segments.color,
-            lineWidth: this.options.segments.linewidth,
+            color: optionsFinal.segments.color,
+            lineWidth: optionsFinal.segments.linewidth,
             sizeAttenuation: true,
         });
         //let kpathGeometry;
@@ -507,24 +484,24 @@ export class BrillouinZoneViewer extends Viewer {
                 const label = kpoint[0]
                 const kpointScaled = new THREE.Vector3().fromArray(kpoint[1])
                 const kpointCartesian = this.coordinateTransform(this.B, I, kpointScaled, false)
-                if (this.options.kpoints.point.enabled) {
+                if (optionsFinal.kpoints.point.enabled) {
                     const kpointCircle = this.createCircle(
                         kpointCartesian,
-                        this.options.kpoints.point.size,
-                        this.options.kpoints.point.color
+                        optionsFinal.kpoints.point.size,
+                        optionsFinal.kpoints.point.color
                     );
                     this.info.add(kpointCircle);
                 }
-                if (this.options.kpoints.label.enabled) {
+                if (optionsFinal.kpoints.label.enabled) {
                     const kpointLabel = this.createLabel(
                         kpointCartesian,
                         label,
-                        this.options.kpoints.label.color,
-                        this.options.kpoints.label.font,
-                        this.options.kpoints.label.size,
-                        new THREE.Vector2().fromArray(this.options.kpoints.label.offset2D),
-                        this.options.kpoints.label.stroke.width,
-                        this.options.kpoints.label.stroke.width,
+                        optionsFinal.kpoints.label.color,
+                        optionsFinal.kpoints.label.font,
+                        optionsFinal.kpoints.label.size,
+                        new THREE.Vector2().fromArray(optionsFinal.kpoints.label.offset2D),
+                        optionsFinal.kpoints.label.stroke.width,
+                        optionsFinal.kpoints.label.stroke.width,
                     );
                     this.info.add(kpointLabel);
                 }
@@ -532,7 +509,7 @@ export class BrillouinZoneViewer extends Viewer {
         }
     }
 
-    getCornerPoints() {
+    fit(margin=0): void {
         // The corners of the BZ will be used as visualization boundaries
         const mesh = this.zone.getObjectByName("group").getObjectByName("outermesh")
         mesh.updateMatrixWorld()
@@ -549,19 +526,10 @@ export class BrillouinZoneViewer extends Viewer {
             const pos = vertices[i]
             worldPos.push(mesh.localToWorld(pos))
         }
-
-        return {
-            points: worldPos,
-            margin: 0,
-        }
+        this.fitViewToPoints(worldPos, margin)
     }
 
-    /**
-     * @param rotations The rotations as a list. Each rotation should be an
-     * array containing four numbers: [x, y, z, angle]. The rotations are
-     * applied in the given order.
-     */
-    rotateView(rotations: number[]): void {
+    rotate(rotations: number[]): void {
         if (rotations === undefined) {
             return;
         }
@@ -574,7 +542,7 @@ export class BrillouinZoneViewer extends Viewer {
         }
     }
 
-    alignView(alignments: string[][]): void {
+    align(alignments: string[][]): void {
         // Determine segment direction
         const segmentVector = new THREE.Vector3()
         const nPoints = this.labelPoints.children.length;
