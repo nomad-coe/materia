@@ -475,11 +475,6 @@ export class StructureViewer extends Viewer {
         }
         else if (positions == 'COC') {
             centerPos = this.getCOCGlobal();
-            // centerPos = new THREE.Vector3()
-            //     .add(this.basisVectors[0])
-            //     .add(this.basisVectors[1])
-            //     .add(this.basisVectors[2])
-            // .multiplyScalar(0.5);
         }
         else if (isArray(positions)) {
             if (isNumber(positions[0])) {
@@ -495,7 +490,7 @@ export class StructureViewer extends Viewer {
         else {
             throw Error("Invalid center positions.");
         }
-        this.setTranslation(centerPos.multiplyScalar(-1));
+        this.translate(centerPos.multiplyScalar(-1));
     }
     /**
      * Adjust the zoom so that the contents fit on the screen. Notice that is is
@@ -530,16 +525,6 @@ export class StructureViewer extends Viewer {
             throw Error("Invalid fit positions.");
         }
         this.fitViewToPoints(points, margin + addedMargin);
-    }
-    /**
-     * Translate the atoms.
-     *
-     * @param translation - Cartesian translation to apply.
-     */
-    translate(translation) {
-        const vec = new THREE.Vector3().fromArray(translation);
-        this.atomsObject.position.add(vec);
-        this.bondsObject.position.add(vec);
     }
     /**
      * Used to rotate the structure based of the alignment of the basis cell

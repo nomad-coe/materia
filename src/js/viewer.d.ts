@@ -118,6 +118,20 @@ export declare abstract class Viewer {
      */
     setTranslation(translation: number[]): void;
     /**
+     * Translates the objects.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. E.g. [[1,
+     * 0, 0, 90]] would apply a 90 degree rotation with respect to the
+     * x-coordinate. If multiple rotations are specified, they will be applied
+     * in the given order. Notice that these rotations are applied with respect
+     * to a global coordinate system, not the coordinate system of the
+     * structure. In this global coordinate system [1, 0, 0] points to the
+     * right, [0, 1, 0] points upwards and [0, 0, 1] points away from the
+     * screen. The rotations are applied in the given order.
+     */
+    translate(translation: number[]): void;
+    /**
      * Used to reset the original view.
      */
     saveCameraReset(): void;

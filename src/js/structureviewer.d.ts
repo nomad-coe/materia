@@ -106,12 +106,6 @@ export declare class StructureViewer extends Viewer {
      */
     fit(positions: any, margin?: number): void;
     /**
-     * Translate the atoms.
-     *
-     * @param translation - Cartesian translation to apply.
-     */
-    translate(translation: number[]): void;
-    /**
      * Used to rotate the structure based of the alignment of the basis cell
      * vectors with respect to the cartesian axes.
      *
