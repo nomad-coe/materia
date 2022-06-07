@@ -804,7 +804,6 @@ export class StructureViewer extends Viewer {
                     const configJ = this.configMap[configHashJ];
                     const radii1 = configI.scale * this.getRadii(num1);
                     const radii2 = configJ.scale * this.getRadii(num2);
-                    console.log(distance, optionsFinal.threshold * 1.1 * (radii1 + radii2));
                     if (distance <= optionsFinal.threshold * 1.1 * (radii1 + radii2)) {
                         this.addBond(i, j, pos1, pos2, bondMaterial, optionsFinal);
                     }
