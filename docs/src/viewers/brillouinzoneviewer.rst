@@ -90,6 +90,7 @@ API
 .. js:autofunction:: BrillouinZoneViewer#load
 .. js:autofunction:: BrillouinZoneViewer#fit
 .. js:autofunction:: Viewer#rotate
+.. js:autofunction:: Viewer#setRotation
 .. js:autofunction:: BrillouinZoneViewer#align
 .. js:autofunction:: Viewer#controls
 .. js:autofunction:: Viewer#render

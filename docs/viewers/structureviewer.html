@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Structure Viewer &mdash; materia 0.0.11 documentation</title>
+  <title>Structure Viewer &mdash; materia 1.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/style.css" type="text/css" />
@@ -16,6 +16,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -32,7 +33,7 @@
             <a href="../index.html" class="icon icon-home"> materia
           </a>
               <div class="version">
-                0.0.11
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -47,8 +48,12 @@
 <li class="toctree-l1 current"><a class="reference internal" href="viewers.html">Viewers</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Structure Viewer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#constructor">Constructor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#loading-a-structure">Loading a structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#render">Render</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tips">Tips</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api">API</a></li>
 </ul>
 </li>
@@ -83,13 +88,14 @@
            <div itemprop="articleBody">
              
   <section id="structure-viewer">
-<h1>Structure Viewer<a class="headerlink" href="#structure-viewer" title="Permalink to this headline"></a></h1>
-<p>Try out the interactive visualizer below. Controls are as follows:</p>
+<h1>Structure Viewer<a class="headerlink" href="#structure-viewer" title="Permalink to this heading"></a></h1>
+<p>Try out the interactive visualizer below. Default controls are as follows:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>Rotate: Drag with left mouse button held down</p></li>
 <li><p>Pan: Drag with right mouse button held down</p></li>
 <li><p>Zoom: Mousewheel</p></li>
+<li><p>Reset: Double click</p></li>
 </ul>
 </div></blockquote>
 <div>
@@ -98,48 +104,18 @@
     <script src="../_static/js/materia.min.js" defer></script>
     <script src="../_static/js/structureviewer.js" defer></script>
 </div><section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline"></a></h2>
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h2>
 <p>This piece of Javascript code shows an example of loading the viewer into a an
 HTML element that has been given the id <code class="code docutils literal notranslate"><span class="pre">canvas</span></code>. This example assumes
 that the global variable installation has been used, but it can be very simply
 changed to also work with the module installation by adding the proper imports
 and changing the <code class="code docutils literal notranslate"><span class="pre">StructureViewer</span></code> constructor call.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Find the element in which the visualizer will be embedded into. It</span><span class="w"></span>
-<span class="c1">// determines the visualization canvas size.</span><span class="w"></span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">canvas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;canvas&quot;</span><span class="p">);</span><span class="w"></span>
-
-<span class="c1">// Viewer options</span><span class="w"></span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="nx">layout</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nx">viewCenter</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;COC&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="nx">periodicity</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;none&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="nx">viewRotation</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="nx">align</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">          </span><span class="nx">top</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;c&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">          </span><span class="nx">right</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;b&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="p">},</span><span class="w"></span>
-<span class="w">      </span><span class="nx">rotations</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
-<span class="w">          </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">60</span><span class="p">],</span><span class="w"></span>
-<span class="w">          </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">],</span><span class="w"></span>
-<span class="w">      </span><span class="p">],</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">  </span><span class="p">},</span><span class="w"></span>
-<span class="w">  </span><span class="nx">bonds</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nx">enabled</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"></span>
-<span class="w">  </span><span class="p">},</span><span class="w"></span>
-<span class="w">  </span><span class="nx">cell</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nx">enabled</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"></span>
-<span class="w">  </span><span class="p">},</span><span class="w"></span>
-<span class="w">  </span><span class="nx">latticeConstants</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nx">enabled</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
-
-<span class="c1">// Initialize viewer</span><span class="w"></span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">viewer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">materia</span><span class="p">.</span><span class="nx">StructureViewer</span><span class="p">(</span><span class="nx">canvas</span><span class="p">,</span><span class="w"> </span><span class="nx">options</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Initialize viewer</span><span class="w"></span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">targetElem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;canvas&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="kd">var</span><span class="w"> </span><span class="nx">viewer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">materia</span><span class="p">.</span><span class="nx">StructureViewer</span><span class="p">(</span><span class="nx">targetElem</span><span class="p">)</span><span class="w"></span>
 
 <span class="c1">// Define structure and load into viewer</span><span class="w"></span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">nacl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="kd">let</span><span class="w"> </span><span class="nx">structure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="nx">species</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">11</span><span class="p">,</span><span class="w"> </span><span class="mf">17</span><span class="p">,</span><span class="w"> </span><span class="mf">11</span><span class="p">,</span><span class="w"> </span><span class="mf">17</span><span class="p">,</span><span class="w"> </span><span class="mf">11</span><span class="p">,</span><span class="w"> </span><span class="mf">17</span><span class="p">,</span><span class="w"> </span><span class="mf">11</span><span class="p">,</span><span class="w"> </span><span class="mf">17</span><span class="p">],</span><span class="w"></span>
 <span class="w">    </span><span class="nx">cell</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
 <span class="w">        </span><span class="p">[</span><span class="mf">5.6402</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">],</span><span class="w"></span>
@@ -159,26 +135,114 @@ and changing the <code class="code docutils literal notranslate"><span class="pr
 <span class="w">    </span><span class="nx">fractional</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
 <span class="w">    </span><span class="nx">pbc</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">],</span><span class="w"></span>
 <span class="p">};</span><span class="w"></span>
-<span class="nx">viewer</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">nacl</span><span class="p">);</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">structure</span><span class="p">)</span><span class="w"></span>
+
+<span class="c1">// Setup viewer initial state</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">align</span><span class="p">([</span><span class="w"></span>
+<span class="w">  </span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;c&quot;</span><span class="p">],</span><span class="w"></span>
+<span class="w">  </span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;b&quot;</span><span class="p">],</span><span class="w"></span>
+<span class="p">])</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">rotate</span><span class="p">([</span><span class="w"></span>
+<span class="w">    </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">60</span><span class="p">],</span><span class="w"></span>
+<span class="w">    </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">30</span><span class="p">],</span><span class="w"></span>
+<span class="p">])</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">atoms</span><span class="p">()</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">bonds</span><span class="p">()</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">cell</span><span class="p">()</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">latticeConstants</span><span class="p">()</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">center</span><span class="p">(</span><span class="s1">&#39;COC&#39;</span><span class="p">)</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">fit</span><span class="p">(</span><span class="s1">&#39;full&#39;</span><span class="p">,</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">controls</span><span class="p">()</span><span class="w"></span>
+
+<span class="c1">// Render final result</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">render</span><span class="p">()</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
-<section id="loading-a-structure">
-<h2>Loading a structure<a class="headerlink" href="#loading-a-structure" title="Permalink to this headline"></a></h2>
-<p>You can load a new atomic structure to the viewer by calling the
-<a class="reference internal" href="#StructureViewer.load" title="StructureViewer.load"><code class="xref js js-func docutils literal notranslate"><span class="pre">StructureViewer.load()</span></code></a> method. Check the API for the supported
-parameters.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The general workflow for producing a visualization is as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Create an instance of the viewer, which is at some point attached to an HTML
+element.</p></li>
+<li><p>Load an atomic structure using the <a class="reference internal" href="#StructureViewer.load" title="StructureViewer.load"><code class="xref js js-func docutils literal notranslate"><span class="pre">StructureViewer.load()</span></code></a>-method.</p></li>
+<li><p>Modify the initial view using the functions documented in the
+<a class="reference internal" href="#api"><span class="std std-ref">API</span></a>, this may contain e.g. translations,
+rotations, centerings, fits, zooming etc.</p></li>
+<li><p>Render the result on the HTML host element at any point using the
+<a class="reference internal" href="brillouinzoneviewer.html#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> method.</p></li>
+<li><p>Do any modifications dynamically according to your applications state, do not
+forget to render when you want the result to be displayed.</p></li>
+</ul>
+</div></blockquote>
 </section>
-<section id="options">
-<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline"></a></h2>
-<p>The options that are given in the constructor are passed to the
-<a class="reference internal" href="#StructureViewer.setOptions" title="StructureViewer.setOptions"><code class="xref js js-func docutils literal notranslate"><span class="pre">StructureViewer.setOptions()</span></code></a> method. These options are provided as a
-nested Javascript object. Check the API for the supported parameters. At any
-time you can also manually call this method to change the options. Notice that
-you can also use this method to only update a subset of the options.</p>
+<section id="constructor">
+<h2>Constructor<a class="headerlink" href="#constructor" title="Permalink to this heading"></a></h2>
+<p>In the constructor <a class="reference internal" href="brillouinzoneviewer.html#Viewer" title="Viewer"><code class="xref js js-class docutils literal notranslate"><span class="pre">Viewer()</span></code></a> you can define the host element (this can
+also be changed at any point using the <a class="reference internal" href="brillouinzoneviewer.html#Viewer.changeHostElement" title="Viewer.changeHostElement"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.changeHostElement()</span></code></a> method)
+together with a set of fixed options that control the rendering.</p>
+</section>
+<section id="loading-a-structure">
+<h2>Loading a structure<a class="headerlink" href="#loading-a-structure" title="Permalink to this heading"></a></h2>
+<p>You can load a new atomic structure to the viewer by calling the
+<a class="reference internal" href="#StructureViewer.load" title="StructureViewer.load"><code class="xref js js-func docutils literal notranslate"><span class="pre">StructureViewer.load()</span></code></a> method. Check the API for the supported parameters.
+Notice that this method will simply create the atomic positions for the given
+structure, and will not yet display anything. See
+<a class="reference internal" href="#configuration"><span class="std std-ref">Configuration</span></a> and
+<a class="reference internal" href="#render"><span class="std std-ref">Render</span></a> for more information on how to display the
+structure.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>You can dynamically alter the visualization at any point by chaining the
+provided functions calls. Check out the <a class="reference internal" href="#api"><span class="std std-ref">API</span></a> for
+the supported functions. Notice that all of these functions will change the
+visualization state internally, but will not yet render the result on screen,
+see <a class="reference internal" href="#render"><span class="std std-ref">Render</span></a> on how to produce the final result.</p>
+</section>
+<section id="render">
+<h2>Render<a class="headerlink" href="#render" title="Permalink to this heading"></a></h2>
+<p>You can control when the structure gets rendered on screen by manually calling
+the <a class="reference internal" href="brillouinzoneviewer.html#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> method. This way you can modify any number of options
+without any screen flickering by only calling render when you are finished.</p>
+</section>
+<section id="tips">
+<h2>Tips<a class="headerlink" href="#tips" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p>If you are not seeing your changes updated on the screen, or they are updated
+only after interacting with the structure, double check that you have called
+<a class="reference internal" href="brillouinzoneviewer.html#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> after your changes.</p></li>
+<li><p>When the HTML element containing the canvas change size, you may want to
+refit the canvas to it using <a class="reference internal" href="brillouinzoneviewer.html#Viewer.fitCanvas" title="Viewer.fitCanvas"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.fitCanvas()</span></code></a>.</p></li>
+<li><p>You can change the visualization canvas at any point by calling
+<a class="reference internal" href="brillouinzoneviewer.html#Viewer.changeHostElement" title="Viewer.changeHostElement"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.changeHostElement()</span></code></a>. Remember to refit the canvas after this
+with <a class="reference internal" href="brillouinzoneviewer.html#Viewer.fitCanvas" title="Viewer.fitCanvas"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.fitCanvas()</span></code></a>.</p></li>
+</ul>
+</div></blockquote>
 </section>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this headline"></a></h2>
+<h2>API<a class="headerlink" href="#api" title="Permalink to this heading"></a></h2>
+<dl class="js class">
+<dt class="sig sig-object js" id="Viewer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="n"><span class="pre">Viewer</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostElement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer" title="Permalink to this definition"></a></dt>
+<dd><p>Abstract base class for visualizing 3D scenes with three.js.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hostElement</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">any()</span></code></span>) – is the html element where the visualization canvas will be appended.</p></li>
+<li><p><strong>options</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Object()</span></code></span>) – An object that can hold custom settings for the viewer.</p></li>
+<li><p><strong>options.renderer.pixelRatioScale</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Scaling factor for the pixel ratio. Defaults to 1.</p></li>
+<li><p><strong>options.renderer.antialias.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Whether antialiasing is enabled. Defaults to true.</p></li>
+<li><p><strong>options.renderer.background.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Color of the background. Defaults to “#fff”.</p></li>
+<li><p><strong>options.renderer.background.opacity</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Opacity of the background. Defaults to 0.</p></li>
+<li><p><strong>options.renderer.shadows.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Whether shows are cast by atoms onto others. Note that enabling this increases the computational cost for doing the visualization. Defaults to false</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="js function">
 <dt class="sig sig-object js" id="StructureViewer.load">
 <span class="sig-prename descclassname"><span class="n"><span class="pre">StructureViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">load</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">structure</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.load" title="Permalink to this definition"></a></dt>
@@ -191,88 +255,296 @@ you can also use this method to only update a subset of the options.</p>
 <li><p><strong>structure.fractional</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Whether the given positions are fractional or not. Defaults to false if not specified.</p></li>
 <li><p><strong>structure.species</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – Atomic numbers or chemical symbols of the atoms.</p></li>
 <li><p><strong>structure.cell</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – The lattice vectors of the unit cell as rows of a 3x3 array.</p></li>
-<li><p><strong>structure.pbc</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – The periodic boundary conditions for the structure as a list of three boolean values for each lattice vector direction.</p></li>
+<li><p><strong>structure.pbc</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – The periodic boundary conditions for the structure as a list of three boolean values for each lattice vector direction. Defaults to [false, false, false].</p></li>
 <li><p><strong>structure.bonds</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – Optional manually set bonds. Provide a list of atomic index pairs, each pair specifying a bond between atoms. If these bonds are not specified, the visualizer will by default use an automated detection of bonds. This can be disabled through options.bonds.enabled.</p></li>
+<li><p><strong>structure.wrap.type</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string|Array.</span></code></span>) – How atomic positions are wrapped in periodic systems. Available options are: - “none”: Visualized as is. - “wrap”: Positions wrapped within unit cell. - “boundary”: Positions that are on the cell boundaries are repeated. - [a, b, c]: Positions are repeated along each lattice vector the given amount of times. Defaults to ‘none’</p></li>
+<li><p><strong>structure.wrap.tolerance</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string|Array.</span></code></span>) – The wrapping tolerance in angstroms. Defaults to 1e-8.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="js function">
-<dt class="sig sig-object js" id="StructureViewer.setOptions">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">StructureViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">setOptions</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.setOptions" title="Permalink to this definition"></a></dt>
-<dd><p>Used to setup the visualization options.</p>
+<dt class="sig sig-object js" id="StructureViewer.atoms">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">StructureViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">atoms</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.atoms" title="Permalink to this definition"></a></dt>
+<dd><p>Creates/updates representation for the atoms based on the given list of
+options. Notice that you can select the targeted atoms using the
+include/exclude options and also provide several configurations at once
+using a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>options</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">object()</span></code></span>) – A Javascript object, or array of objects containing the visualizaiton options. See below for the subparameters.</p></li>
+<li><p><strong>options.include</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – List of atomic indices to target with these options.</p></li>
+<li><p><strong>options.exclude</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – List of atomic indices to exclude from these options.</p></li>
+<li><p><strong>options.smoothness</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – A value between 0-180 that controls the number of polygons. Used as the angle between adjacent cylinder/sphere sectors that indirectly controls the number of polygons.</p></li>
+<li><p><strong>options.opacity</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – The opacity of the atom</p></li>
+<li><p><strong>options.material.phong.shininess</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Shininess of the atom material (for phong material)</p></li>
+<li><p><strong>options.material.toon.tones</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Tone-steps for toon material</p></li>
+<li><p><strong>options.radii</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string|Array.</span></code></span>) – The radius to use for the atom.  Defaults to covalent radii. Available options are: - “covalent”: Covalent radius from DOI:10.1039/B801115J. - Radius in angstrom.</p></li>
+<li><p><strong>options.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string|Array.</span></code></span>) – The color to use. Available options are: - “Jmol” (default): Jmol color. - Hexadecimal color, e.g. ‘#ffffff’</p></li>
+<li><p><strong>options.scale</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Scaling factor for the atomic radii. Used to scale the given radius.</p></li>
+<li><p><strong>options.outline.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Used to enable or disable a fixed color outline around the atom. Notice that enabling the outline incurs a performance penalty.</p></li>
+<li><p><strong>options.outline.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Outline color.</p></li>
+<li><p><strong>options.outline.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Outline size.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="StructureViewer.bonds">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">StructureViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">bonds</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.bonds" title="Permalink to this definition"></a></dt>
+<dd><p>Creates/updates bond representation based on the given config.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>options</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – A Javascript object containing the options. See below for the subparameters.</p></li>
-<li><p><strong>options.layout.periodicity</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string|Array.</span></code></span>) – How periodicity is handled in the visualization. Available options are: - “none”: Visualized as is. - “wrap”: Positions wrapped within unit cell. - “boundary”: Positions that are on the cell boundaries are repeated. - [a, b, c]: Positions are repeated along each lattice vector the given amount of times.</p></li>
-<li><p><strong>options.layout.translation</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – A fixed cartesian translation to be applied to the atoms.</p></li>
-<li><p><strong>options.layout.viewCenter</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Determines how the view is initially centered. Available options are: - “COC”: Center of cell. - “COP”: Center of atom positions.</p></li>
-<li><p><strong>options.layout.viewRotation.alignment.top</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Optional alignment indicating which lattice basis vector should point upwards. Possible values are: “a”, “b”, “c”, “-a”, “-b”, “-c”.</p></li>
-<li><p><strong>options.layout.viewRotation.align.right</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Optional alignment indicating which lattice basis vector should point to the right (more precisely: the cross-product of options.layout.viewRotation.align.top and options.layout.viewRotation.align.right will point away from the screen.). Possible values are: “a”, “b”, “c”, “-a”, “-b”, “-c”.</p></li>
-<li><p><strong>options.layout.viewRotation.alignments</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – Optional alignments for the basis vectors. You can define two alignments for any two axis vectors. E.g. [[“up”, “c”], [“right”, “b”]] will force the third basis vector to point exactly up, and the second basis vector to as close to right as possible.</p></li>
-<li><p><strong>options.layout.viewRotation.rotations</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – Optional rotations that are applied after the alignments have been done (see options.layout.viewRotation.alignments). The rotations are given as a list of 4-element arrays containing the rotations axis and rotation angle in degrees. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with respect to the x-coordinate. If multiple rotations are specified, they will be applied in the given order. Notice that these rotations are applied with respect to a global coordinate system, not the coordinate system of the structure. In this global coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away from the screen.</p></li>
-<li><p><strong>options.latticeConstants.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Show lattice parameters</p></li>
-<li><p><strong>options.latticeConstants.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font size for lattice constants. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
-<li><p><strong>options.latticeConstants.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color for lattice constants. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
-<li><p><strong>options.latticeConstants.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color for lattice constants. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
-<li><p><strong>options.latticeConstants.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke width for lattice constants. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
-<li><p><strong>options.latticeConstants.a.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color</p></li>
-<li><p><strong>options.latticeConstants.a.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family</p></li>
-<li><p><strong>options.latticeConstants.a.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size</p></li>
-<li><p><strong>options.latticeConstants.a.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width</p></li>
-<li><p><strong>options.latticeConstants.a.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color</p></li>
-<li><p><strong>options.latticeConstants.b.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color</p></li>
-<li><p><strong>options.latticeConstants.b.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family</p></li>
-<li><p><strong>options.latticeConstants.b.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size</p></li>
-<li><p><strong>options.latticeConstants.b.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width</p></li>
-<li><p><strong>options.latticeConstants.b.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color</p></li>
-<li><p><strong>options.latticeConstants.c.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color</p></li>
-<li><p><strong>options.latticeConstants.c.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family</p></li>
-<li><p><strong>options.latticeConstants.c.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size</p></li>
-<li><p><strong>options.latticeConstants.c.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width</p></li>
-<li><p><strong>options.latticeConstants.c.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color</p></li>
-<li><p><strong>options.latticeConstants.alpha.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color</p></li>
-<li><p><strong>options.latticeConstants.alpha.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family</p></li>
-<li><p><strong>options.latticeConstants.alpha.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size</p></li>
-<li><p><strong>options.latticeConstants.alpha.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width</p></li>
-<li><p><strong>options.latticeConstants.alpha.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color</p></li>
-<li><p><strong>options.latticeConstants.beta.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color</p></li>
-<li><p><strong>options.latticeConstants.beta.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family</p></li>
-<li><p><strong>options.latticeConstants.beta.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size</p></li>
-<li><p><strong>options.latticeConstants.beta.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width</p></li>
-<li><p><strong>options.latticeConstants.beta.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color</p></li>
-<li><p><strong>options.latticeConstants.gamma.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color</p></li>
-<li><p><strong>options.latticeConstants.gamma.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family</p></li>
-<li><p><strong>options.latticeConstants.gamma.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size</p></li>
-<li><p><strong>options.latticeConstants.gamma.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width</p></li>
-<li><p><strong>options.latticeConstants.gamma.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color</p></li>
-<li><p><strong>options.outline.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Used to enable or disable a fixed color outline around atoms and bonds. Notice that enabling the outline incurs a performance penalty.</p></li>
-<li><p><strong>options.outline.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Outline color.</p></li>
-<li><p><strong>options.outline.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Outline size.</p></li>
-<li><p><strong>options.cell.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Show unit cell wireframe.</p></li>
-<li><p><strong>options.cell.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Unit cell wireframe color.</p></li>
-<li><p><strong>options.cell.linewidth</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Unit cell wireframe line width.</p></li>
-<li><p><strong>options.cell.dashSize</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Unit cell wireframe dash size. Provide a value &gt; 0 for a dashed line.</p></li>
-<li><p><strong>options.cell.gapSize</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Unit cell wireframe dash size. Provide a value &gt; 0 for a dashed line.</p></li>
-<li><p><strong>options.bonds.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Show bonds.</p></li>
-<li><p><strong>options.bonds.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Color of bonds.</p></li>
-<li><p><strong>options.bonds.radius</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Bond radius.</p></li>
-<li><p><strong>options.bonds.smoothness</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – A value between 0-180 that controls the number of polygons. Used as the angle between adjacent cylinder/sphere sectors that indirectly controls the number of polygons.</p></li>
-<li><p><strong>options.bonds.material.phong.shininess</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Shininess of the bond material (for phong material)</p></li>
-<li><p><strong>options.bonds.material.toon.tones</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Tone-steps for toon material.</p></li>
-<li><p><strong>options.bonds.threshold</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Controls the automatic detection of bonds between atoms. If custom bonds have not been specified for the structure, bonds will be detected automatically with the following criteria: distance &lt;= this.options.bonds.threshold * 1.1 * (radius1 + radius2)</p></li>
-<li><p><strong>options.atoms.smoothness</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – A value between 0-180 that controls the number of polygons. Used as the angle between adjacent cylinder/sphere sectors that indirectly controls the number of polygons.</p></li>
-<li><p><strong>options.atoms.material.phong.shininess</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Shininess of the atom material (for phong material)</p></li>
-<li><p><strong>options.atoms.material.toon.tones</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Tone-steps for toon material</p></li>
-<li><p><strong>options.atoms.radii</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string|Array.</span></code></span>) – The radii to use for atoms. Defaults to covalent radii. Available options are: - “covalent”: Covalent radii from DOI:10.1039/B801115J. - Custom list of atomic radii. Provide an array of floating point numbers where the index corresponds to an atomic number.</p></li>
-<li><p><strong>options.atoms.colors</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string|Array.</span></code></span>) – The colors to use for atoms. Available options are: - “Jmol” (default): Jmol colors. - Custom list of colors. Provide an array of hexadecimal colors where the index corresponds to an atomic number.</p></li>
-<li><p><strong>options.atoms.scale</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Scaling factor for the atomic radii.</p></li>
-<li><p><strong>options.renderer.background.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Color of the background.</p></li>
-<li><p><strong>options.renderer.background.opacity</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Opacity of the background.</p></li>
-<li><p><strong>options.renderer.shadows.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Whether shows are cast by atoms onto others. Note that enabling this increases the computational cost for doing the visualization.</p></li>
-<li><p><strong>render</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Whether to perform a render after setting the options. Defaults to true. You should only disable this setting if you plan to do a render manually afterwards.</p></li>
+<li><p><strong>options.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Show bonds. Defaults to true.</p></li>
+<li><p><strong>options.include</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">any()</span></code></span>) – The atom indices to take into account when creating bonds. Either provide a array or leave undefined to include all. Defaults to undefined.</p></li>
+<li><p><strong>options.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Color of bonds. Defaults to “#ffffff”.</p></li>
+<li><p><strong>options.radius</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Bond radius. Defaults to 0.08.</p></li>
+<li><p><strong>options.smoothness</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – A value between 0-180 that controls the number of polygons. Used as the angle between adjacent cylinder/sphere sectors that indirectly controls the number of polygons. Defaults to 145.</p></li>
+<li><p><strong>options.material.phong.shininess</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Shininess of the bond material. Defaults to 30.</p></li>
+<li><p><strong>options.threshold</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Controls the automatic detection of bonds between atoms. If custom bonds have not been specified for the structure, bonds will be detected automatically with the following criteria: distance &lt;= this.options.bonds.threshold * 1.1 * (radius1 + radius2)</p></li>
+<li><p><strong>options.outline.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Used to enable or disable a fixed color outline around the bond. Notice that enabling the outline incurs a performance penalty. Defaults to true.</p></li>
+<li><p><strong>options.outline.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Outline color. Defaults to “#000000”.</p></li>
+<li><p><strong>options.outline.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Outline size. Defaults to 0.025.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="StructureViewer.cell">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">StructureViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">cell</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.cell" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the color for the given atomic number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>options.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Show unit cell wireframe. Defaults to true.</p></li>
+<li><p><strong>options.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Unit cell wireframe color. Defaults to “#000000”.</p></li>
+<li><p><strong>options.linewidth</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Unit cell wireframe line width. Defaults to 1.5.</p></li>
+<li><p><strong>options.dashSize</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Unit cell wireframe dash size. Defaults to 0. Provide a value &gt; 0 for a dashed line.</p></li>
+<li><p><strong>options.gapSize</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Unit cell wireframe dash size. Defaults to 0. Provide a value &gt; 0 for a dashed line.</p></li>
+<li><p><strong>options.periodicity</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Periodicity of the cell. The non-periodic directions will be flattened. Defaults to [true, true, true].</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="StructureViewer.latticeConstants">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">StructureViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">latticeConstants</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.latticeConstants" title="Permalink to this definition"></a></dt>
+<dd><p>Visualizes the lattice constants using the given visualization options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>options.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Show lattice parameters. Defaults to true.</p></li>
+<li><p><strong>options.periodicity</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Periodicity of the lattice. Defaults to [true, true, true]:</p></li>
+<li><p><strong>options.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font size for lattice constants. Defaults to 0.7. constants. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
+<li><p><strong>options.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color for lattice constants. Applied as default to all labels, can be overridden individually for each lattice constant. Defaults to</p></li>
+<li><p><strong>options.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color for lattice constants. Defaults to “#000”. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
+<li><p><strong>options.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke width for lattice constants. Defaults to “#000”. Applied as default to all labels, can be overridden individually for each lattice constant.</p></li>
+<li><p><strong>options.a.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Whether to display this lattice contant. Defaults to true.</p></li>
+<li><p><strong>options.a.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color. Defaults to “#C52929”.</p></li>
+<li><p><strong>options.a.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family. Defaults to “Arial”.</p></li>
+<li><p><strong>options.a.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size. Defaults to 0.7.</p></li>
+<li><p><strong>options.a.label</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – The label to display. Defaults to “a”.</p></li>
+<li><p><strong>options.a.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width. Defaults to 0.06.</p></li>
+<li><p><strong>options.a.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color. Defaults to “#000”.</p></li>
+<li><p><strong>options.b.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Whether to display this lattice contant. Defaults to true.</p></li>
+<li><p><strong>options.b.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color. Defaults to “#47A823”.</p></li>
+<li><p><strong>options.b.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family. Defaults to “Arial”.</p></li>
+<li><p><strong>options.b.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size. Defaults to 0.7.</p></li>
+<li><p><strong>options.b.label</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – The label to display. Defaults to “b”.</p></li>
+<li><p><strong>options.b.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width. Defaults to 0.06.</p></li>
+<li><p><strong>options.b.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color. Defaults to “#000”.</p></li>
+<li><p><strong>options.c.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Whether to display this lattice contant. Defaults to true.</p></li>
+<li><p><strong>options.c.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color. Defaults to “#3B5796”.</p></li>
+<li><p><strong>options.c.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family. Defaults to “Arial”.</p></li>
+<li><p><strong>options.c.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size. Defaults to 0.7.</p></li>
+<li><p><strong>options.c.label</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – The label to display. Defaults to “c”.</p></li>
+<li><p><strong>options.c.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width. Defaults to 0.06.</p></li>
+<li><p><strong>options.c.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color. Defaults to “#000”.</p></li>
+<li><p><strong>options.alpha.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Whether to display this lattice contant. Defaults to true.</p></li>
+<li><p><strong>options.alpha.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color. Defaults to “#ffffff”.</p></li>
+<li><p><strong>options.alpha.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family. Defaults to “Arial”.</p></li>
+<li><p><strong>options.alpha.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size. Defaults to 0.7.</p></li>
+<li><p><strong>options.alpha.label</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – The label to display. Defaults to “α”.</p></li>
+<li><p><strong>options.alpha.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width. Defaults to 0.06.</p></li>
+<li><p><strong>options.alpha.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color. Defaults to “#000”.</p></li>
+<li><p><strong>options.beta.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Whether to display this lattice contant. Defaults to true.</p></li>
+<li><p><strong>options.beta.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color. Defaults to “#ffffff”.</p></li>
+<li><p><strong>options.beta.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family. Defaults to “Arial”.</p></li>
+<li><p><strong>options.beta.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size. Defaults to 0.7.</p></li>
+<li><p><strong>options.beta.label</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – The label to display. Defaults to “β”.</p></li>
+<li><p><strong>options.beta.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width. Defaults to 0.06.</p></li>
+<li><p><strong>options.beta.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color. Defaults to “#000”.</p></li>
+<li><p><strong>options.gamma.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Whether to display this lattice contant. Defaults to true.</p></li>
+<li><p><strong>options.gamma.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font color. Defaults to “#ffffff”.</p></li>
+<li><p><strong>options.gamma.font</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font family. Defaults to “Arial”.</p></li>
+<li><p><strong>options.gamma.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size. Defaults to 0.7.</p></li>
+<li><p><strong>options.gamma.label</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – The label to display. Defaults to “γ”.</p></li>
+<li><p><strong>options.gamma.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font stroke width. Defaults to 0.06.</p></li>
+<li><p><strong>options.gamma.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Font stroke color. Defaults to “#000”.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="StructureViewer.center">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">StructureViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">center</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.center" title="Permalink to this definition"></a></dt>
+<dd><p>Centers the visualization around a specific point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>position</strong> – The position to center on. Can be one of: - ‘COP’: Center of all atom positions. - ‘COC’: Center of the cell. - Array&lt;Number&gt;: An array of atomic indices, the COP will be used. - Array&lt;Array&lt;Number&gt;&gt;: An array of positions, the COP will be used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="StructureViewer.fit">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">StructureViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">fit</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Adjust the zoom so that the contents fit on the screen. Notice that is is
+typically useful to center around a point of interest first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>position</strong> – The positions to take into account when fitting. Can be one of: - ‘full’: Fit the full view - Array&lt;Number&gt;: An array of atomic indices, the COP will be used. - Array&lt;Array&lt;Number&gt;&gt;: An array of positions, the COP will be used.</p></li>
+<li><p><strong>margin</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Margin to apply, given in angstroms.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="StructureViewer.translate">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">StructureViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">translate</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">translation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.translate" title="Permalink to this definition"></a></dt>
+<dd><p>Translate the atoms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>translation</strong> – Cartesian translation to apply.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.rotate">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">rotate</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotations</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.rotate" title="Permalink to this definition"></a></dt>
+<dd><p>Rotates the scenes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rotations</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – The rotations as a list. Each rotation should be an array containing four numbers: [x, y, z, angle]. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with respect to the x-coordinate. If multiple rotations are specified, they will be applied in the given order. Notice that these rotations are applied with respect to a global coordinate system, not the coordinate system of the structure. In this global coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away from the screen. The rotations are applied in the given order.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.setRotation">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">setRotation</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.setRotation" title="Permalink to this definition"></a></dt>
+<dd><p>Sets the rotation of all the scenes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rotation</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – The rotation as a list. Rotation should be an array containing four numbers: [x, y, z, angle]. E.g. [1, 0, 0, 90] would set a 90 degree rotation with respect to the x-coordinate.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="StructureViewer.align">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">StructureViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">align</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alignments</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StructureViewer.align" title="Permalink to this definition"></a></dt>
+<dd><p>Used to rotate the structure based of the alignment of the basis cell
+vectors with respect to the cartesian axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alignments</strong> – List of  up to two alignments for any two axis vectors. E.g. [[“up”, “c”], [“right”, “b”]] will force the third basis vector to point exactly up, and the second basis vector to as close to right as possible. The alignments are applied in the given order.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.controls">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">controls</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.controls" title="Permalink to this definition"></a></dt>
+<dd><p>Used to setup the controls that allow interacting with the visualization
+with mouse.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>options</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Object()</span></code></span>) – An object containing the control options. See below for the subparameters.</p></li>
+<li><p><strong>options.zoom.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Is zoom enabled</p></li>
+<li><p><strong>options.zoom.speed</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Zoom speed</p></li>
+<li><p><strong>options.rotation.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Is rotation enabled</p></li>
+<li><p><strong>options.rotation.speed</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Rotation speed</p></li>
+<li><p><strong>options.pan.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Is panning enabled</p></li>
+<li><p><strong>options.pan.speed</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Pan speed</p></li>
+<li><p><strong>options.resetOnDoubleClick</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Whether to reset the camera on double click.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.render">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">render</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.render" title="Permalink to this definition"></a></dt>
+<dd><p>Used to render all the scenes that are present. The scenes will be
+rendered on top of each other, so make sure that they are in the right
+order.</p>
+<p>This approach is copied from
+<a class="reference external" href="http://stackoverflow.com/questions/12666570/how-to-change-the-zorder-of-object-with-threejs/12666937#12666937">http://stackoverflow.com/questions/12666570/how-to-change-the-zorder-of-object-with-threejs/12666937#12666937</a></p>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.zoom">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">zoom</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zoom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.zoom" title="Permalink to this definition"></a></dt>
+<dd><p>Sets the zoom level for the visualization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>zoom</strong> – The wanted zoom level as a floating point number.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.fitCanvas">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">fitCanvas</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.fitCanvas" title="Permalink to this definition"></a></dt>
+<dd><p>Resizes the WebGL canvas to the host element.</p>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.resetCamera">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">resetCamera</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.resetCamera" title="Permalink to this definition"></a></dt>
+<dd><p>Used to reset the original view.</p>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.saveCameraReset">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">saveCameraReset</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.saveCameraReset" title="Permalink to this definition"></a></dt>
+<dd><p>Used to reset the original view.</p>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.changeHostElement">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">changeHostElement</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostElement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize=true</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.changeHostElement" title="Permalink to this definition"></a></dt>
+<dd><p>Used to setup the DOM element where the viewer will be displayed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hostElement</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">any()</span></code></span>) – The HTML element into which this viewer is loaded.</p></li>
+<li><p><strong>resize</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Whether to resize the canvas to fit the new host.</p></li>
 </ul>
 </dd>
 </dl>
@@ -309,14 +581,14 @@ you can also use this method to only update a subset of the options.</p>
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Versions</span>
-      v: 0.0.11
+      v: 1.0.0
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
       <dl>
         <dt>Versions</dt>
         
-          <dd><a href="https://lauri-codes.github.io/materia">0.0.11 (latest stable)</a></dd>
+          <dd><a href="https://lauri-codes.github.io/materia">1.0.0 (latest stable)</a></dd>
         
       </dl>
     </div>

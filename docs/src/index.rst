@@ -31,8 +31,8 @@ Changelog
 =========
  - 1.0.0:
     - Significant breaking change to the viewer API. The viewers are now
-    controlled using newly exposed functions that allow for a very fine-grained
-    control of the rendering and updates.
+      controlled using newly exposed functions that allow for a very
+      fine-grained control of the rendering and updates.
 
  - 0.0.11:
     - Updated dependencies used to build the 3D visualization.

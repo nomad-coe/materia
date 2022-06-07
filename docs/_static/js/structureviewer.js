@@ -1,9 +1,9 @@
 // Initialize viewer
-let targetElem = document.getElementById("visualizationCanvas")
+let targetElem = document.getElementById("canvas")
 var viewer = new materia.StructureViewer(targetElem)
 
 // Define structure and load into viewer
-let nacl = {
+let structure = {
     species: [11, 17, 11, 17, 11, 17, 11, 17],
     cell: [
         [5.6402, 0.0, 0.0],
@@ -22,9 +22,8 @@ let nacl = {
     ],
     fractional: true,
     pbc: [true, true, true],
-    wrap: 'none'
 };
-viewer.load(nacl);
+viewer.load(structure)
 
 // Setup viewer initial state
 viewer.align([

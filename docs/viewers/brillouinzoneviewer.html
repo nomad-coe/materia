@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Brillouin Zone Viewer &mdash; materia 0.0.11 documentation</title>
+  <title>Brillouin Zone Viewer &mdash; materia 1.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/style.css" type="text/css" />
@@ -16,6 +16,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -31,7 +32,7 @@
             <a href="../index.html" class="icon icon-home"> materia
           </a>
               <div class="version">
-                0.0.11
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -47,8 +48,12 @@
 <li class="toctree-l2"><a class="reference internal" href="structureviewer.html">Structure Viewer</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Brillouin Zone Viewer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#constructor">Constructor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#loading-a-structure">Loading a structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#render">Render</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tips">Tips</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api">API</a></li>
 </ul>
 </li>
@@ -82,12 +87,14 @@
            <div itemprop="articleBody">
              
   <section id="brillouin-zone-viewer">
-<h1>Brillouin Zone Viewer<a class="headerlink" href="#brillouin-zone-viewer" title="Permalink to this headline"></a></h1>
+<h1>Brillouin Zone Viewer<a class="headerlink" href="#brillouin-zone-viewer" title="Permalink to this heading"></a></h1>
 <p>Try out the interactive visualizer below. Controls are as follows:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>Rotate: Drag with left mouse button held down</p></li>
+<li><p>Pan: Drag with right mouse button held down</p></li>
 <li><p>Zoom: Mousewheel</p></li>
+<li><p>Reset: Double click</p></li>
 </ul>
 </div></blockquote>
 <div>
@@ -96,48 +103,15 @@
     <script src="../_static/js/materia.min.js" defer></script>
     <script src="../_static/js/brillouinzoneviewer.js" defer></script>
 </div><section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline"></a></h2>
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h2>
 <p>This piece of Javascript code shows an example of loading the viewer into a an
 HTML element that has been given the id <code class="code docutils literal notranslate"><span class="pre">canvas</span></code>. This example assumes
 that the global variable installation has been used, but it can be very simply
 changed to also work with the module installation by adding the proper imports
 and changing the <code class="code docutils literal notranslate"><span class="pre">BrillouinZoneViewer</span></code> constructor call.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Find the element in which the visualizer will be embedded into. It</span><span class="w"></span>
-<span class="c1">// determines the visualization canvas size.</span><span class="w"></span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">canvas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;canvas&quot;</span><span class="p">);</span><span class="w"></span>
-
-<span class="c1">// Viewer options</span><span class="w"></span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">  </span><span class="nx">controls</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="nx">enablePan</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="w"></span>
-<span class="w">  </span><span class="p">},</span><span class="w"></span>
-<span class="w">  </span><span class="nx">view</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nx">fitMargin</span><span class="o">:</span><span class="w"> </span><span class="mf">0.075</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="p">},</span><span class="w"></span>
-<span class="w">  </span><span class="nx">layout</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nx">viewRotation</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="nx">alignments</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
-<span class="w">          </span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;a&quot;</span><span class="p">],</span><span class="w"></span>
-<span class="w">          </span><span class="p">[</span><span class="s2">&quot;front&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;segments&quot;</span><span class="p">],</span><span class="w"></span>
-<span class="w">      </span><span class="p">],</span><span class="w"></span>
-<span class="w">      </span><span class="nx">rotations</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
-<span class="w">          </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">45</span><span class="p">],</span><span class="w"></span>
-<span class="w">          </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">25</span><span class="p">],</span><span class="w"></span>
-<span class="w">      </span><span class="p">],</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">  </span><span class="p">},</span><span class="w"></span>
-<span class="w">  </span><span class="nx">basis</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;#fff&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">  </span><span class="p">},</span><span class="w"></span>
-<span class="w">  </span><span class="nx">kpoints</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nx">label</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;#fff&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
-
-<span class="c1">// Initialize viewer</span><span class="w"></span>
-<span class="kd">let</span><span class="w"> </span><span class="nx">viewer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">materia</span><span class="p">.</span><span class="nx">BrillouinZoneViewer</span><span class="p">(</span><span class="nx">canvas</span><span class="p">,</span><span class="w"> </span><span class="nx">options</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// Initialize viewer</span><span class="w"></span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">canvas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;canvas&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">viewer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">materia</span><span class="p">.</span><span class="nx">BrillouinZoneViewer</span><span class="p">(</span><span class="nx">canvas</span><span class="p">);</span><span class="w"></span>
 
 <span class="c1">// Define structure and load into viewer</span><span class="w"></span>
 <span class="kd">let</span><span class="w"> </span><span class="nx">reciprocal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
@@ -173,32 +147,114 @@ and changing the <code class="code docutils literal notranslate"><span class="pr
 <span class="w">    </span><span class="p">[</span><span class="s2">&quot;F&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="mf">0.625</span><span class="p">,</span><span class="w"> </span><span class="mf">0.25</span><span class="p">,</span><span class="w"> </span><span class="mf">0.625</span><span class="p">]],</span><span class="w"></span>
 <span class="w">  </span><span class="p">]</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">reciprocal</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">// Load structure into viewer</span><span class="w"></span>
-<span class="nx">viewer</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">reciprocal</span><span class="p">);</span><span class="w"></span>
+<span class="c1">// Setup viewer initial state</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">align</span><span class="p">([</span><span class="w"></span>
+<span class="w">  </span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;a&quot;</span><span class="p">],</span><span class="w"></span>
+<span class="w">  </span><span class="p">[</span><span class="s2">&quot;front&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;segments&quot;</span><span class="p">]</span><span class="w"></span>
+<span class="p">])</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">rotate</span><span class="p">([</span><span class="w"></span>
+<span class="w">  </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">45</span><span class="p">],</span><span class="w"></span>
+<span class="w">  </span><span class="p">[</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">25</span><span class="p">],</span><span class="w"></span>
+<span class="p">])</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">fit</span><span class="p">(</span><span class="mf">0.075</span><span class="p">)</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">controls</span><span class="p">()</span><span class="w"></span>
+
+<span class="c1">// Render final result</span><span class="w"></span>
+<span class="nx">viewer</span><span class="p">.</span><span class="nx">render</span><span class="p">()</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
-<section id="loading-a-structure">
-<h2>Loading a structure<a class="headerlink" href="#loading-a-structure" title="Permalink to this headline"></a></h2>
-<p>You can load data to the viewer by calling the <a class="reference internal" href="#BrillouinZoneViewer.load" title="BrillouinZoneViewer.load"><code class="xref js js-func docutils literal notranslate"><span class="pre">BrillouinZoneViewer.load()</span></code></a>
-method. Check the API for the supported parameters.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The general workflow for producing a visualization is as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Create an instance of the viewer, which is at some point attached to an HTML
+element.</p></li>
+<li><p>Load a structure using the <a class="reference internal" href="#BrillouinZoneViewer.load" title="BrillouinZoneViewer.load"><code class="xref js js-func docutils literal notranslate"><span class="pre">BrillouinZoneViewer.load()</span></code></a>-method.</p></li>
+<li><p>Modify the initial view using the functions documented in the
+<a class="reference internal" href="#api"><span class="std std-ref">API</span></a>, this may contain e.g. translations,
+rotations, centerings, fits, zooming etc.</p></li>
+<li><p>Render the result on the HTML host element at any point using the
+<a class="reference internal" href="#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> method.</p></li>
+<li><p>Do any modifications dynamically according to your applications state, do not
+forget to render when you want the result to be displayed.</p></li>
+</ul>
+</div></blockquote>
 </section>
-<section id="options">
-<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline"></a></h2>
-<p>The options that are given in the constructor are passed to the
-<a class="reference internal" href="#BrillouinZoneViewer.setOptions" title="BrillouinZoneViewer.setOptions"><code class="xref js js-func docutils literal notranslate"><span class="pre">BrillouinZoneViewer.setOptions()</span></code></a> method. These options are provided as a
-nested Javascript object. Check the API for the supported parameters. At any
-time you can also manually call this method to change the options. You can also
-use this method to only update a subset of the options.</p>
+<section id="constructor">
+<h2>Constructor<a class="headerlink" href="#constructor" title="Permalink to this heading"></a></h2>
+<p>In the constructor <a class="reference internal" href="#Viewer" title="Viewer"><code class="xref js js-class docutils literal notranslate"><span class="pre">Viewer()</span></code></a> you can define the host element (this can
+also be changed at any point using the <a class="reference internal" href="#Viewer.changeHostElement" title="Viewer.changeHostElement"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.changeHostElement()</span></code></a> method)
+together with a set of fixed options that control the rendering.</p>
+</section>
+<section id="loading-a-structure">
+<h2>Loading a structure<a class="headerlink" href="#loading-a-structure" title="Permalink to this heading"></a></h2>
+<p>You can load a new structure to the viewer by calling the
+<a class="reference internal" href="#BrillouinZoneViewer.load" title="BrillouinZoneViewer.load"><code class="xref js js-func docutils literal notranslate"><span class="pre">BrillouinZoneViewer.load()</span></code></a> method. Check the API for the supported
+parameters.  Notice that this method will only create the internal
+representation and will not yet display anything. See
+<a class="reference internal" href="#configuration"><span class="std std-ref">Configuration</span></a> and
+<a class="reference internal" href="#render"><span class="std std-ref">Render</span></a> for more information on how to display the
+structure.</p>
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<p>You can dynamically alter the visualization at any point by chaining the
+provided functions calls. Check out the <a class="reference internal" href="#api"><span class="std std-ref">API</span></a> for
+the supported functions. Notice that all of these functions will change the
+visualization state internally, but will not yet render the result on screen,
+see <a class="reference internal" href="#render"><span class="std std-ref">Render</span></a> on how to produce the final result.</p>
+</section>
+<section id="render">
+<h2>Render<a class="headerlink" href="#render" title="Permalink to this heading"></a></h2>
+<p>You can control when the structure gets rendered on screen by manually calling
+the <a class="reference internal" href="#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> method. This way you can modify any number of options
+without any screen flickering by only calling render when you are finished.</p>
+</section>
+<section id="tips">
+<h2>Tips<a class="headerlink" href="#tips" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p>If you are not seeing your changes updated on the screen, or they are updated
+only after interacting with the structure, double check that you have called
+<a class="reference internal" href="#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> after your changes.</p></li>
+<li><p>When the HTML element containing the canvas change size, you may want to
+refit the canvas to it using <a class="reference internal" href="#Viewer.fitCanvas" title="Viewer.fitCanvas"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.fitCanvas()</span></code></a>.</p></li>
+<li><p>You can change the visualization canvas at any point by calling
+<a class="reference internal" href="#Viewer.changeHostElement" title="Viewer.changeHostElement"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.changeHostElement()</span></code></a>. Remember to refit the canvas after this
+with <a class="reference internal" href="#Viewer.fitCanvas" title="Viewer.fitCanvas"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.fitCanvas()</span></code></a>.</p></li>
+</ul>
+</div></blockquote>
 </section>
 <section id="api">
-<h2>API<a class="headerlink" href="#api" title="Permalink to this headline"></a></h2>
+<h2>API<a class="headerlink" href="#api" title="Permalink to this heading"></a></h2>
+<dl class="js class">
+<dt class="sig sig-object js" id="Viewer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="n"><span class="pre">Viewer</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostElement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer" title="Permalink to this definition"></a></dt>
+<dd><p>Abstract base class for visualizing 3D scenes with three.js.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hostElement</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">any()</span></code></span>) – is the html element where the visualization canvas will be appended.</p></li>
+<li><p><strong>options</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Object()</span></code></span>) – An object that can hold custom settings for the viewer.</p></li>
+<li><p><strong>options.renderer.pixelRatioScale</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Scaling factor for the pixel ratio. Defaults to 1.</p></li>
+<li><p><strong>options.renderer.antialias.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Whether antialiasing is enabled. Defaults to true.</p></li>
+<li><p><strong>options.renderer.background.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Color of the background. Defaults to “#fff”.</p></li>
+<li><p><strong>options.renderer.background.opacity</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Opacity of the background. Defaults to 0.</p></li>
+<li><p><strong>options.renderer.shadows.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Whether shows are cast by atoms onto others. Note that enabling this increases the computational cost for doing the visualization. Defaults to false</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="js function">
 <dt class="sig sig-object js" id="BrillouinZoneViewer.load">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">BrillouinZoneViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">load</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BrillouinZoneViewer.load" title="Permalink to this definition"></a></dt>
-<dd><p>Visualizes the first Brillouin zone of the given reciprocal lattice and
-optional k-path segments and k-point labels within it.</p>
+<span class="sig-prename descclassname"><span class="n"><span class="pre">BrillouinZoneViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">load</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BrillouinZoneViewer.load" title="Permalink to this definition"></a></dt>
+<dd><p>Used to create a visualization for the first Brillouin Zone together with
+kpath and segment information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments</dt>
 <dd class="field-odd"><ul class="simple">
@@ -206,18 +262,6 @@ optional k-path segments and k-point labels within it.</p>
 <li><p><strong>data.basis</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – The basis vectors of the reciprocal cell as rows of a 3x3 array.</p></li>
 <li><p><strong>data.segments</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – List containing lists of k-points, each sublist indicating a continuous segment within the Brillouin zone.</p></li>
 <li><p><strong>data.kpoints</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">*()</span></code></span>) – List of pairs of labels and reciprocal lattice coordinates for specific k-points that should be shown.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="js function">
-<dt class="sig sig-object js" id="BrillouinZoneViewer.setOptions">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">BrillouinZoneViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">setOptions</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BrillouinZoneViewer.setOptions" title="Permalink to this definition"></a></dt>
-<dd><p>Used to setup the visualization options.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Arguments</dt>
-<dd class="field-odd"><ul class="simple">
 <li><p><strong>options</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">object()</span></code></span>) – A Javascript object containing the options. See below for the subparameters.</p></li>
 <li><p><strong>options.segments.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Segment color</p></li>
 <li><p><strong>options.segments.linewidth</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Segment linewidth</p></li>
@@ -253,9 +297,136 @@ optional k-path segments and k-point labels within it.</p>
 <li><p><strong>options.basis.c.size</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Font size applied to the label of the third reciprocal lattice vector.</p></li>
 <li><p><strong>options.basis.c.stroke.width</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Outline stroke width applied to the label of the third reciprocal lattice vector.</p></li>
 <li><p><strong>options.basis.c.stroke.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Outline stroke color applied to the label of the third reciprocal lattice vector.</p></li>
-<li><p><strong>options.renderer.background.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Color of the background.</p></li>
-<li><p><strong>options.renderer.background.opacity</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Opacity of the background.</p></li>
-<li><p><strong>render</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Whether to perform a render after setting the options. Defaults to true. You should only disable this setting if you plan to do a render manually afterwards.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="BrillouinZoneViewer.fit">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">BrillouinZoneViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">fit</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">margin=0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BrillouinZoneViewer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Adjust the zoom so that the contents fit on the screen. Notice that is is
+typically useful to center around a point of interest first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>margin</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Margin to apply.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.rotate">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">rotate</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotations</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.rotate" title="Permalink to this definition"></a></dt>
+<dd><p>Rotates the scenes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rotations</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – The rotations as a list. Each rotation should be an array containing four numbers: [x, y, z, angle]. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with respect to the x-coordinate. If multiple rotations are specified, they will be applied in the given order. Notice that these rotations are applied with respect to a global coordinate system, not the coordinate system of the structure. In this global coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away from the screen. The rotations are applied in the given order.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.setRotation">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">setRotation</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotation</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.setRotation" title="Permalink to this definition"></a></dt>
+<dd><p>Sets the rotation of all the scenes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rotation</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – The rotation as a list. Rotation should be an array containing four numbers: [x, y, z, angle]. E.g. [1, 0, 0, 90] would set a 90 degree rotation with respect to the x-coordinate.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="BrillouinZoneViewer.align">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">BrillouinZoneViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">align</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alignments</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BrillouinZoneViewer.align" title="Permalink to this definition"></a></dt>
+<dd><p>Used to rotate the contents based of the alignment of the basis cell
+vectors or the segments with respect to the cartesian axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alignments</strong> – List of up to two alignments for any two axis vectors. E.g. [[“up”, “c”], [“right”, “segments”]] will force the third basis vector to point exactly up, and the segments to as close to right as possible. The alignments are applied in the given order.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.controls">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">controls</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.controls" title="Permalink to this definition"></a></dt>
+<dd><p>Used to setup the controls that allow interacting with the visualization
+with mouse.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>options</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Object()</span></code></span>) – An object containing the control options. See below for the subparameters.</p></li>
+<li><p><strong>options.zoom.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Is zoom enabled</p></li>
+<li><p><strong>options.zoom.speed</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Zoom speed</p></li>
+<li><p><strong>options.rotation.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Is rotation enabled</p></li>
+<li><p><strong>options.rotation.speed</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Rotation speed</p></li>
+<li><p><strong>options.pan.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Is panning enabled</p></li>
+<li><p><strong>options.pan.speed</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Pan speed</p></li>
+<li><p><strong>options.resetOnDoubleClick</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Whether to reset the camera on double click.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.render">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">render</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.render" title="Permalink to this definition"></a></dt>
+<dd><p>Used to render all the scenes that are present. The scenes will be
+rendered on top of each other, so make sure that they are in the right
+order.</p>
+<p>This approach is copied from
+<a class="reference external" href="http://stackoverflow.com/questions/12666570/how-to-change-the-zorder-of-object-with-threejs/12666937#12666937">http://stackoverflow.com/questions/12666570/how-to-change-the-zorder-of-object-with-threejs/12666937#12666937</a></p>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.zoom">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">zoom</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zoom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.zoom" title="Permalink to this definition"></a></dt>
+<dd><p>Sets the zoom level for the visualization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>zoom</strong> – The wanted zoom level as a floating point number.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.fitCanvas">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">fitCanvas</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.fitCanvas" title="Permalink to this definition"></a></dt>
+<dd><p>Resizes the WebGL canvas to the host element.</p>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.resetCamera">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">resetCamera</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.resetCamera" title="Permalink to this definition"></a></dt>
+<dd><p>Used to reset the original view.</p>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.saveCameraReset">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">saveCameraReset</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.saveCameraReset" title="Permalink to this definition"></a></dt>
+<dd><p>Used to reset the original view.</p>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.changeHostElement">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">changeHostElement</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostElement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize=true</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.changeHostElement" title="Permalink to this definition"></a></dt>
+<dd><p>Used to setup the DOM element where the viewer will be displayed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hostElement</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">any()</span></code></span>) – The HTML element into which this viewer is loaded.</p></li>
+<li><p><strong>resize</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Whether to resize the canvas to fit the new host.</p></li>
 </ul>
 </dd>
 </dl>
@@ -291,14 +462,14 @@ optional k-path segments and k-point labels within it.</p>
   <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
     <span class="rst-current-version" data-toggle="rst-current-version">
       <span class="fa fa-book"> Versions</span>
-      v: 0.0.11
+      v: 1.0.0
       <span class="fa fa-caret-down"></span>
     </span>
     <div class="rst-other-versions">
       <dl>
         <dt>Versions</dt>
         
-          <dd><a href="https://lauri-codes.github.io/materia">0.0.11 (latest stable)</a></dd>
+          <dd><a href="https://lauri-codes.github.io/materia">1.0.0 (latest stable)</a></dd>
         
       </dl>
     </div>

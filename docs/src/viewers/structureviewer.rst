@@ -96,6 +96,7 @@ API
 .. js:autofunction:: StructureViewer#fit
 .. js:autofunction:: StructureViewer#translate
 .. js:autofunction:: Viewer#rotate
+.. js:autofunction:: Viewer#setRotation
 .. js:autofunction:: StructureViewer#align
 .. js:autofunction:: Viewer#controls
 .. js:autofunction:: Viewer#render
