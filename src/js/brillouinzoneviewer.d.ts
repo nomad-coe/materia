@@ -2,10 +2,8 @@ import { Viewer } from "./viewer";
 import * as THREE from "three";
 export declare class BrillouinZoneViewer extends Viewer {
     private data;
-    private info;
-    private zone;
     private sceneZone;
-    private sceneInfo;
+    private info;
     private basis;
     private segments;
     private kpoints;
@@ -30,8 +28,8 @@ export declare class BrillouinZoneViewer extends Viewer {
     setupScenes(): void;
     setupLights(): void;
     /**
-     * Visualizes the first Brillouin zone of the given reciprocal lattice and
-     * optional k-path segments and k-point labels within it.
+     * Used to create a visualization for the first Brillouin Zone together with
+     * kpath and segment information.
      *
      * @param {object} data A Javascript object containing the visualized
      * structure. See below for the subparameters.
@@ -41,10 +39,6 @@ export declare class BrillouinZoneViewer extends Viewer {
      * each sublist indicating a continuous segment within the Brillouin zone.
      * @param {*} data.kpoints List of pairs of labels and reciprocal
      * lattice coordinates for specific k-points that should be shown.
-     */
-    load(data: any): boolean;
-    /**
-     * Used to create the representation for the first Brillouin Zone.
      *
      * @param {object} options A Javascript object containing the options. See
      *   below for the subparameters.
@@ -109,9 +103,23 @@ export declare class BrillouinZoneViewer extends Viewer {
      * @param {string} options.basis.c.stroke.color Outline stroke color
      * applied to the label of the third reciprocal lattice vector.
      */
-    brillouinZone(options: any): void;
+    load(data: any, options: any): void;
+    /**
+     * Adjust the zoom so that the contents fit on the screen. Notice that is is
+     * typically useful to center around a point of interest first.
+     *
+     * @param {number} margin - Margin to apply.
+     */
     fit(margin?: number): void;
-    rotate(rotations: number[]): void;
+    /**
+     * Used to rotate the contents based of the alignment of the basis cell
+     * vectors or the segments with respect to the cartesian axes.
+     *
+     * @param alignments List of up to two alignments for any two axis vectors.
+     * E.g. [["up", "c"], ["right", "segments"]] will force the third basis
+     * vector to point exactly up, and the segments to as close to right as
+     * possible. The alignments are applied in the given order.
+     */
     align(alignments: string[][]): void;
     createCircle(position: THREE.Vector3, diameter: number, color: string): THREE.Object3D;
 }

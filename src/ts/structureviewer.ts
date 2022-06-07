@@ -1,6 +1,6 @@
 import { Viewer } from "./viewer"
 import objectHash from '../js/object_hash.js'
-import { isNumber, isArray, isPlainObject, isNil, range, size, merge, cloneDeep } from "lodash"
+import { isNumber, isArray, isPlainObject, isNil, range, merge, cloneDeep } from "lodash"
 import * as THREE from "three"
 
 /**
@@ -45,7 +45,8 @@ export class StructureViewer extends Viewer {
 
     /*
      * Overrides the implementation from the base class, as we need two scenes:
-     * one for the structure and another for the information that is laid on top.
+     * one for the structure and another for the information that is laid on
+     * top.
      */
     setupScenes() {
         this.scenes = [];
@@ -53,6 +54,20 @@ export class StructureViewer extends Viewer {
         this.scenes.push(this.sceneStructure);
         this.sceneInfo = new THREE.Scene();
         this.scenes.push(this.sceneInfo);
+
+        this.root = new THREE.Object3D();
+        this.container = new THREE.Object3D();
+        this.infoContainer = new THREE.Object3D();
+        this.atomsObject = new THREE.Object3D();
+        this.bondsObject = new THREE.Object3D();
+        this.container.add(this.atomsObject);
+        this.container.add(this.bondsObject);
+        this.angleArcs = new THREE.Object3D();
+        this.root.add(this.container);
+        this.sceneStructure.add(this.root);
+        this.sceneInfo.add(this.infoContainer);
+        this.latticeConstantsGroup = new THREE.Object3D();
+        this.container.add(this.latticeConstantsGroup);
     }
 
     /**
@@ -145,17 +160,8 @@ export class StructureViewer extends Viewer {
      *   tolerance in angstroms. Defaults to 1e-8.
      */
     load(structure:any): boolean {
-        // Clear all the old data
-        this.clear();
-        this.setup();
-
         // Save the structure for reloading
         this.structure = structure;
-
-        // Reconstruct the visualization
-        this.setupScenes();
-        this.setupLights();
-        this.setupCamera();
 
         // Determine the radii to be used
         this.atomicRadii = this.covalentRadii;
@@ -167,7 +173,7 @@ export class StructureViewer extends Viewer {
         const positions = structure["positions"]
         const species = structure["species"]
         const cell = structure["cell"] 
-        const wrap = merge(cloneDeep(structure["wrap"]), {type: 'none', tolerance: 1e-8})
+        const wrap = merge({type: 'none', tolerance: 1e-8}, cloneDeep(structure["wrap"]))
         const periodicity = structure["pbc"] || [false, false, false]
         let bonds = structure["bonds"]
 
@@ -200,20 +206,6 @@ export class StructureViewer extends Viewer {
             console.log("The number of positions does not match the number of labels.")
             return false;
         }
-
-        this.root = new THREE.Object3D();
-        this.container = new THREE.Object3D();
-        this.infoContainer = new THREE.Object3D();
-        this.atomsObject = new THREE.Object3D();
-        this.bondsObject = new THREE.Object3D();
-        this.container.add(this.atomsObject);
-        this.container.add(this.bondsObject);
-        this.angleArcs = new THREE.Object3D();
-        this.root.add(this.container);
-        this.sceneStructure.add(this.root);
-        this.sceneInfo.add(this.infoContainer);
-        this.latticeConstantsGroup = new THREE.Object3D();
-        this.container.add(this.latticeConstantsGroup);
 
         // Create a set of fractional and cartesian positions
         this.createBasisVectors(cell);
@@ -299,8 +291,11 @@ export class StructureViewer extends Viewer {
     }
 
     /**
-     * Centers the visualization around a specific point.
-     * @param position - The position to center on. Can be one of:
+     * Adjust the zoom so that the contents fit on the screen. Notice that is is
+     * typically useful to center around a point of interest first.
+     *
+     * @param position - The positions to take into account when fitting. Can be
+     *   one of:
      *   - 'full': Fit the full view
      *   - Array<Number>: An array of atomic indices, the COP will be used.
      *   - Array<Array<Number>>: An array of positions, the COP will be used.
@@ -336,34 +331,6 @@ export class StructureViewer extends Viewer {
         const vec = new THREE.Vector3().fromArray(translation);
         this.atomsObject.position.add(vec);
         this.bondsObject.position.add(vec);
-    }
-
-    /**
-     * Rotates the structure.
-     *
-     * @param {number[][]} rotations The rotations as a list. Each rotation
-     * should be an array containing four numbers: [x, y, z, angle]. The
-     * rotations are given as a list of 4-element arrays containing the
-     * rotations axis and rotation angle in degrees. E.g. [[1, 0, 0, 90]] would
-     * apply a 90 degree rotation with respect to the x-coordinate. If multiple
-     * rotations are specified, they will be applied in the given order. Notice
-     * that these rotations are applied with respect to a global coordinate
-     * system, not the coordinate system of the structure. In this global
-     * coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards
-     * and [0, 0, 1] points away from the screen. The rotations are applied in
-     * the given order.
-     */
-    rotate(rotations: number[]): void {
-        if (rotations === undefined) {
-            return;
-        }
-        for (const r of rotations) {
-            const basis = new THREE.Vector3(r[0], r[1], r[2]);
-            basis.normalize();
-            const angle = r[3]/180*Math.PI;
-            this.rotateAroundWorldAxis(this.root, basis, angle);
-            this.rotateAroundWorldAxis(this.sceneInfo, basis, angle);
-        }
     }
 
     /**
@@ -548,7 +515,7 @@ export class StructureViewer extends Viewer {
             threshold: 1,
             smoothness: 145
         }
-        const optionsFinal = merge(cloneDeep(options || {}), cloneDeep(def))
+        const optionsFinal = merge(cloneDeep(def), cloneDeep(options || {}))
 
         // Do not create new ones if disabled
         if (!optionsFinal.enabled) {
@@ -611,6 +578,7 @@ export class StructureViewer extends Viewer {
                     const configJ = this.configMap[configHashJ]
                     const radii1 = configI.scale * this.getRadii(num1)
                     const radii2 = configJ.scale * this.getRadii(num2)
+                    console.log(distance, optionsFinal.threshold*1.1*(radii1 + radii2))
                     if (distance <= optionsFinal.threshold*1.1*(radii1 + radii2)) {
                         this.addBond(i, j, pos1, pos2, bondMaterial, optionsFinal);
                     }
@@ -633,6 +601,11 @@ export class StructureViewer extends Viewer {
      *
      */
     cell(options:any) {
+        // Check that cell was defined for the structure
+        if (isNil(this.basisVectors)) {
+            throw Error("The loaded structure does not have any cell information.")
+        }
+
         // Delete old instance
         if (!isNil(this.convCell)) {
             this.container.remove(this.convCell)
@@ -647,7 +620,7 @@ export class StructureViewer extends Viewer {
             gapSize: 0,
             periodicity: [true, true, true],
         }
-        const optionsFinal = merge(cloneDeep(options || {}), cloneDeep(def))
+        const optionsFinal = merge(cloneDeep(def), cloneDeep(options || {}))
 
         // Create new instance
         if (optionsFinal.enabled) {
@@ -734,6 +707,11 @@ export class StructureViewer extends Viewer {
      * @param {string} options.gamma.stroke.color Font stroke color. Defaults to "#000".
      */
     latticeConstants(options:any) {
+        // Check that cell was defined for the structure
+        if (isNil(this.basisVectors)) {
+            throw Error("The loaded structure does not have any cell information.")
+        }
+
         // Delete old instance
         this.latticeConstantsGroup.clear()
         this.axisLabels = []
@@ -780,7 +758,7 @@ export class StructureViewer extends Viewer {
                 label: "γ",
             }
         }
-        const optionsFinal = merge(cloneDeep(options || {}), cloneDeep(def))
+        const optionsFinal = merge(cloneDeep(def), cloneDeep(options || {}))
 
         if (!optionsFinal.enabled) {
             return

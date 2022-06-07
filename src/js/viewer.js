@@ -45,6 +45,7 @@ export class Viewer {
         this.setupRootElement();
         this.setupRenderer();
         this.setupScenes();
+        this.setupLights();
         this.setupCamera();
         this.changeHostElement(hostElement);
     }
@@ -255,6 +256,33 @@ export class Viewer {
         hostElement.appendChild(this.rootElement);
         if (resize) {
             this.fitCanvas();
+        }
+    }
+    /**
+     * Rotates the scenes.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. The
+     * rotations are given as a list of 4-element arrays containing the
+     * rotations axis and rotation angle in degrees. E.g. [[1, 0, 0, 90]] would
+     * apply a 90 degree rotation with respect to the x-coordinate. If multiple
+     * rotations are specified, they will be applied in the given order. Notice
+     * that these rotations are applied with respect to a global coordinate
+     * system, not the coordinate system of the structure. In this global
+     * coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards
+     * and [0, 0, 1] points away from the screen. The rotations are applied in
+     * the given order.
+     */
+    rotate(rotations) {
+        if (rotations === undefined) {
+            return;
+        }
+        for (const r of rotations) {
+            const basis = new THREE.Vector3(r[0], r[1], r[2]);
+            basis.normalize();
+            const angle = r[3] / 180 * Math.PI;
+            this.rotateAroundWorldAxis(this.root, basis, angle);
+            this.rotateAroundWorldAxis(this.sceneInfo, basis, angle);
         }
     }
     /**

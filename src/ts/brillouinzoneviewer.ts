@@ -9,18 +9,16 @@ import voronoi from 'voronoi-diagram'
  * A 3D visualizer for the Brillouin Zone and the k-point path within it.
  */
 export class BrillouinZoneViewer extends Viewer {
-    private data:any          // The visualized structure
-    private info:any          // Object3D containing the information visuals
-    private zone:any          // Object3D containing the BZ mesh
-    private sceneZone:any     // The scene containing the Brillouin zone mesh
-    private sceneInfo:any     // The scene containing the information that is overlayed on top of the BZ
-    private basis:any         // The reciprocal cell basis
-    private segments:any      // The segments
-    private kpoints:any       // The k points
-    private labelPoints:any   // Contains the labels of special k-points
+    private data:any                     // The visualized structure
+    private sceneZone:THREE.Scene        // The scene containing the Brillouin zone mesh
+    private info:THREE.Object3D          // The scene containing the Brillouin zone mesh
+    private basis:any                    // The reciprocal cell basis
+    private segments:any                 // The segments
+    private kpoints:any                  // The k points
+    private labelPoints:any              // Contains the labels of special k-points
     private basisVectors:THREE.Vector3[]
     private B:THREE.Matrix3
-    controlDefaults = {  // Default controls settings
+    controlDefaults = {                  // Default controls settings
         zoom: {
             enabled: true,
             speed: 0.2
@@ -41,11 +39,16 @@ export class BrillouinZoneViewer extends Viewer {
      * one for the BZ mesh and another for the information that is laid on top.
      */
     setupScenes(): void {
-        this.scenes = [];
-        this.sceneZone = new THREE.Scene();
-        this.scenes.push(this.sceneZone);
-        this.sceneInfo = new THREE.Scene();
-        this.scenes.push(this.sceneInfo);
+        this.scenes = []
+        this.sceneZone = new THREE.Scene()
+        this.scenes.push(this.sceneZone)
+        this.sceneInfo = new THREE.Scene()
+        this.scenes.push(this.sceneInfo)
+
+        this.root = new THREE.Object3D()
+        this.sceneZone.add(this.root)
+        this.info = new THREE.Object3D()
+        this.sceneInfo.add(this.info)
     }
 
     setupLights(): void {
@@ -70,8 +73,8 @@ export class BrillouinZoneViewer extends Viewer {
     }
 
     /**
-     * Visualizes the first Brillouin zone of the given reciprocal lattice and
-     * optional k-path segments and k-point labels within it.
+     * Used to create a visualization for the first Brillouin Zone together with
+     * kpath and segment information.
      *
      * @param {object} data A Javascript object containing the visualized
      * structure. See below for the subparameters.
@@ -81,35 +84,7 @@ export class BrillouinZoneViewer extends Viewer {
      * each sublist indicating a continuous segment within the Brillouin zone.
      * @param {*} data.kpoints List of pairs of labels and reciprocal
      * lattice coordinates for specific k-points that should be shown.
-     */
-    load(data:any): boolean {
-        // Deep copy the structure for reloading
-        this.data = data;
-
-        // Clear all the old data
-        this.clear();
-        this.setup();
-
-        // Reconstruct the visualization
-        this.setupScenes();
-        this.setupLights();
-        this.setupCamera();
-
-        // Add the Brillouin zone and the k-point path
-        this.basis = data["basis"];
-        this.segments = data["segments"];
-        this.kpoints = data["kpoints"];
-        if (!this.basis || !this.segments) {
-            console.log("The data given for the Brillouin zone viewer is incomplete.")
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Used to create the representation for the first Brillouin Zone.
-     *
+     * 
      * @param {object} options A Javascript object containing the options. See
      *   below for the subparameters.
      *
@@ -173,13 +148,21 @@ export class BrillouinZoneViewer extends Viewer {
      * @param {string} options.basis.c.stroke.color Outline stroke color
      * applied to the label of the third reciprocal lattice vector.
      */
-    brillouinZone(options): void {
+    load(data:any, options:any): void {
+        // Read the Brillouin zone and the k-point path
+        this.basis = data["basis"]
+        this.segments = data["segments"]
+        this.kpoints = data["kpoints"]
+        if (!this.basis || !this.segments) {
+            throw Error("The data given for the Brillouin zone viewer is incomplete.")
+        }
+
         // Remove old viz
         if (!isNil(this.info)) {
             this.info.clear()
         }
-        if (!isNil(this.zone)) {
-            this.zone.clear()
+        if (!isNil(this.root)) {
+            this.root.clear()
         }
 
         // Define final options
@@ -233,8 +216,7 @@ export class BrillouinZoneViewer extends Viewer {
                 },
             },
         }
-        const optionsFinal = merge(cloneDeep(options || {}), cloneDeep(def))
-
+        const optionsFinal = merge(cloneDeep(def), cloneDeep(options || {}))
 
         // Create list of reciprocal lattice points
         const basis = this.basis
@@ -310,13 +292,6 @@ export class BrillouinZoneViewer extends Viewer {
             }
         }
 
-        this.zone = new THREE.Object3D()
-        this.zone.name = "zone"
-        this.sceneZone.add(this.zone)
-        this.info = new THREE.Object3D()
-        this.info.name = "info"
-        this.sceneInfo.add(this.info)
-
         // A customised THREE.BufferGeometry object that will create the face
         // geometry and information about the face edges
         const {geometry, faces} = getConvexGeometry(bzVertices)
@@ -340,7 +315,7 @@ export class BrillouinZoneViewer extends Viewer {
         mesh2.material.side = THREE.FrontSide; // front faces
         mesh2.renderOrder = 1
         group.add( mesh2 )
-        this.zone.add(group)
+        this.root.add(group)
 
         // Create edges as closed loops around each face
         const edgeWidth = optionsFinal.faces.outline.width
@@ -361,7 +336,7 @@ export class BrillouinZoneViewer extends Viewer {
             const edgeLine = new MeshLine();
             edgeLine.setPoints(edgeVertices)
             const edgeMesh = new THREE.Mesh(edgeLine, edgeMaterial);
-            this.zone.add(edgeMesh);
+            this.root.add(edgeMesh);
         }
 
         // Create the reciprocal space axes
@@ -509,9 +484,15 @@ export class BrillouinZoneViewer extends Viewer {
         }
     }
 
+    /**
+     * Adjust the zoom so that the contents fit on the screen. Notice that is is
+     * typically useful to center around a point of interest first.
+     *
+     * @param {number} margin - Margin to apply.
+     */
     fit(margin=0): void {
         // The corners of the BZ will be used as visualization boundaries
-        const mesh = this.zone.getObjectByName("group").getObjectByName("outermesh")
+        const mesh = this.root.getObjectByName("group").getObjectByName("outermesh")
         mesh.updateMatrixWorld()
         const vertices = []
         const verticesArray = mesh.geometry.attributes.position.array
@@ -529,19 +510,15 @@ export class BrillouinZoneViewer extends Viewer {
         this.fitViewToPoints(worldPos, margin)
     }
 
-    rotate(rotations: number[]): void {
-        if (rotations === undefined) {
-            return;
-        }
-        for (const r of rotations) {
-            const basis = new THREE.Vector3(r[0], r[1], r[2]);
-            basis.normalize();
-            const angle = r[3]/180*Math.PI;
-            this.rotateAroundWorldAxis(this.zone, basis, angle);
-            this.rotateAroundWorldAxis(this.info, basis, angle);
-        }
-    }
-
+    /**
+     * Used to rotate the contents based of the alignment of the basis cell
+     * vectors or the segments with respect to the cartesian axes.
+     * 
+     * @param alignments List of up to two alignments for any two axis vectors.
+     * E.g. [["up", "c"], ["right", "segments"]] will force the third basis
+     * vector to point exactly up, and the segments to as close to right as
+     * possible. The alignments are applied in the given order.
+     */
     align(alignments: string[][]): void {
         // Determine segment direction
         const segmentVector = new THREE.Vector3()
@@ -563,7 +540,7 @@ export class BrillouinZoneViewer extends Viewer {
         }
 
         // List the objects whose matrix needs to be updated
-        const objects = [this.zone, this.info]
+        const objects = [this.root, this.sceneInfo]
 
         // Rotate
         super.alignView(alignments, directions, objects);

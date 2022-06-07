@@ -21,7 +21,7 @@ let structure = {
         [0.5, 0.0, 0.5]
     ],
     fractional: true,
-    pbc: [true, true, true],
+    pbc: [true, true, true]
 };
 viewer.load(structure)
 

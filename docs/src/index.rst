@@ -18,8 +18,8 @@ installation guide for further details.
 
 Go Deeper
 =========
-The full source code with examples and regression tests can be explored at `github
-<https://github.com/lauri-codes/materia>`_.
+The full source code with examples can be explored at `github
+<https://github.com/nomad-coe/materia>`_.
 
 .. toctree::
     :hidden:
@@ -29,6 +29,11 @@ The full source code with examples and regression tests can be explored at `gith
 
 Changelog
 =========
+ - 1.0.0:
+    - Significant breaking change to the viewer API. The viewers are now
+    controlled using newly exposed functions that allow for a very fine-grained
+    control of the rendering and updates.
+
  - 0.0.11:
     - Updated dependencies used to build the 3D visualization.
 

@@ -95,8 +95,11 @@ export declare class StructureViewer extends Viewer {
      */
     center(positions: any): void;
     /**
-     * Centers the visualization around a specific point.
-     * @param position - The position to center on. Can be one of:
+     * Adjust the zoom so that the contents fit on the screen. Notice that is is
+     * typically useful to center around a point of interest first.
+     *
+     * @param position - The positions to take into account when fitting. Can be
+     *   one of:
      *   - 'full': Fit the full view
      *   - Array<Number>: An array of atomic indices, the COP will be used.
      *   - Array<Array<Number>>: An array of positions, the COP will be used.
@@ -109,22 +112,6 @@ export declare class StructureViewer extends Viewer {
      * @param translation - Cartesian translation to apply.
      */
     translate(translation: number[]): void;
-    /**
-     * Rotates the structure.
-     *
-     * @param {number[][]} rotations The rotations as a list. Each rotation
-     * should be an array containing four numbers: [x, y, z, angle]. The
-     * rotations are given as a list of 4-element arrays containing the
-     * rotations axis and rotation angle in degrees. E.g. [[1, 0, 0, 90]] would
-     * apply a 90 degree rotation with respect to the x-coordinate. If multiple
-     * rotations are specified, they will be applied in the given order. Notice
-     * that these rotations are applied with respect to a global coordinate
-     * system, not the coordinate system of the structure. In this global
-     * coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards
-     * and [0, 0, 1] points away from the screen. The rotations are applied in
-     * the given order.
-     */
-    rotate(rotations: number[]): void;
     /**
      * Used to rotate the structure based of the alignment of the basis cell
      * vectors with respect to the cartesian axes.

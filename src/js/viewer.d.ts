@@ -4,6 +4,8 @@ import * as THREE from "three";
  */
 export declare abstract class Viewer {
     hostElement: any;
+    root: THREE.Object3D;
+    sceneInfo: THREE.Scene;
     camera: any;
     renderer: any;
     controlsObject: any;
@@ -87,6 +89,22 @@ export declare abstract class Viewer {
      * @param {boolean} resize Whether to resize the canvas to fit the new host.
      */
     changeHostElement(hostElement: any, resize?: boolean): void;
+    /**
+     * Rotates the scenes.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. The
+     * rotations are given as a list of 4-element arrays containing the
+     * rotations axis and rotation angle in degrees. E.g. [[1, 0, 0, 90]] would
+     * apply a 90 degree rotation with respect to the x-coordinate. If multiple
+     * rotations are specified, they will be applied in the given order. Notice
+     * that these rotations are applied with respect to a global coordinate
+     * system, not the coordinate system of the structure. In this global
+     * coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards
+     * and [0, 0, 1] points away from the screen. The rotations are applied in
+     * the given order.
+     */
+    rotate(rotations: number[]): void;
     /**
      * Used to reset the original view.
      */

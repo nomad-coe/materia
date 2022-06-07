@@ -5,15 +5,17 @@ import * as THREE from "three"
  * Abstract base class for visualizing 3D scenes with three.js.
  */
 export abstract class Viewer {
-    camera:any;                           // three.js camera
-    renderer:any;                         // three.js renderer object
-    controlsObject:any;                   // Controller object for handling mouse interaction with the system
-    scene:any;                            // The default scene
-    scenes:any[] = [];                    // A list of scenes that are rendered
-    cameraWidth = 10.0;                   // The default "width" of the camera
-    rootElement:any;                      // A root html element that contains all visualization components
-    options:any = {};                     // Options for the viewer. Can be e.g. used to control which settings are enabled
-    controlDefaults = {                   // Default controls settings
+    root:THREE.Object3D
+    sceneInfo:THREE.Scene
+    camera:any                           // three.js camera
+    renderer:any                         // three.js renderer object
+    controlsObject:any                   // Controller object for handling mouse interaction with the system
+    scene:any                            // The default scene
+    scenes:any[] = []                    // A list of scenes that are rendered
+    cameraWidth = 10.0                   // The default "width" of the camera
+    rootElement:any                      // A root html element that contains all visualization components
+    options:any = {}                     // Options for the viewer. Can be e.g. used to control which settings are enabled
+    controlDefaults = {                  // Default controls settings
         zoom: {
             enabled: true,
             speed: 0.2
@@ -50,6 +52,7 @@ export abstract class Viewer {
         this.setupRootElement()
         this.setupRenderer()
         this.setupScenes()
+        this.setupLights()
         this.setupCamera()
         this.changeHostElement(hostElement)
     }
@@ -284,6 +287,34 @@ export abstract class Viewer {
         hostElement.appendChild(this.rootElement);
         if (resize) {
             this.fitCanvas();
+        }
+    }
+
+    /**
+     * Rotates the scenes.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. The
+     * rotations are given as a list of 4-element arrays containing the
+     * rotations axis and rotation angle in degrees. E.g. [[1, 0, 0, 90]] would
+     * apply a 90 degree rotation with respect to the x-coordinate. If multiple
+     * rotations are specified, they will be applied in the given order. Notice
+     * that these rotations are applied with respect to a global coordinate
+     * system, not the coordinate system of the structure. In this global
+     * coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards
+     * and [0, 0, 1] points away from the screen. The rotations are applied in
+     * the given order.
+     */
+    rotate(rotations: number[]): void {
+        if (rotations === undefined) {
+            return;
+        }
+        for (const r of rotations) {
+            const basis = new THREE.Vector3(r[0], r[1], r[2]);
+            basis.normalize();
+            const angle = r[3]/180*Math.PI;
+            this.rotateAroundWorldAxis(this.root, basis, angle);
+            this.rotateAroundWorldAxis(this.sceneInfo, basis, angle);
         }
     }
 

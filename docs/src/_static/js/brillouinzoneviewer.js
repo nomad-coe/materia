@@ -36,8 +36,7 @@ let reciprocal = {
     ["F", [0.625, 0.25, 0.625]],
   ]
 }
-viewer.load(reciprocal);
-viewer.brillouinZone()
+viewer.load(reciprocal)
 
 // Setup viewer initial state
 viewer.align([

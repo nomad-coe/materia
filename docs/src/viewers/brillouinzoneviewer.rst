@@ -4,7 +4,9 @@ Brillouin Zone Viewer
 Try out the interactive visualizer below. Controls are as follows:
 
  - Rotate: Drag with left mouse button held down
+ - Pan: Drag with right mouse button held down
  - Zoom: Mousewheel
+ - Reset: Double click
 
 .. raw:: html
 
@@ -26,20 +28,74 @@ and changing the :code:`BrillouinZoneViewer` constructor call.
 .. literalinclude :: ../_static/js/brillouinzoneviewer.js
    :language: javascript
 
+Overview
+--------
+The general workflow for producing a visualization is as follows:
+
+ - Create an instance of the viewer, which is at some point attached to an HTML
+   element.
+ - Load a structure using the :func:`BrillouinZoneViewer.load`-method.
+ - Modify the initial view using the functions documented in the
+   :ref:`viewers/brillouinzoneviewer:API`, this may contain e.g. translations,
+   rotations, centerings, fits, zooming etc.
+ - Render the result on the HTML host element at any point using the
+   :func:`Viewer.render` method.
+ - Do any modifications dynamically according to your applications state, do not
+   forget to render when you want the result to be displayed.
+
+Constructor
+-----------
+In the constructor :class:`Viewer` you can define the host element (this can
+also be changed at any point using the :func:`Viewer.changeHostElement` method)
+together with a set of fixed options that control the rendering.
+
 Loading a structure
 -------------------
-You can load data to the viewer by calling the :func:`BrillouinZoneViewer.load`
-method. Check the API for the supported parameters.
+You can load a new structure to the viewer by calling the
+:func:`BrillouinZoneViewer.load` method. Check the API for the supported
+parameters.  Notice that this method will only create the internal
+representation and will not yet display anything. See
+:ref:`viewers/brillouinzoneviewer:Configuration` and
+:ref:`viewers/brillouinzoneviewer:Render` for more information on how to display the
+structure.
 
-Options
--------
-The options that are given in the constructor are passed to the
-:func:`BrillouinZoneViewer.setOptions` method. These options are provided as a
-nested Javascript object. Check the API for the supported parameters. At any
-time you can also manually call this method to change the options. You can also
-use this method to only update a subset of the options.
+Configuration
+-------------
+You can dynamically alter the visualization at any point by chaining the
+provided functions calls. Check out the :ref:`viewers/brillouinzoneviewer:API` for
+the supported functions. Notice that all of these functions will change the
+visualization state internally, but will not yet render the result on screen,
+see :ref:`viewers/brillouinzoneviewer:Render` on how to produce the final result.
+
+Render
+------
+You can control when the structure gets rendered on screen by manually calling
+the :func:`Viewer.render` method. This way you can modify any number of options
+without any screen flickering by only calling render when you are finished.
+
+Tips
+----
+ - If you are not seeing your changes updated on the screen, or they are updated
+   only after interacting with the structure, double check that you have called
+   :func:`Viewer.render` after your changes.
+ - When the HTML element containing the canvas change size, you may want to
+   refit the canvas to it using :func:`Viewer.fitCanvas`.
+ - You can change the visualization canvas at any point by calling
+   :func:`Viewer.changeHostElement`. Remember to refit the canvas after this
+   with :func:`Viewer.fitCanvas`.
 
 API
 ---
+.. js:autoclass:: Viewer
 .. js:autofunction:: BrillouinZoneViewer#load
+.. js:autofunction:: BrillouinZoneViewer#fit
+.. js:autofunction:: Viewer#rotate
+.. js:autofunction:: BrillouinZoneViewer#align
+.. js:autofunction:: Viewer#controls
+.. js:autofunction:: Viewer#render
+.. js:autofunction:: Viewer#zoom
+.. js:autofunction:: Viewer#fitCanvas
+.. js:autofunction:: Viewer#resetCamera
+.. js:autofunction:: Viewer#saveCameraReset
+.. js:autofunction:: Viewer#changeHostElement
 
