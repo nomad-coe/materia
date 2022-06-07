@@ -20,8 +20,10 @@ export class Viewer {
     constructor(hostElement, options = {}) {
         this.hostElement = hostElement;
         this.scenes = []; // A list of scenes that are rendered
+        this.objects = []; // A list of objects that are affected by rotation etc.
         this.cameraWidth = 10.0; // The default "width" of the camera
         this.options = {}; // Options for the viewer. Can be e.g. used to control which settings are enabled
+        this.translation = new THREE.Vector3(); // Translation vector that has been applied to shift the view
         this.controlDefaults = {
             zoom: {
                 enabled: true,
@@ -72,63 +74,6 @@ export class Viewer {
         };
         // Save custom settings
         this.options = merge(cloneDeep(def), cloneDeep(options));
-    }
-    /**
-     * This function will set up all the basics for visualization: scenes,
-     * lights, camera and controls.
-     */
-    setup() {
-        // Reconstruct the visualization
-        this.setupScenes();
-        this.setupLights();
-        this.setupCamera();
-    }
-    /*
-     * Used to setup the scenes. This default implementation will create a
-     * single scene. Override this function to create additional scenes and
-     * push them all to the 'scenes' attribute.
-     */
-    setupScenes() {
-        this.scenes = [];
-        this.scene = new THREE.Scene();
-        this.scenes.push(this.scene);
-    }
-    /*
-     * Clears the entire visualization.
-     */
-    clear() {
-        this.clearScenes();
-        this.scenes = null;
-        this.controlsObject = null;
-        this.camera = null;
-    }
-    /*
-     * This function will clear everything inside the scenes. This should
-     * ensure that memory is not leaked. Cameras, controls and lights are not
-     * part of the scene, so they are reset elsewhere.
-     */
-    clearScenes() {
-        for (let iScene = 0; iScene < this.scenes.length; ++iScene) {
-            const scene = this.scenes[iScene];
-            scene.traverse(function (node) {
-                const geometry = node.geometry;
-                const material = node.material;
-                const texture = node.texture;
-                if (geometry) {
-                    geometry.dispose();
-                }
-                if (material) {
-                    material.dispose();
-                }
-                if (texture) {
-                    texture.dispose();
-                }
-            });
-            while (scene.children.length) {
-                const child = scene.children[0];
-                scene.remove(child);
-            }
-        }
     }
     /**
      * Can be used to download the current visualization as a jpg-image to the
@@ -279,8 +224,8 @@ export class Viewer {
             const basis = new THREE.Vector3(r[0], r[1], r[2]);
             basis.normalize();
             const angle = r[3] / 180 * Math.PI;
-            for (const scene of this.scenes) {
-                this.rotateAroundWorldAxis(scene, basis, angle);
+            for (const obj of this.objects) {
+                this.rotateAroundWorldAxis(obj, basis, angle);
             }
         }
     }
@@ -295,8 +240,27 @@ export class Viewer {
         const basis = new THREE.Vector3(rotation[0], rotation[1], rotation[2]);
         basis.normalize();
         const angle = rotation[3] / 180 * Math.PI;
-        for (const scene of this.scenes) {
-            scene.setRotationFromAxisAngle(basis, angle);
+        for (const obj of this.objects) {
+            obj.setRotationFromAxisAngle(basis, angle);
+        }
+    }
+    /**
+     * Translates the objects.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. E.g. [[1,
+     * 0, 0, 90]] would apply a 90 degree rotation with respect to the
+     * x-coordinate. If multiple rotations are specified, they will be applied
+     * in the given order. Notice that these rotations are applied with respect
+     * to a global coordinate system, not the coordinate system of the
+     * structure. In this global coordinate system [1, 0, 0] points to the
+     * right, [0, 1, 0] points upwards and [0, 0, 1] points away from the
+     * screen. The rotations are applied in the given order.
+     */
+    setTranslation(translation) {
+        this.translation = translation;
+        for (const obj of this.objects) {
+            obj.position.copy(translation);
         }
     }
     /**
@@ -637,10 +601,10 @@ export class Viewer {
                 for (const direction in directions) {
                     directions[direction].applyQuaternion(quaternion);
                 }
-                // Rotate the given objects
-                for (const scene of this.scenes) {
-                    scene.applyQuaternion(quaternion);
-                    scene.updateMatrixWorld();
+                // Rotate the objects
+                for (const obj of this.objects) {
+                    obj.applyQuaternion(quaternion);
+                    obj.updateMatrixWorld();
                 }
                 if (direction == "right" || direction == "left") {
                     alignedDirections.push("x");

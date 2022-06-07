@@ -9,16 +9,17 @@ import voronoi from 'voronoi-diagram'
  * A 3D visualizer for the Brillouin Zone and the k-point path within it.
  */
 export class BrillouinZoneViewer extends Viewer {
-    private data:any                     // The visualized structure
-    private sceneZone:THREE.Scene        // The scene containing the Brillouin zone mesh
-    private sceneInfo:THREE.Scene        // The scene containing the overlayed information
-    private info:THREE.Object3D          // The scene containing the Brillouin zone mesh
-    private basis:any                    // The reciprocal cell basis
-    private segments:any                 // The segments
-    private kpoints:any                  // The k points
-    private labelPoints:any              // Contains the labels of special k-points
-    private basisVectors:THREE.Vector3[]
-    private B:THREE.Matrix3
+    data:any                     // The visualized structure
+    sceneRoot:THREE.Scene        // The scene containing the Brillouin zone mesh
+    sceneInfo:THREE.Scene        // The scene containing the overlayed information
+    root:THREE.Object3D          // The root object for main content
+    info:THREE.Object3D          // The root object containing the information overlay
+    basis:any                    // The reciprocal cell basis
+    segments:any                 // The segments
+    kpoints:any                  // The k points
+    labelPoints:any              // Contains the labels of special k-points
+    basisVectors:THREE.Vector3[]
+    B:THREE.Matrix3
     controlDefaults = {                  // Default controls settings
         zoom: {
             enabled: true,
@@ -40,37 +41,40 @@ export class BrillouinZoneViewer extends Viewer {
      * one for the BZ mesh and another for the information that is laid on top.
      */
     setupScenes(): void {
+        // Setup the scenes in rendering order
         this.scenes = []
-        this.sceneZone = new THREE.Scene()
-        this.scenes.push(this.sceneZone)
+        this.sceneRoot = new THREE.Scene()
+        this.scenes.push(this.sceneRoot)
         this.sceneInfo = new THREE.Scene()
         this.scenes.push(this.sceneInfo)
-
         this.root = new THREE.Object3D()
-        this.sceneZone.add(this.root)
+        this.sceneRoot.add(this.root)
         this.info = new THREE.Object3D()
         this.sceneInfo.add(this.info)
+
+        // Setup the objects that are affected by rotations etc.
+        this.objects = [this.root, this.info]
     }
 
     setupLights(): void {
         // Key light
         const keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
         keyLight.position.set(0, 0, 20)
-        this.sceneZone.add( keyLight );
+        this.sceneRoot.add( keyLight );
 
         // Fill light
         const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
         fillLight.position.set(-20, 0, -20)
-        this.sceneZone.add( fillLight );
+        this.sceneRoot.add( fillLight );
 
         // Back light
         const backLight = new THREE.DirectionalLight(0xffffff, 0.25);
         backLight.position.set( 20, 0, -20 );
-        this.sceneZone.add( backLight );
+        this.sceneRoot.add( backLight );
 
         // White ambient light.
         const ambientLight = new THREE.AmbientLight( 0x404040, 3.7 ); // soft white light
-        this.sceneZone.add( ambientLight );
+        this.sceneRoot.add( ambientLight );
     }
 
     /**

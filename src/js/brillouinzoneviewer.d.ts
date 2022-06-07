@@ -1,16 +1,17 @@
 import { Viewer } from "./viewer";
 import * as THREE from "three";
 export declare class BrillouinZoneViewer extends Viewer {
-    private data;
-    private sceneZone;
-    private sceneInfo;
-    private info;
-    private basis;
-    private segments;
-    private kpoints;
-    private labelPoints;
-    private basisVectors;
-    private B;
+    data: any;
+    sceneRoot: THREE.Scene;
+    sceneInfo: THREE.Scene;
+    root: THREE.Object3D;
+    info: THREE.Object3D;
+    basis: any;
+    segments: any;
+    kpoints: any;
+    labelPoints: any;
+    basisVectors: THREE.Vector3[];
+    B: THREE.Matrix3;
     controlDefaults: {
         zoom: {
             enabled: boolean;

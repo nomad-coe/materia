@@ -288,6 +288,7 @@ export class StructureViewer extends Viewer {
      * top.
      */
     setupScenes() {
+        // Setup the scenes in rendering order
         this.scenes = [];
         this.sceneStructure = new THREE.Scene();
         this.scenes.push(this.sceneStructure);
@@ -306,6 +307,8 @@ export class StructureViewer extends Viewer {
         this.sceneInfo.add(this.info);
         this.latticeConstantsGroup = new THREE.Object3D();
         this.container.add(this.latticeConstantsGroup);
+        // Setup the objects that are affected by rotations etc.
+        this.objects = [this.root, this.info];
     }
     /**
      * Returns information about the elements included in the structure.
@@ -338,28 +341,6 @@ export class StructureViewer extends Viewer {
         // For some reason double rendering is required... Maybe delay()?
         // this.render();
         // this.render();
-    }
-    /*
-     * Clears current data and visualization.
-     */
-    clear() {
-        super.clear();
-        this.structure = undefined;
-        this.atomsObject = undefined;
-        this.convCell = undefined;
-        this.primCell = undefined;
-        this.bondsObject = undefined;
-        this.atomPos = undefined;
-        this.positions = undefined;
-        this.atomicNumbers = undefined;
-        this.latticeConstantsGroup = undefined;
-        this.B = undefined;
-        this.Bi = undefined;
-        this.basisVectors = undefined;
-        this.elements = undefined;
-        this.maxRadii = undefined;
-        this.atomicRadii = undefined;
-        this.elementColors = undefined;
     }
     /**
      * Visualizes the given atomic structure.
@@ -489,19 +470,21 @@ export class StructureViewer extends Viewer {
     center(positions) {
         let centerPos;
         if (positions === "COP") {
-            const atomPos = this.getPositions();
+            const atomPos = this.getPositionsGlobal();
             centerPos = this.calculateCOP(atomPos);
         }
         else if (positions == 'COC') {
-            centerPos = new THREE.Vector3()
-                .add(this.basisVectors[0])
-                .add(this.basisVectors[1])
-                .add(this.basisVectors[2])
-                .multiplyScalar(0.5);
+            centerPos = this.getCOCGlobal();
+            // centerPos = new THREE.Vector3()
+            //     .add(this.basisVectors[0])
+            //     .add(this.basisVectors[1])
+            //     .add(this.basisVectors[2])
+            // .multiplyScalar(0.5);
         }
         else if (isArray(positions)) {
             if (isNumber(positions[0])) {
-                const points = positions.map(i => this.positions[i]);
+                const atomPos = this.getPositionsGlobal();
+                const points = positions.map(i => atomPos[i]);
                 centerPos = this.calculateCOP(points);
             }
             else {
@@ -512,10 +495,7 @@ export class StructureViewer extends Viewer {
         else {
             throw Error("Invalid center positions.");
         }
-        this.translation = centerPos;
-        const invertedPos = centerPos.multiplyScalar(-1);
-        this.container.position.copy(invertedPos);
-        this.info.position.copy(invertedPos);
+        this.setTranslation(centerPos.multiplyScalar(-1));
     }
     /**
      * Adjust the zoom so that the contents fit on the screen. Notice that is is
@@ -1214,7 +1194,7 @@ export class StructureViewer extends Viewer {
     getPositionsGlobal() {
         const nAtoms = this.positions.length;
         const worldPos = [];
-        this.atomsObject.updateMatrixWorld();
+        this.atomsObject.updateMatrixWorld(); // This update is required
         for (let i = 0; i < nAtoms; ++i) {
             const atom = this.atomsObject.getObjectByName(`atom${i}`);
             const wPos = new THREE.Vector3();
@@ -1222,6 +1202,19 @@ export class StructureViewer extends Viewer {
             worldPos.push(wPos);
         }
         return worldPos;
+    }
+    /**
+     * Get the positions of the center of cell in the global coordinate system.
+     */
+    getCOCGlobal() {
+        let COC = new THREE.Vector3()
+            .add(this.basisVectors[0])
+            .add(this.basisVectors[1])
+            .add(this.basisVectors[2])
+            .multiplyScalar(0.5);
+        this.root.updateMatrixWorld(); // This update is required
+        COC = this.root.localToWorld(COC);
+        return COC;
     }
     /**
      * Converts a list of list of numbers into vectors.

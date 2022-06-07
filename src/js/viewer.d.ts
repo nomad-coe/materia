@@ -4,15 +4,15 @@ import * as THREE from "three";
  */
 export declare abstract class Viewer {
     hostElement: any;
-    root: THREE.Object3D;
     camera: any;
     renderer: any;
     controlsObject: any;
-    scene: any;
-    scenes: any[];
+    scenes: THREE.Scene[];
+    objects: THREE.Object3D[];
     cameraWidth: number;
     rootElement: any;
     options: any;
+    translation: THREE.Vector3;
     controlDefaults: {
         zoom: {
             enabled: boolean;
@@ -42,15 +42,8 @@ export declare abstract class Viewer {
      */
     constructor(hostElement: any, options?: {});
     setOptions(options: any): void;
-    /**
-     * This function will set up all the basics for visualization: scenes,
-     * lights, camera and controls.
-     */
-    setup(): void;
     abstract setupLights(): void;
-    setupScenes(): void;
-    clear(): void;
-    clearScenes(): void;
+    abstract setupScenes(): void;
     /**
      * Can be used to download the current visualization as a jpg-image to the
      * browser's download location.
@@ -110,6 +103,20 @@ export declare abstract class Viewer {
      * set a 90 degree rotation with respect to the x-coordinate.
      */
     setRotation(rotation: number[]): void;
+    /**
+     * Translates the objects.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. E.g. [[1,
+     * 0, 0, 90]] would apply a 90 degree rotation with respect to the
+     * x-coordinate. If multiple rotations are specified, they will be applied
+     * in the given order. Notice that these rotations are applied with respect
+     * to a global coordinate system, not the coordinate system of the
+     * structure. In this global coordinate system [1, 0, 0] points to the
+     * right, [0, 1, 0] points upwards and [0, 0, 1] points away from the
+     * screen. The rotations are applied in the given order.
+     */
+    setTranslation(translation: number[]): void;
     /**
      * Used to reset the original view.
      */

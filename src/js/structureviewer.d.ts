@@ -27,7 +27,7 @@ export declare class StructureViewer extends Viewer {
     bondsObject: THREE.Object3D;
     latticeConstantsGroup: any;
     container: any;
-    info: any;
+    info: THREE.Object3D;
     elements: any;
     sceneInfo: THREE.Scene;
     sceneStructure: THREE.Scene;
@@ -47,7 +47,6 @@ export declare class StructureViewer extends Viewer {
      * Hides or shows the shadows.
      */
     toggleShadows(value: boolean): void;
-    clear(): void;
     /**
      * Visualizes the given atomic structure.
      *
@@ -285,6 +284,10 @@ export declare class StructureViewer extends Viewer {
      * Get the positions of atoms in the global coordinate system.
      */
     getPositionsGlobal(): Array<THREE.Vector3>;
+    /**
+     * Get the positions of the center of cell in the global coordinate system.
+     */
+    getCOCGlobal(): Array<THREE.Vector3>;
     /**
      * Converts a list of list of numbers into vectors.
      *

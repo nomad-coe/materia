@@ -31,32 +31,35 @@ export class BrillouinZoneViewer extends Viewer {
      * one for the BZ mesh and another for the information that is laid on top.
      */
     setupScenes() {
+        // Setup the scenes in rendering order
         this.scenes = [];
-        this.sceneZone = new THREE.Scene();
-        this.scenes.push(this.sceneZone);
+        this.sceneRoot = new THREE.Scene();
+        this.scenes.push(this.sceneRoot);
         this.sceneInfo = new THREE.Scene();
         this.scenes.push(this.sceneInfo);
         this.root = new THREE.Object3D();
-        this.sceneZone.add(this.root);
+        this.sceneRoot.add(this.root);
         this.info = new THREE.Object3D();
         this.sceneInfo.add(this.info);
+        // Setup the objects that are affected by rotations etc.
+        this.objects = [this.root, this.info];
     }
     setupLights() {
         // Key light
         const keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
         keyLight.position.set(0, 0, 20);
-        this.sceneZone.add(keyLight);
+        this.sceneRoot.add(keyLight);
         // Fill light
         const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
         fillLight.position.set(-20, 0, -20);
-        this.sceneZone.add(fillLight);
+        this.sceneRoot.add(fillLight);
         // Back light
         const backLight = new THREE.DirectionalLight(0xffffff, 0.25);
         backLight.position.set(20, 0, -20);
-        this.sceneZone.add(backLight);
+        this.sceneRoot.add(backLight);
         // White ambient light.
         const ambientLight = new THREE.AmbientLight(0x404040, 3.7); // soft white light
-        this.sceneZone.add(ambientLight);
+        this.sceneRoot.add(ambientLight);
     }
     /**
      * Used to create a visualization for the first Brillouin Zone together with

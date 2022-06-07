@@ -7,54 +7,54 @@ import * as THREE from "three"
  * Class for visualizing an atomic structure.
  */
 export class StructureViewer extends Viewer {
-    structure:unknown;                    // The visualized structure
-    atomPos:number[][];                   // Contains the positions of the visualized atoms
-    positions:THREE.Vector3[];            // Contains the positions of the visualized atoms
-    atomicNumbers:number[];               // Contains the atomic numbers of the visualized atoms
-    atomNumbers:number[];                 // Contains the atomic numbers of the visualized atoms
-    B:THREE.Matrix3;
-    Bi:THREE.Matrix3;
-    basisVectors:THREE.Vector3[];
-    basisVectorCollapsed:boolean[];
-    maxRadii: number;
-    atomicRadii:Array<number> = [];       // Contains the atomic radii
-    elementColors:Array<string> = [];     // Contains the element colors
-    translation:THREE.Vector3             // Translation vector that has been applied to shift the view
+    structure:unknown                    // The visualized structure
+    atomPos:number[][]                   // Contains the positions of the visualized atoms
+    positions:THREE.Vector3[]            // Contains the positions of the visualized atoms
+    atomicNumbers:number[]               // Contains the atomic numbers of the visualized atoms
+    atomNumbers:number[]                 // Contains the atomic numbers of the visualized atoms
+    B:THREE.Matrix3
+    Bi:THREE.Matrix3
+    basisVectors:THREE.Vector3[]
+    basisVectorCollapsed:boolean[]
+    maxRadii: number
+    atomicRadii:Array<number> = []       // Contains the atomic radii
+    elementColors:Array<string> = []     // Contains the element colors
+    translation:THREE.Vector3            // Translation vector that has been applied to shift the view
 
-    meshMap:any = {};                     // Contains mappings from hashes to THREE.js meshes.
-    atomConfigMap:any = {};               // Contains mappings from atom indices to config hashes
-    configMap:any = {};                   // Contains mappings from config hashes to configs
-    root:THREE.Object3D;                  // three.js root object in the scene
-    atomsObject:THREE.Object3D;           // three.js object for storing the atoms
-    convCell:THREE.Object3D;              // three.js object for storing the cell
-    primCell:THREE.Object3D;              // three.js object for storing the primitive cell
-    bondsObject:THREE.Object3D;           // Contains the atomic bonds
-    latticeConstantsGroup:any;            // Contains visuals for lattice parameters
-    container:any;                        // Contains visuals
-    info:any;                             // Contains visuals for the overlayed information
-    elements:any;                         // Contains information about the elements included in the structure
-    sceneInfo:THREE.Scene                 // Scene containing the overlayed information
-    sceneStructure:THREE.Scene            // Scene containing the structure
+    meshMap:any = {}                     // Contains mappings from hashes to THREE.js meshes.
+    atomConfigMap:any = {}               // Contains mappings from atom indices to config hashes
+    configMap:any = {}                   // Contains mappings from config hashes to configs
+    root:THREE.Object3D                  // three.js root object in the scene
+    atomsObject:THREE.Object3D           // three.js object for storing the atoms
+    convCell:THREE.Object3D              // three.js object for storing the cell
+    primCell:THREE.Object3D              // three.js object for storing the primitive cell
+    bondsObject:THREE.Object3D           // Contains the atomic bonds
+    latticeConstantsGroup:any            // Contains visuals for lattice parameters
+    container:any                        // Contains visuals
+    info:THREE.Object3D                  // Contains visuals for the overlayed information
+    elements:any                         // Contains information about the elements included in the structure
+    sceneInfo:THREE.Scene                // Scene containing the overlayed information
+    sceneStructure:THREE.Scene           // Scene containing the structure
 
-    lights:Array<any> = [];               // Contains the lights in the scene
-    bondFills:Array<any> = [];            // Contains the bulk of the bonds
-    atomFills:Array<any> = [];            // Contains the bulk of the atoms
-    atomOutlines:Array<any> = [];         // Contains the outlines of the atoms
-    angleArcs:any;                        // Contains the arcs for the lattice angles
-    axisLabels:Array<any> = [];           // List of all labels in the view.
+    lights:Array<any> = []               // Contains the lights in the scene
+    bondFills:Array<any> = []            // Contains the bulk of the bonds
+    atomFills:Array<any> = []            // Contains the bulk of the atoms
+    atomOutlines:Array<any> = []         // Contains the outlines of the atoms
+    angleArcs:any                        // Contains the arcs for the lattice angles
+    axisLabels:Array<any> = []           // List of all labels in the view.
 
     /*
      * Overrides the implementation from the base class, as we need two scenes:
      * one for the structure and another for the information that is laid on
      * top.
      */
-    setupScenes() {
+    setupScenes() : void {
+        // Setup the scenes in rendering order
         this.scenes = [];
         this.sceneStructure = new THREE.Scene();
         this.scenes.push(this.sceneStructure);
         this.sceneInfo = new THREE.Scene();
         this.scenes.push(this.sceneInfo);
-
         this.root = new THREE.Object3D();
         this.container = new THREE.Object3D();
         this.info = new THREE.Object3D();
@@ -68,6 +68,9 @@ export class StructureViewer extends Viewer {
         this.sceneInfo.add(this.info);
         this.latticeConstantsGroup = new THREE.Object3D();
         this.container.add(this.latticeConstantsGroup);
+
+        // Setup the objects that are affected by rotations etc.
+        this.objects = [this.root, this.info]
     }
 
     /**
@@ -102,29 +105,6 @@ export class StructureViewer extends Viewer {
         // For some reason double rendering is required... Maybe delay()?
         // this.render();
         // this.render();
-    }
-
-    /*
-     * Clears current data and visualization.
-     */
-    clear(): void {
-        super.clear();
-        this.structure = undefined;
-        this.atomsObject = undefined;
-        this.convCell = undefined;
-        this.primCell = undefined;
-        this.bondsObject = undefined;
-        this.atomPos = undefined;
-        this.positions = undefined;
-        this.atomicNumbers = undefined;
-        this.latticeConstantsGroup = undefined;
-        this.B = undefined;
-        this.Bi = undefined;
-        this.basisVectors = undefined;
-        this.elements = undefined;
-        this.maxRadii = undefined;
-        this.atomicRadii = undefined;
-        this.elementColors = undefined;
     }
 
     /**
@@ -264,17 +244,19 @@ export class StructureViewer extends Viewer {
     center(positions:any) : void {
         let centerPos
         if (positions === "COP") {
-            const atomPos = this.getPositions()
+            const atomPos = this.getPositionsGlobal()
             centerPos = this.calculateCOP(atomPos);
         } else if (positions == 'COC') {
-            centerPos = new THREE.Vector3()
-                .add(this.basisVectors[0])
-                .add(this.basisVectors[1])
-                .add(this.basisVectors[2])
-            .multiplyScalar(0.5);
+            centerPos = this.getCOCGlobal()
+            // centerPos = new THREE.Vector3()
+            //     .add(this.basisVectors[0])
+            //     .add(this.basisVectors[1])
+            //     .add(this.basisVectors[2])
+            // .multiplyScalar(0.5);
         } else if (isArray(positions)) {
             if (isNumber(positions[0])) {
-                const points = positions.map(i => this.positions[i])
+                const atomPos = this.getPositionsGlobal()
+                const points = positions.map(i => atomPos[i])
                 centerPos = this.calculateCOP(points)
             } else {
                 const points = this.toVectors(positions)
@@ -284,10 +266,7 @@ export class StructureViewer extends Viewer {
             throw Error("Invalid center positions.")
         }
 
-        this.translation = centerPos
-        const invertedPos = centerPos.multiplyScalar(-1)
-        this.container.position.copy(invertedPos);
-        this.info.position.copy(invertedPos);
+        this.setTranslation(centerPos.multiplyScalar(-1))
     }
 
     /**
@@ -1040,7 +1019,7 @@ export class StructureViewer extends Viewer {
     getPositionsGlobal() : Array<THREE.Vector3> {
         const nAtoms = this.positions.length
         const worldPos = [];
-        this.atomsObject.updateMatrixWorld()
+        this.atomsObject.updateMatrixWorld() // This update is required
         for (let i=0; i < nAtoms; ++i) {
             const atom = this.atomsObject.getObjectByName(`atom${i}`)
             const wPos = new THREE.Vector3();
@@ -1048,6 +1027,20 @@ export class StructureViewer extends Viewer {
             worldPos.push(wPos)
         }
         return worldPos
+    }
+
+    /**
+     * Get the positions of the center of cell in the global coordinate system.
+     */
+    getCOCGlobal() : Array<THREE.Vector3> {
+        let COC = new THREE.Vector3()
+            .add(this.basisVectors[0])
+            .add(this.basisVectors[1])
+            .add(this.basisVectors[2])
+        .multiplyScalar(0.5);
+        this.root.updateMatrixWorld() // This update is required
+        COC = this.root.localToWorld(COC)
+        return COC
     }
 
     /**
@@ -1122,7 +1115,7 @@ export class StructureViewer extends Viewer {
         keyLight.shadow.camera.bottom = -shadowCutoff;
 
         keyLight.position.set(0, 0, 20);
-        this.sceneStructure.add( keyLight );
+        this.sceneStructure.add(keyLight);
         this.lights.push(keyLight);
 
         // Fill light
@@ -1137,11 +1130,11 @@ export class StructureViewer extends Viewer {
         backLight.shadow.mapSize.width = shadowMapWidth;
         backLight.shadow.mapSize.height = shadowMapWidth;
         backLight.shadow.bias = shadowBias;
-        backLight.position.set( 20, 0, -20 );
+        backLight.position.set(20, 0, -20);
 
         // White ambient light.
-        const ambientLight = new THREE.AmbientLight( 0x404040, 1.7 ); // soft white light
-        this.sceneStructure.add( ambientLight );
+        const ambientLight = new THREE.AmbientLight(0x404040, 1.7); // soft white light
+        this.sceneStructure.add(ambientLight);
     }
 
     /**

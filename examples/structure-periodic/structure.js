@@ -26,6 +26,10 @@ let structure = {
 viewer.load(structure)
 
 // Setup viewer initial state
+viewer.atoms()
+viewer.bonds()
+viewer.cell()
+viewer.latticeConstants()
 viewer.align([
     ["up", "c"],
     ["right", "b"],
@@ -34,10 +38,6 @@ viewer.rotate([
     [0, 1, 0, 60],
     [1, 0, 0, 30],
 ])
-viewer.atoms()
-viewer.bonds()
-viewer.cell()
-viewer.latticeConstants()
 viewer.center('COC')
 viewer.fit('full', 0.5)
 viewer.controls()
