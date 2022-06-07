@@ -6,7 +6,6 @@ import * as THREE from "three"
  */
 export abstract class Viewer {
     root:THREE.Object3D
-    sceneInfo:THREE.Scene
     camera:any                           // three.js camera
     renderer:any                         // three.js renderer object
     controlsObject:any                   // Controller object for handling mouse interaction with the system
@@ -294,18 +293,16 @@ export abstract class Viewer {
      * Rotates the scenes.
      *
      * @param {number[][]} rotations The rotations as a list. Each rotation
-     * should be an array containing four numbers: [x, y, z, angle]. The
-     * rotations are given as a list of 4-element arrays containing the
-     * rotations axis and rotation angle in degrees. E.g. [[1, 0, 0, 90]] would
-     * apply a 90 degree rotation with respect to the x-coordinate. If multiple
-     * rotations are specified, they will be applied in the given order. Notice
-     * that these rotations are applied with respect to a global coordinate
-     * system, not the coordinate system of the structure. In this global
-     * coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards
-     * and [0, 0, 1] points away from the screen. The rotations are applied in
-     * the given order.
+     * should be an array containing four numbers: [x, y, z, angle]. E.g. [[1,
+     * 0, 0, 90]] would apply a 90 degree rotation with respect to the
+     * x-coordinate. If multiple rotations are specified, they will be applied
+     * in the given order. Notice that these rotations are applied with respect
+     * to a global coordinate system, not the coordinate system of the
+     * structure. In this global coordinate system [1, 0, 0] points to the
+     * right, [0, 1, 0] points upwards and [0, 0, 1] points away from the
+     * screen. The rotations are applied in the given order.
      */
-    rotate(rotations: number[]): void {
+    rotate(rotations: number[][]): void {
         if (rotations === undefined) {
             return;
         }
@@ -313,8 +310,25 @@ export abstract class Viewer {
             const basis = new THREE.Vector3(r[0], r[1], r[2]);
             basis.normalize();
             const angle = r[3]/180*Math.PI;
-            this.rotateAroundWorldAxis(this.root, basis, angle);
-            this.rotateAroundWorldAxis(this.sceneInfo, basis, angle);
+            for (const scene of this.scenes) {
+                this.rotateAroundWorldAxis(scene, basis, angle);
+            }
+        }
+    }
+
+    /**
+     * Sets the rotation of all the scenes.
+     *
+     * @param {number[]} rotation The rotation as a list. Rotation should be an
+     * array containing four numbers: [x, y, z, angle]. E.g. [1, 0, 0, 90] would
+     * set a 90 degree rotation with respect to the x-coordinate.
+     */
+    setRotation(rotation: number[]): void {
+        const basis = new THREE.Vector3(rotation[0], rotation[1], rotation[2]);
+        basis.normalize();
+        const angle = rotation[3]/180*Math.PI;
+        for (const scene of this.scenes) {
+            scene.setRotationFromAxisAngle(basis, angle)
         }
     }
 
@@ -532,7 +546,7 @@ export abstract class Viewer {
         for (let iScene=0; iScene<this.scenes.length; ++iScene) {
             const scene = this.scenes[iScene];
             this.renderer.render(scene, this.camera);
-            if (iScene !== this.scenes.length -1) {
+            if (iScene !== this.scenes.length - 1) {
                 this.renderer.clearDepth();
             }
         }
@@ -654,7 +668,7 @@ export abstract class Viewer {
         return result.applyMatrix3(A).applyMatrix3(Bi);
     }
 
-    alignView(alignments:string[][], directions:any, objects:THREE.Object3D[], render = true): void {
+    alignView(alignments:string[][], directions:any): void {
         // Check alignment validity
         if (alignments === undefined) {
             return
@@ -708,9 +722,9 @@ export abstract class Viewer {
                 }
                 
                 // Rotate the given objects
-                for (const obj of objects) {
-                    obj.applyQuaternion(quaternion);
-                    obj.updateMatrixWorld()
+                for (const scene of this.scenes) {
+                    scene.applyQuaternion(quaternion);
+                    scene.updateMatrixWorld()
                 }
 
                 if (direction == "right" || direction == "left") {
@@ -725,10 +739,6 @@ export abstract class Viewer {
 
         for (const alignment of alignments) {
             rotate(alignment)
-        }
-        
-        if (render) {
-            this.render()
         }
     }
 }

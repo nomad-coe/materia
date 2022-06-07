@@ -27,10 +27,10 @@ export declare class StructureViewer extends Viewer {
     bondsObject: THREE.Object3D;
     latticeConstantsGroup: any;
     container: any;
-    infoContainer: any;
+    info: any;
     elements: any;
-    sceneStructure: any;
-    sceneInfo: any;
+    sceneInfo: THREE.Scene;
+    sceneStructure: THREE.Scene;
     lights: Array<any>;
     bondFills: Array<any>;
     atomFills: Array<any>;

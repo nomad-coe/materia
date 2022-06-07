@@ -27,8 +27,8 @@ viewer.load(structure)
 
 // Setup viewer initial state
 viewer.align([
-  ["up", "c"],
-  ["right", "b"],
+    ["up", "c"],
+    ["right", "b"],
 ])
 viewer.rotate([
     [0, 1, 0, 60],

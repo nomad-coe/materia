@@ -477,10 +477,8 @@ export class BrillouinZoneViewer extends Viewer {
             "-c": this.basisVectors[2].clone().negate(),
             "segments": segmentVector,
         };
-        // List the objects whose matrix needs to be updated
-        const objects = [this.root, this.sceneInfo];
-        // Rotate
-        super.alignView(alignments, directions, objects);
+        // Align
+        super.alignView(alignments, directions);
     }
     createCircle(position, diameter, color) {
         // Configure canvas

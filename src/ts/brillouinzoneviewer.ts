@@ -11,6 +11,7 @@ import voronoi from 'voronoi-diagram'
 export class BrillouinZoneViewer extends Viewer {
     private data:any                     // The visualized structure
     private sceneZone:THREE.Scene        // The scene containing the Brillouin zone mesh
+    private sceneInfo:THREE.Scene        // The scene containing the overlayed information
     private info:THREE.Object3D          // The scene containing the Brillouin zone mesh
     private basis:any                    // The reciprocal cell basis
     private segments:any                 // The segments
@@ -539,11 +540,8 @@ export class BrillouinZoneViewer extends Viewer {
             "segments": segmentVector,
         }
 
-        // List the objects whose matrix needs to be updated
-        const objects = [this.root, this.sceneInfo]
-
-        // Rotate
-        super.alignView(alignments, directions, objects);
+        // Align
+        super.alignView(alignments, directions);
     }
 
     createCircle(position:THREE.Vector3, diameter:number, color:string): THREE.Object3D {

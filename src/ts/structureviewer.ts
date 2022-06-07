@@ -28,13 +28,13 @@ export class StructureViewer extends Viewer {
     atomsObject:THREE.Object3D;           // three.js object for storing the atoms
     convCell:THREE.Object3D;              // three.js object for storing the cell
     primCell:THREE.Object3D;              // three.js object for storing the primitive cell
-    bondsObject:THREE.Object3D;                 // Contains the atomic bonds
+    bondsObject:THREE.Object3D;           // Contains the atomic bonds
     latticeConstantsGroup:any;            // Contains visuals for lattice parameters
     container:any;                        // Contains visuals
-    infoContainer:any;                    // Contains visuals for the overlayed information
+    info:any;                             // Contains visuals for the overlayed information
     elements:any;                         // Contains information about the elements included in the structure
-    sceneStructure:any;
-    sceneInfo:any;
+    sceneInfo:THREE.Scene                 // Scene containing the overlayed information
+    sceneStructure:THREE.Scene            // Scene containing the structure
 
     lights:Array<any> = [];               // Contains the lights in the scene
     bondFills:Array<any> = [];            // Contains the bulk of the bonds
@@ -57,7 +57,7 @@ export class StructureViewer extends Viewer {
 
         this.root = new THREE.Object3D();
         this.container = new THREE.Object3D();
-        this.infoContainer = new THREE.Object3D();
+        this.info = new THREE.Object3D();
         this.atomsObject = new THREE.Object3D();
         this.bondsObject = new THREE.Object3D();
         this.container.add(this.atomsObject);
@@ -65,7 +65,7 @@ export class StructureViewer extends Viewer {
         this.angleArcs = new THREE.Object3D();
         this.root.add(this.container);
         this.sceneStructure.add(this.root);
-        this.sceneInfo.add(this.infoContainer);
+        this.sceneInfo.add(this.info);
         this.latticeConstantsGroup = new THREE.Object3D();
         this.container.add(this.latticeConstantsGroup);
     }
@@ -287,7 +287,7 @@ export class StructureViewer extends Viewer {
         this.translation = centerPos
         const invertedPos = centerPos.multiplyScalar(-1)
         this.container.position.copy(invertedPos);
-        this.infoContainer.position.copy(invertedPos);
+        this.info.position.copy(invertedPos);
     }
 
     /**
@@ -352,12 +352,8 @@ export class StructureViewer extends Viewer {
             "c": this.basisVectors[2].clone(),
             "-c": this.basisVectors[2].clone().negate(),
         }
-
-        // List the objects whose matrix needs to be updated
-        const objects = [this.root, this.sceneInfo]
-
-        // Rotate
-        super.alignView(alignments, directions, objects);
+        // Align
+        super.alignView(alignments, directions)
     }
 
     /**
@@ -783,8 +779,8 @@ export class StructureViewer extends Viewer {
         // Create new instances
         const basis = this.basisVectors
         this.axisLabels = []
-        this.infoContainer.add(this.latticeConstantsGroup);
-        this.infoContainer.add(this.angleArcs);
+        this.info.add(this.latticeConstantsGroup);
+        this.info.add(this.angleArcs);
         const infoColor = 0x000000;
         const axisOffset = 1.3;
 

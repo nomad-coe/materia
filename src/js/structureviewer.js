@@ -295,7 +295,7 @@ export class StructureViewer extends Viewer {
         this.scenes.push(this.sceneInfo);
         this.root = new THREE.Object3D();
         this.container = new THREE.Object3D();
-        this.infoContainer = new THREE.Object3D();
+        this.info = new THREE.Object3D();
         this.atomsObject = new THREE.Object3D();
         this.bondsObject = new THREE.Object3D();
         this.container.add(this.atomsObject);
@@ -303,7 +303,7 @@ export class StructureViewer extends Viewer {
         this.angleArcs = new THREE.Object3D();
         this.root.add(this.container);
         this.sceneStructure.add(this.root);
-        this.sceneInfo.add(this.infoContainer);
+        this.sceneInfo.add(this.info);
         this.latticeConstantsGroup = new THREE.Object3D();
         this.container.add(this.latticeConstantsGroup);
     }
@@ -515,7 +515,7 @@ export class StructureViewer extends Viewer {
         this.translation = centerPos;
         const invertedPos = centerPos.multiplyScalar(-1);
         this.container.position.copy(invertedPos);
-        this.infoContainer.position.copy(invertedPos);
+        this.info.position.copy(invertedPos);
     }
     /**
      * Adjust the zoom so that the contents fit on the screen. Notice that is is
@@ -580,10 +580,8 @@ export class StructureViewer extends Viewer {
             "c": this.basisVectors[2].clone(),
             "-c": this.basisVectors[2].clone().negate(),
         };
-        // List the objects whose matrix needs to be updated
-        const objects = [this.root, this.sceneInfo];
-        // Rotate
-        super.alignView(alignments, directions, objects);
+        // Align
+        super.alignView(alignments, directions);
     }
     /**
      * Creates/updates representation for the atoms based on the given list of
@@ -991,8 +989,8 @@ export class StructureViewer extends Viewer {
         // Create new instances
         const basis = this.basisVectors;
         this.axisLabels = [];
-        this.infoContainer.add(this.latticeConstantsGroup);
-        this.infoContainer.add(this.angleArcs);
+        this.info.add(this.latticeConstantsGroup);
+        this.info.add(this.angleArcs);
         const infoColor = 0x000000;
         const axisOffset = 1.3;
         let iBasis = -1;

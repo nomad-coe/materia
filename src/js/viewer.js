@@ -262,16 +262,14 @@ export class Viewer {
      * Rotates the scenes.
      *
      * @param {number[][]} rotations The rotations as a list. Each rotation
-     * should be an array containing four numbers: [x, y, z, angle]. The
-     * rotations are given as a list of 4-element arrays containing the
-     * rotations axis and rotation angle in degrees. E.g. [[1, 0, 0, 90]] would
-     * apply a 90 degree rotation with respect to the x-coordinate. If multiple
-     * rotations are specified, they will be applied in the given order. Notice
-     * that these rotations are applied with respect to a global coordinate
-     * system, not the coordinate system of the structure. In this global
-     * coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards
-     * and [0, 0, 1] points away from the screen. The rotations are applied in
-     * the given order.
+     * should be an array containing four numbers: [x, y, z, angle]. E.g. [[1,
+     * 0, 0, 90]] would apply a 90 degree rotation with respect to the
+     * x-coordinate. If multiple rotations are specified, they will be applied
+     * in the given order. Notice that these rotations are applied with respect
+     * to a global coordinate system, not the coordinate system of the
+     * structure. In this global coordinate system [1, 0, 0] points to the
+     * right, [0, 1, 0] points upwards and [0, 0, 1] points away from the
+     * screen. The rotations are applied in the given order.
      */
     rotate(rotations) {
         if (rotations === undefined) {
@@ -281,8 +279,24 @@ export class Viewer {
             const basis = new THREE.Vector3(r[0], r[1], r[2]);
             basis.normalize();
             const angle = r[3] / 180 * Math.PI;
-            this.rotateAroundWorldAxis(this.root, basis, angle);
-            this.rotateAroundWorldAxis(this.sceneInfo, basis, angle);
+            for (const scene of this.scenes) {
+                this.rotateAroundWorldAxis(scene, basis, angle);
+            }
+        }
+    }
+    /**
+     * Sets the rotation of all the scenes.
+     *
+     * @param {number[]} rotation The rotation as a list. Rotation should be an
+     * array containing four numbers: [x, y, z, angle]. E.g. [1, 0, 0, 90] would
+     * set a 90 degree rotation with respect to the x-coordinate.
+     */
+    setRotation(rotation) {
+        const basis = new THREE.Vector3(rotation[0], rotation[1], rotation[2]);
+        basis.normalize();
+        const angle = rotation[3] / 180 * Math.PI;
+        for (const scene of this.scenes) {
+            scene.setRotationFromAxisAngle(basis, angle);
         }
     }
     /**
@@ -577,7 +591,7 @@ export class Viewer {
         const result = copy ? a.clone() : a;
         return result.applyMatrix3(A).applyMatrix3(Bi);
     }
-    alignView(alignments, directions, objects, render = true) {
+    alignView(alignments, directions) {
         // Check alignment validity
         if (alignments === undefined) {
             return;
@@ -624,9 +638,9 @@ export class Viewer {
                     directions[direction].applyQuaternion(quaternion);
                 }
                 // Rotate the given objects
-                for (const obj of objects) {
-                    obj.applyQuaternion(quaternion);
-                    obj.updateMatrixWorld();
+                for (const scene of this.scenes) {
+                    scene.applyQuaternion(quaternion);
+                    scene.updateMatrixWorld();
                 }
                 if (direction == "right" || direction == "left") {
                     alignedDirections.push("x");
@@ -641,9 +655,6 @@ export class Viewer {
         };
         for (const alignment of alignments) {
             rotate(alignment);
-        }
-        if (render) {
-            this.render();
         }
     }
 }

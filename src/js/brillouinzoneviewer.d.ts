@@ -3,6 +3,7 @@ import * as THREE from "three";
 export declare class BrillouinZoneViewer extends Viewer {
     private data;
     private sceneZone;
+    private sceneInfo;
     private info;
     private basis;
     private segments;
