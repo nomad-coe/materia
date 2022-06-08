@@ -76,15 +76,14 @@ export declare class StructureViewer extends Viewer {
      *   If these bonds are not specified, the visualizer will by default use an
      *   automated detection of bonds. This can be disabled through
      *   options.bonds.enabled.
-     * @param {(string|number[])} structure.wrap.type How atomic positions are
+     * @param {string} structure.wrap.type How atomic positions are
      * wrapped in periodic systems. Available options are:
      *    - "none": Visualized as is.
-     *    - "wrap": Positions wrapped within unit cell.
      *    - "boundary": Positions that are on the cell boundaries are repeated.
      *    - [a, b, c]: Positions are repeated along each lattice vector the
      *      given amount of times.
-     * Defaults to 'none'
-     * @param {(string|number[])} structure.wrap.tolerance The wrapping
+     *   Defaults to 'none'
+     * @param {number} structure.wrap.tolerance The wrapping
      *   tolerance in angstroms. Defaults to 1e-8.
      */
     load(structure: any): boolean;
@@ -342,9 +341,16 @@ export declare class StructureViewer extends Viewer {
      */
     repeat(multipliers: Array<number>, fracPos: any, labels: any): void;
     /**
-     * Wraps all atoms to be within the unit cell.
+     * Controls the wrapping of atoms. Notice that only cell directions with
+     * periodic boundaries will be wrapped.
+     *
+     * @param {boolean} wrap - Whether to wrap or not.
      */
-    wrap(positions: any, fractional?: boolean): void;
+    wrap(wrap?: boolean): void;
+    /**
+     * Set the position for atoms in the currently loaded structure.
+     */
+    setPositions(positions: THREE.Vector3[], fractional?: boolean): void;
     /**
      * Used to add periodic repetitions of atoms at the unit cell boundary.
      */

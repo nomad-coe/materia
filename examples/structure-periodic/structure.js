@@ -11,8 +11,8 @@ let structure = {
         [0.0, 0.0, 5.6402]
     ],
     positions: [
-        [0.0, 0.5, 0.0],
-        [0.0, 0.5, 0.5],
+        [0.0, 1.5, 0.0],
+        [0.0, 1.5, 0.5],
         [0.0, 0.0, 0.5],
         [0.0, 0.0, 0.0],
         [0.5, 0.5, 0.5],
@@ -27,6 +27,7 @@ viewer.load(structure)
 
 // Setup viewer initial state
 viewer.atoms()
+viewer.wrap(true)
 viewer.bonds()
 viewer.cell()
 viewer.latticeConstants()

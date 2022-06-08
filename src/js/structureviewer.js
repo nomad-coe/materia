@@ -455,15 +455,14 @@ export class StructureViewer extends Viewer {
      *   If these bonds are not specified, the visualizer will by default use an
      *   automated detection of bonds. This can be disabled through
      *   options.bonds.enabled.
-     * @param {(string|number[])} structure.wrap.type How atomic positions are
+     * @param {string} structure.wrap.type How atomic positions are
      * wrapped in periodic systems. Available options are:
      *    - "none": Visualized as is.
-     *    - "wrap": Positions wrapped within unit cell.
      *    - "boundary": Positions that are on the cell boundaries are repeated.
      *    - [a, b, c]: Positions are repeated along each lattice vector the
      *      given amount of times.
-     * Defaults to 'none'
-     * @param {(string|number[])} structure.wrap.tolerance The wrapping
+     *   Defaults to 'none'
+     * @param {number} structure.wrap.tolerance The wrapping
      *   tolerance in angstroms. Defaults to 1e-8.
      */
     load(structure) {
@@ -1472,23 +1471,50 @@ export class StructureViewer extends Viewer {
         }
     }
     /**
-     * Wraps all atoms to be within the unit cell.
+     * Controls the wrapping of atoms. Notice that only cell directions with
+     * periodic boundaries will be wrapped.
+     *
+     * @param {boolean} wrap - Whether to wrap or not.
      */
-    wrap(positions, fractional = true) {
-        if (!fractional) {
-            this.toScaled(positions, false);
+    wrap(wrap = true) {
+        const pbc = this.structure["pbc"];
+        if (!pbc.some(a => a)) {
+            return;
         }
-        for (let len = positions.length, i = 0; i < len; ++i) {
-            const iFracPos = positions[i];
-            if (this.structure["pbc"][0])
-                iFracPos.x = iFracPos.x < 0 ? 1 + (iFracPos.x % 1) : iFracPos.x % 1;
-            if (this.structure["pbc"][1])
-                iFracPos.y = iFracPos.y < 0 ? 1 + (iFracPos.y % 1) : iFracPos.y % 1;
-            if (this.structure["pbc"][2])
-                iFracPos.z = iFracPos.z < 0 ? 1 + (iFracPos.z % 1) : iFracPos.z % 1;
+        // Check that cell is valid
+        if (isNil(this.B)) {
+            throw Error("Could not wrap as cell is not set.");
         }
-        if (!fractional) {
+        // Get scaled positions, wrap to be within cell, revert back to
+        // cartesian and save.
+        if (wrap) {
+            const pos = this.toScaled(this.positions, true);
+            for (let len = pos.length, i = 0; i < len; ++i) {
+                const iFracPos = pos[i];
+                if (pbc[0])
+                    iFracPos.x = iFracPos.x < 0 ? 1 + (iFracPos.x % 1) : iFracPos.x % 1;
+                if (pbc[1])
+                    iFracPos.y = iFracPos.y < 0 ? 1 + (iFracPos.y % 1) : iFracPos.y % 1;
+                if (pbc[2])
+                    iFracPos.z = iFracPos.z < 0 ? 1 + (iFracPos.z % 1) : iFracPos.z % 1;
+            }
+            this.setPositions(pos, true);
+        }
+        else {
+            this.setPositions(this.positions, false);
+        }
+    }
+    /**
+     * Set the position for atoms in the currently loaded structure.
+     */
+    setPositions(positions, fractional = false) {
+        if (fractional) {
             this.toCartesian(positions, false);
+        }
+        for (let i = 0, size = positions.length; i < size; ++i) {
+            const position = positions[i];
+            const atom = this.getAtom(i);
+            atom.position.copy(position);
         }
     }
     /**
@@ -1574,10 +1600,7 @@ export class StructureViewer extends Viewer {
         this.atomOutlines = [];
         // Determine the periodicity handling
         if (pbc.some(a => { return a === true; })) {
-            if (wrap.type === "wrap") {
-                this.wrap(positions, fractional);
-            }
-            else if (fractional && wrap.type === "boundary") {
+            if (fractional && wrap.type === "boundary") {
                 this.addBoundaryAtoms(positions, labels, wrap.tolerance);
             }
             else if (fractional && Array.isArray(wrap)) {

@@ -94,10 +94,12 @@ API
 .. js:autofunction:: StructureViewer#latticeConstants
 .. js:autofunction:: StructureViewer#center
 .. js:autofunction:: StructureViewer#fit
-.. js:autofunction:: StructureViewer#translate
+.. js:autofunction:: StructureViewer#wrap
+.. js:autofunction:: StructureViewer#align
+.. js:autofunction:: Viewer#translate
+.. js:autofunction:: Viewer#setTranslation
 .. js:autofunction:: Viewer#rotate
 .. js:autofunction:: Viewer#setRotation
-.. js:autofunction:: StructureViewer#align
 .. js:autofunction:: Viewer#controls
 .. js:autofunction:: Viewer#render
 .. js:autofunction:: Viewer#zoom

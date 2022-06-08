@@ -89,9 +89,11 @@ API
 .. js:autoclass:: Viewer
 .. js:autofunction:: BrillouinZoneViewer#load
 .. js:autofunction:: BrillouinZoneViewer#fit
+.. js:autofunction:: BrillouinZoneViewer#align
 .. js:autofunction:: Viewer#rotate
 .. js:autofunction:: Viewer#setRotation
-.. js:autofunction:: BrillouinZoneViewer#align
+.. js:autofunction:: Viewer#translate
+.. js:autofunction:: Viewer#setTranslation
 .. js:autofunction:: Viewer#controls
 .. js:autofunction:: Viewer#render
 .. js:autofunction:: Viewer#zoom

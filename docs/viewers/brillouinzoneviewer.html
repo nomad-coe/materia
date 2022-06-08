@@ -178,7 +178,7 @@ element.</p></li>
 <a class="reference internal" href="#api"><span class="std std-ref">API</span></a>, this may contain e.g. translations,
 rotations, centerings, fits, zooming etc.</p></li>
 <li><p>Render the result on the HTML host element at any point using the
-<a class="reference internal" href="#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> method.</p></li>
+<a class="reference internal" href="structureviewer.html#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> method.</p></li>
 <li><p>Do any modifications dynamically according to your applications state, do not
 forget to render when you want the result to be displayed.</p></li>
 </ul>
@@ -186,8 +186,8 @@ forget to render when you want the result to be displayed.</p></li>
 </section>
 <section id="constructor">
 <h2>Constructor<a class="headerlink" href="#constructor" title="Permalink to this heading"></a></h2>
-<p>In the constructor <a class="reference internal" href="#Viewer" title="Viewer"><code class="xref js js-class docutils literal notranslate"><span class="pre">Viewer()</span></code></a> you can define the host element (this can
-also be changed at any point using the <a class="reference internal" href="#Viewer.changeHostElement" title="Viewer.changeHostElement"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.changeHostElement()</span></code></a> method)
+<p>In the constructor <a class="reference internal" href="structureviewer.html#Viewer" title="Viewer"><code class="xref js js-class docutils literal notranslate"><span class="pre">Viewer()</span></code></a> you can define the host element (this can
+also be changed at any point using the <a class="reference internal" href="structureviewer.html#Viewer.changeHostElement" title="Viewer.changeHostElement"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.changeHostElement()</span></code></a> method)
 together with a set of fixed options that control the rendering.</p>
 </section>
 <section id="loading-a-structure">
@@ -211,7 +211,7 @@ see <a class="reference internal" href="#render"><span class="std std-ref">Rende
 <section id="render">
 <h2>Render<a class="headerlink" href="#render" title="Permalink to this heading"></a></h2>
 <p>You can control when the structure gets rendered on screen by manually calling
-the <a class="reference internal" href="#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> method. This way you can modify any number of options
+the <a class="reference internal" href="structureviewer.html#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> method. This way you can modify any number of options
 without any screen flickering by only calling render when you are finished.</p>
 </section>
 <section id="tips">
@@ -220,12 +220,12 @@ without any screen flickering by only calling render when you are finished.</p>
 <div><ul class="simple">
 <li><p>If you are not seeing your changes updated on the screen, or they are updated
 only after interacting with the structure, double check that you have called
-<a class="reference internal" href="#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> after your changes.</p></li>
+<a class="reference internal" href="structureviewer.html#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> after your changes.</p></li>
 <li><p>When the HTML element containing the canvas change size, you may want to
-refit the canvas to it using <a class="reference internal" href="#Viewer.fitCanvas" title="Viewer.fitCanvas"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.fitCanvas()</span></code></a>.</p></li>
+refit the canvas to it using <a class="reference internal" href="structureviewer.html#Viewer.fitCanvas" title="Viewer.fitCanvas"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.fitCanvas()</span></code></a>.</p></li>
 <li><p>You can change the visualization canvas at any point by calling
-<a class="reference internal" href="#Viewer.changeHostElement" title="Viewer.changeHostElement"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.changeHostElement()</span></code></a>. Remember to refit the canvas after this
-with <a class="reference internal" href="#Viewer.fitCanvas" title="Viewer.fitCanvas"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.fitCanvas()</span></code></a>.</p></li>
+<a class="reference internal" href="structureviewer.html#Viewer.changeHostElement" title="Viewer.changeHostElement"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.changeHostElement()</span></code></a>. Remember to refit the canvas after this
+with <a class="reference internal" href="structureviewer.html#Viewer.fitCanvas" title="Viewer.fitCanvas"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.fitCanvas()</span></code></a>.</p></li>
 </ul>
 </div></blockquote>
 </section>
@@ -317,6 +317,20 @@ typically useful to center around a point of interest first.</p>
 </dd></dl>
 
 <dl class="js function">
+<dt class="sig sig-object js" id="BrillouinZoneViewer.align">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">BrillouinZoneViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">align</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alignments</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BrillouinZoneViewer.align" title="Permalink to this definition"></a></dt>
+<dd><p>Used to rotate the contents based of the alignment of the basis cell
+vectors or the segments with respect to the cartesian axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alignments</strong> – List of up to two alignments for any two axis vectors. E.g. [[“up”, “c”], [“right”, “segments”]] will force the third basis vector to point exactly up, and the segments to as close to right as possible. The alignments are applied in the given order.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
 <dt class="sig sig-object js" id="Viewer.rotate">
 <span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">rotate</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotations</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.rotate" title="Permalink to this definition"></a></dt>
 <dd><p>Rotates the scenes.</p>
@@ -343,14 +357,26 @@ typically useful to center around a point of interest first.</p>
 </dd></dl>
 
 <dl class="js function">
-<dt class="sig sig-object js" id="BrillouinZoneViewer.align">
-<span class="sig-prename descclassname"><span class="n"><span class="pre">BrillouinZoneViewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">align</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alignments</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BrillouinZoneViewer.align" title="Permalink to this definition"></a></dt>
-<dd><p>Used to rotate the contents based of the alignment of the basis cell
-vectors or the segments with respect to the cartesian axes.</p>
+<dt class="sig sig-object js" id="Viewer.translate">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">translate</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotations</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.translate" title="Permalink to this definition"></a></dt>
+<dd><p>Translates the objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Arguments</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>alignments</strong> – List of up to two alignments for any two axis vectors. E.g. [[“up”, “c”], [“right”, “segments”]] will force the third basis vector to point exactly up, and the segments to as close to right as possible. The alignments are applied in the given order.</p></li>
+<li><p><strong>rotations</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – The rotations as a list. Each rotation should be an array containing four numbers: [x, y, z, angle]. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with respect to the x-coordinate. If multiple rotations are specified, they will be applied in the given order. Notice that these rotations are applied with respect to a global coordinate system, not the coordinate system of the structure. In this global coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away from the screen. The rotations are applied in the given order.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="js function">
+<dt class="sig sig-object js" id="Viewer.setTranslation">
+<span class="sig-prename descclassname"><span class="n"><span class="pre">Viewer</span></span><span class="p"><span class="pre">.</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">setTranslation</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotations</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer.setTranslation" title="Permalink to this definition"></a></dt>
+<dd><p>Translates the objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Arguments</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rotations</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Array.</span></code></span>) – The rotations as a list. Each rotation should be an array containing four numbers: [x, y, z, angle]. E.g. [[1, 0, 0, 90]] would apply a 90 degree rotation with respect to the x-coordinate. If multiple rotations are specified, they will be applied in the given order. Notice that these rotations are applied with respect to a global coordinate system, not the coordinate system of the structure. In this global coordinate system [1, 0, 0] points to the right, [0, 1, 0] points upwards and [0, 0, 1] points away from the screen. The rotations are applied in the given order.</p></li>
 </ul>
 </dd>
 </dl>
