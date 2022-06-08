@@ -20,20 +20,27 @@ export class BrillouinZoneViewer extends Viewer {
     labelPoints:any              // Contains the labels of special k-points
     basisVectors:THREE.Vector3[]
     B:THREE.Matrix3
-    controlDefaults = {                  // Default controls settings
-        zoom: {
-            enabled: true,
-            speed: 0.2
-        },
-        rotation: {
-            enabled: true,
-            speed: 40
-        },
-        pan: {
-            enabled: true,
-            speed: 10
-        },
-        resetOnDoubleClick: true
+
+    /**
+     * Saves the default options.
+    */
+    setOptions(options:any): void {
+        const controlDefaults = {
+            zoom: {
+                enabled: true,
+                speed: 0.2
+            },
+            rotation: {
+                enabled: true,
+                speed: 40
+            },
+            pan: {
+                enabled: true,
+                speed: 10
+            },
+            resetOnDoubleClick: true
+        }
+        this.controlDefaults = merge(cloneDeep(controlDefaults), cloneDeep(options?.controls))
     }
 
     /*

@@ -37,92 +37,14 @@ export declare class StructureViewer extends Viewer {
     atomOutlines: Array<any>;
     angleArcs: any;
     axisLabels: Array<any>;
-    atomDefaults: {
-        material: {
-            phong: {
-                shininess: number;
-            };
-        };
-        outline: {
-            enabled: boolean;
-            color: string;
-            size: number;
-        };
-        opacity: number;
-        color: string;
-        radius: string;
-        scale: number;
-        smoothness: number;
-    };
-    bondDefaults: {
-        enabled: boolean;
-        material: {
-            phong: {
-                shininess: number;
-            };
-        };
-        outline: {
-            enabled: boolean;
-            color: string;
-            size: number;
-        };
-        color: string;
-        radius: number;
-        threshold: number;
-        smoothness: number;
-    };
-    cellDefaults: {
-        enabled: boolean;
-        color: string;
-        linewidth: number;
-        dashSize: number;
-        gapSize: number;
-        periodicity: boolean[];
-    };
-    latticeConstantDefaults: {
-        enabled: boolean;
-        periodicity: boolean[];
-        font: string;
-        size: number;
-        stroke: {
-            width: number;
-            color: string;
-        };
-        a: {
-            enabled: boolean;
-            color: string;
-            label: string;
-        };
-        b: {
-            enabled: boolean;
-            color: string;
-            label: string;
-        };
-        c: {
-            enabled: boolean;
-            color: string;
-            label: string;
-        };
-        alpha: {
-            enabled: boolean;
-            color: string;
-            label: string;
-        };
-        beta: {
-            enabled: boolean;
-            color: string;
-            label: string;
-        };
-        gamma: {
-            enabled: boolean;
-            color: string;
-            label: string;
-        };
-    };
+    atomDefaults: any;
+    bondDefaults: any;
+    cellDefaults: any;
+    latticeConstantDefaults: any;
     /**
      * Saves the default options.
     */
-    setupOptions(options: any): void;
+    setOptions(options: any): void;
     setupScenes(): void;
     /**
      * Returns information about the elements included in the structure.

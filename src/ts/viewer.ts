@@ -14,35 +14,8 @@ export abstract class Viewer {
     rootElement:any                      // A root html element that contains all visualization components
     options:any = {}                     // Options for the viewer. Can be e.g. used to control which settings are enabled
     translation:THREE.Vector3 = new THREE.Vector3() // Translation vector that has been applied to shift the view
-    controlDefaults = {                  // Default controls settings
-        zoom: {
-            enabled: true,
-            speed: 0.2
-        },
-        rotation: {
-            enabled: true,
-            speed: 2.5
-        },
-        pan: {
-            enabled: true,
-            speed: 10
-        },
-        resetOnDoubleClick: true
-    }
-    rendererDefaults = {
-        pixelRatioScale: 1,
-        antialias: {
-            enabled: true,
-        },
-        background: {
-            color: "#fff",
-            opacity: 0,
-        },
-        shadows: {
-            enabled: false,
-        }
-    }
-
+    controlDefaults:any
+    rendererDefaults:any
 
     /**
      * @param {any} hostElement is the html element where the visualization
@@ -56,12 +29,45 @@ export abstract class Viewer {
      * by atoms onto others. Note that enabling this increases the computational
      * cost for doing the visualization. Defaults to false
      */
-    constructor(public hostElement:any, options={}) {
+    constructor(public hostElement:any, options:any={}) {
         // Check that OpenGL is available, otherwise throw an exception
         if ( !this.webglAvailable()  ) {
             throw Error("WebGL is not supported on this browser, cannot display viewer.")
         }
-        this.setupOptions(options)
+
+        // Save default settings
+        const controlDefaults = {
+            zoom: {
+                enabled: true,
+                speed: 0.2
+            },
+            rotation: {
+                enabled: true,
+                speed: 2.5
+            },
+            pan: {
+                enabled: true,
+                speed: 10
+            },
+            resetOnDoubleClick: true
+        }
+        const rendererDefaults = {
+            pixelRatioScale: 1,
+            antialias: {
+                enabled: true,
+            },
+            background: {
+                color: "#fff",
+                opacity: 0,
+            },
+            shadows: {
+                enabled: false,
+            }
+        }
+        this.rendererDefaults = merge(cloneDeep(rendererDefaults), cloneDeep(options?.renderer))
+        this.controlDefaults = merge(cloneDeep(controlDefaults), cloneDeep(options?.controls))
+        this.setOptions(options)
+
         this.setupRootElement()
         this.setupRenderer()
         this.setupScenes()
@@ -70,14 +76,11 @@ export abstract class Viewer {
         this.changeHostElement(hostElement)
     }
 
+
     /**
      * Saves the default options.
     */
-    setupOptions(options:any): void {
-        // Save default settings
-        this.rendererDefaults = merge(cloneDeep(this.rendererDefaults), cloneDeep(options?.renderer))
-        this.controlDefaults = merge(cloneDeep(this.controlDefaults), cloneDeep(options?.controls))
-    }
+    abstract setOptions(options:any): void;
 
     /*
      * Used to setup the lighting.

@@ -8,9 +8,11 @@ import voronoi from 'voronoi-diagram';
  * A 3D visualizer for the Brillouin Zone and the k-point path within it.
  */
 export class BrillouinZoneViewer extends Viewer {
-    constructor() {
-        super(...arguments);
-        this.controlDefaults = {
+    /**
+     * Saves the default options.
+    */
+    setOptions(options) {
+        const controlDefaults = {
             zoom: {
                 enabled: true,
                 speed: 0.2
@@ -25,6 +27,7 @@ export class BrillouinZoneViewer extends Viewer {
             },
             resetOnDoubleClick: true
         };
+        this.controlDefaults = merge(cloneDeep(controlDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.controls));
     }
     /*
      * Overrides the implementation from the base class, as we need two scenes:

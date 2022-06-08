@@ -42,99 +42,102 @@ export class StructureViewer extends Viewer {
     atomOutlines:Array<any> = []         // Contains the outlines of the atoms
     angleArcs:any                        // Contains the arcs for the lattice angles
     axisLabels:Array<any> = []           // List of all labels in the view.
-    atomDefaults = {
-        material: {
-            phong: {
-                shininess: 30,
-            }
-        },
-        outline: {
-            enabled: true,
-            color: "#000000",
-            size: 0.025,
-        },
-        opacity: 1,
-        color: "Jmol",
-        radius: "covalent",
-        scale: 1,
-        smoothness: 165,
-    }
-    bondDefaults = {
-        enabled: true,
-        material: {
-            phong: {
-                shininess: 30,
-            }
-        },
-        outline: {
-            enabled: true,
-            color: "#000000",
-            size: 0.025,
-        },
-        color: "#ffffff",
-        radius: 0.08,
-        threshold: 1,
-        smoothness: 145
-    }
-    cellDefaults = {
-        enabled: true,
-        color: "#000000",
-        linewidth: 1.5,
-        dashSize: 0,
-        gapSize: 0,
-        periodicity: [true, true, true],
-    }
-    latticeConstantDefaults = {
-        enabled: true,
-        periodicity: [true, true, true],
-        font: "Arial",
-        size: 0.7,
-        stroke: {
-            width: 0.06,
-            color: "#000",
-        },
-        a: {
-            enabled: true,
-            color: "#C52929",
-            label: "a",
-        },
-        b: {
-            enabled: true,
-            color: "#47A823",
-            label: "b",
-        },
-        c: {
-            enabled: true,
-            color: "#3B5796",
-            label: "c",
-        },
-        alpha: {
-            enabled: true,
-            color: "#ffffff",
-            label: "α",
-        },
-        beta: {
-            enabled: true,
-            color: "#ffffff",
-            label: "β",
-        },
-        gamma: {
-            enabled: true,
-            color: "#ffffff",
-            label: "γ",
-        }
-    }
+    atomDefaults:any
+    bondDefaults:any
+    cellDefaults:any
+    latticeConstantDefaults:any
 
     /**
      * Saves the default options.
     */
-    setupOptions(options:any): void {
+    setOptions(options:any): void {
         // Save default settings
-        this.atomDefaults = merge(cloneDeep(this.atomDefaults), cloneDeep(options?.atoms))
-        this.bondDefaults = merge(cloneDeep(this.bondDefaults), cloneDeep(options?.bonds))
-        this.cellDefaults = merge(cloneDeep(this.cellDefaults), cloneDeep(options?.cell))
-        this.latticeConstantDefaults = merge(cloneDeep(this.latticeConstantDefaults), cloneDeep(options?.latticeConstants))
-        super.setupOptions(options)
+        const atomDefaults = {
+            material: {
+                phong: {
+                    shininess: 30,
+                }
+            },
+            outline: {
+                enabled: true,
+                color: "#000000",
+                size: 0.025,
+            },
+            opacity: 1,
+            color: "Jmol",
+            radius: "covalent",
+            scale: 1,
+            smoothness: 165,
+        }
+        const bondDefaults = {
+            enabled: true,
+            material: {
+                phong: {
+                    shininess: 30,
+                }
+            },
+            outline: {
+                enabled: true,
+                color: "#000000",
+                size: 0.025,
+            },
+            color: "#ffffff",
+            radius: 0.08,
+            threshold: 1,
+            smoothness: 145
+        }
+        const cellDefaults = {
+            enabled: true,
+            color: "#000000",
+            linewidth: 1.5,
+            dashSize: 0,
+            gapSize: 0,
+            periodicity: [true, true, true],
+        }
+        const latticeConstantDefaults = {
+            enabled: true,
+            periodicity: [true, true, true],
+            font: "Arial",
+            size: 0.7,
+            stroke: {
+                width: 0.06,
+                color: "#000",
+            },
+            a: {
+                enabled: true,
+                color: "#C52929",
+                label: "a",
+            },
+            b: {
+                enabled: true,
+                color: "#47A823",
+                label: "b",
+            },
+            c: {
+                enabled: true,
+                color: "#3B5796",
+                label: "c",
+            },
+            alpha: {
+                enabled: true,
+                color: "#ffffff",
+                label: "α",
+            },
+            beta: {
+                enabled: true,
+                color: "#ffffff",
+                label: "β",
+            },
+            gamma: {
+                enabled: true,
+                color: "#ffffff",
+                label: "γ",
+            }
+        }
+        this.atomDefaults = merge(cloneDeep(atomDefaults), cloneDeep(options?.atoms))
+        this.bondDefaults = merge(cloneDeep(bondDefaults), cloneDeep(options?.bonds))
+        this.cellDefaults = merge(cloneDeep(cellDefaults), cloneDeep(options?.cell))
+        this.latticeConstantDefaults = merge(cloneDeep(latticeConstantDefaults), cloneDeep(options?.latticeConstants))
     }
 
     /*

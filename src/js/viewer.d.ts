@@ -13,34 +13,8 @@ export declare abstract class Viewer {
     rootElement: any;
     options: any;
     translation: THREE.Vector3;
-    controlDefaults: {
-        zoom: {
-            enabled: boolean;
-            speed: number;
-        };
-        rotation: {
-            enabled: boolean;
-            speed: number;
-        };
-        pan: {
-            enabled: boolean;
-            speed: number;
-        };
-        resetOnDoubleClick: boolean;
-    };
-    rendererDefaults: {
-        pixelRatioScale: number;
-        antialias: {
-            enabled: boolean;
-        };
-        background: {
-            color: string;
-            opacity: number;
-        };
-        shadows: {
-            enabled: boolean;
-        };
-    };
+    controlDefaults: any;
+    rendererDefaults: any;
     /**
      * @param {any} hostElement is the html element where the visualization
      *   canvas will be appended.
@@ -53,11 +27,11 @@ export declare abstract class Viewer {
      * by atoms onto others. Note that enabling this increases the computational
      * cost for doing the visualization. Defaults to false
      */
-    constructor(hostElement: any, options?: {});
+    constructor(hostElement: any, options?: any);
     /**
      * Saves the default options.
     */
-    setupOptions(options: any): void;
+    abstract setOptions(options: any): void;
     abstract setupLights(): void;
     abstract setupScenes(): void;
     /**

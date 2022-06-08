@@ -18,88 +18,6 @@ export class StructureViewer extends Viewer {
         this.atomFills = []; // Contains the bulk of the atoms
         this.atomOutlines = []; // Contains the outlines of the atoms
         this.axisLabels = []; // List of all labels in the view.
-        this.atomDefaults = {
-            material: {
-                phong: {
-                    shininess: 30,
-                }
-            },
-            outline: {
-                enabled: true,
-                color: "#000000",
-                size: 0.025,
-            },
-            opacity: 1,
-            color: "Jmol",
-            radius: "covalent",
-            scale: 1,
-            smoothness: 165,
-        };
-        this.bondDefaults = {
-            enabled: true,
-            material: {
-                phong: {
-                    shininess: 30,
-                }
-            },
-            outline: {
-                enabled: true,
-                color: "#000000",
-                size: 0.025,
-            },
-            color: "#ffffff",
-            radius: 0.08,
-            threshold: 1,
-            smoothness: 145
-        };
-        this.cellDefaults = {
-            enabled: true,
-            color: "#000000",
-            linewidth: 1.5,
-            dashSize: 0,
-            gapSize: 0,
-            periodicity: [true, true, true],
-        };
-        this.latticeConstantDefaults = {
-            enabled: true,
-            periodicity: [true, true, true],
-            font: "Arial",
-            size: 0.7,
-            stroke: {
-                width: 0.06,
-                color: "#000",
-            },
-            a: {
-                enabled: true,
-                color: "#C52929",
-                label: "a",
-            },
-            b: {
-                enabled: true,
-                color: "#47A823",
-                label: "b",
-            },
-            c: {
-                enabled: true,
-                color: "#3B5796",
-                label: "c",
-            },
-            alpha: {
-                enabled: true,
-                color: "#ffffff",
-                label: "α",
-            },
-            beta: {
-                enabled: true,
-                color: "#ffffff",
-                label: "β",
-            },
-            gamma: {
-                enabled: true,
-                color: "#ffffff",
-                label: "γ",
-            }
-        };
         this.label_missing = 'X';
         this.elementNames = [
             this.label_missing, 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si',
@@ -367,13 +285,94 @@ export class StructureViewer extends Viewer {
     /**
      * Saves the default options.
     */
-    setupOptions(options) {
+    setOptions(options) {
         // Save default settings
-        this.atomDefaults = merge(cloneDeep(this.atomDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.atoms));
-        this.bondDefaults = merge(cloneDeep(this.bondDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.bonds));
-        this.cellDefaults = merge(cloneDeep(this.cellDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.cell));
-        this.latticeConstantDefaults = merge(cloneDeep(this.latticeConstantDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.latticeConstants));
-        super.setupOptions(options);
+        const atomDefaults = {
+            material: {
+                phong: {
+                    shininess: 30,
+                }
+            },
+            outline: {
+                enabled: true,
+                color: "#000000",
+                size: 0.025,
+            },
+            opacity: 1,
+            color: "Jmol",
+            radius: "covalent",
+            scale: 1,
+            smoothness: 165,
+        };
+        const bondDefaults = {
+            enabled: true,
+            material: {
+                phong: {
+                    shininess: 30,
+                }
+            },
+            outline: {
+                enabled: true,
+                color: "#000000",
+                size: 0.025,
+            },
+            color: "#ffffff",
+            radius: 0.08,
+            threshold: 1,
+            smoothness: 145
+        };
+        const cellDefaults = {
+            enabled: true,
+            color: "#000000",
+            linewidth: 1.5,
+            dashSize: 0,
+            gapSize: 0,
+            periodicity: [true, true, true],
+        };
+        const latticeConstantDefaults = {
+            enabled: true,
+            periodicity: [true, true, true],
+            font: "Arial",
+            size: 0.7,
+            stroke: {
+                width: 0.06,
+                color: "#000",
+            },
+            a: {
+                enabled: true,
+                color: "#C52929",
+                label: "a",
+            },
+            b: {
+                enabled: true,
+                color: "#47A823",
+                label: "b",
+            },
+            c: {
+                enabled: true,
+                color: "#3B5796",
+                label: "c",
+            },
+            alpha: {
+                enabled: true,
+                color: "#ffffff",
+                label: "α",
+            },
+            beta: {
+                enabled: true,
+                color: "#ffffff",
+                label: "β",
+            },
+            gamma: {
+                enabled: true,
+                color: "#ffffff",
+                label: "γ",
+            }
+        };
+        this.atomDefaults = merge(cloneDeep(atomDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.atoms));
+        this.bondDefaults = merge(cloneDeep(bondDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.bonds));
+        this.cellDefaults = merge(cloneDeep(cellDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.cell));
+        this.latticeConstantDefaults = merge(cloneDeep(latticeConstantDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.latticeConstants));
     }
     /*
      * Overrides the implementation from the base class, as we need two scenes:

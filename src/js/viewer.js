@@ -24,7 +24,12 @@ export class Viewer {
         this.cameraWidth = 10.0; // The default "width" of the camera
         this.options = {}; // Options for the viewer. Can be e.g. used to control which settings are enabled
         this.translation = new THREE.Vector3(); // Translation vector that has been applied to shift the view
-        this.controlDefaults = {
+        // Check that OpenGL is available, otherwise throw an exception
+        if (!this.webglAvailable()) {
+            throw Error("WebGL is not supported on this browser, cannot display viewer.");
+        }
+        // Save default settings
+        const controlDefaults = {
             zoom: {
                 enabled: true,
                 speed: 0.2
@@ -39,7 +44,7 @@ export class Viewer {
             },
             resetOnDoubleClick: true
         };
-        this.rendererDefaults = {
+        const rendererDefaults = {
             pixelRatioScale: 1,
             antialias: {
                 enabled: true,
@@ -52,25 +57,15 @@ export class Viewer {
                 enabled: false,
             }
         };
-        // Check that OpenGL is available, otherwise throw an exception
-        if (!this.webglAvailable()) {
-            throw Error("WebGL is not supported on this browser, cannot display viewer.");
-        }
-        this.setupOptions(options);
+        this.rendererDefaults = merge(cloneDeep(rendererDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.renderer));
+        this.controlDefaults = merge(cloneDeep(controlDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.controls));
+        this.setOptions(options);
         this.setupRootElement();
         this.setupRenderer();
         this.setupScenes();
         this.setupLights();
         this.setupCamera();
         this.changeHostElement(hostElement);
-    }
-    /**
-     * Saves the default options.
-    */
-    setupOptions(options) {
-        // Save default settings
-        this.rendererDefaults = merge(cloneDeep(this.rendererDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.renderer));
-        this.controlDefaults = merge(cloneDeep(this.controlDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.controls));
     }
     /**
      * Can be used to download the current visualization as a jpg-image to the

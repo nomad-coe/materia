@@ -12,21 +12,10 @@ export declare class BrillouinZoneViewer extends Viewer {
     labelPoints: any;
     basisVectors: THREE.Vector3[];
     B: THREE.Matrix3;
-    controlDefaults: {
-        zoom: {
-            enabled: boolean;
-            speed: number;
-        };
-        rotation: {
-            enabled: boolean;
-            speed: number;
-        };
-        pan: {
-            enabled: boolean;
-            speed: number;
-        };
-        resetOnDoubleClick: boolean;
-    };
+    /**
+     * Saves the default options.
+    */
+    setOptions(options: any): void;
     setupScenes(): void;
     setupLights(): void;
     /**
