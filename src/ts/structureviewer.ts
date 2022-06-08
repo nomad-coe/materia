@@ -42,6 +42,100 @@ export class StructureViewer extends Viewer {
     atomOutlines:Array<any> = []         // Contains the outlines of the atoms
     angleArcs:any                        // Contains the arcs for the lattice angles
     axisLabels:Array<any> = []           // List of all labels in the view.
+    atomDefaults = {
+        material: {
+            phong: {
+                shininess: 30,
+            }
+        },
+        outline: {
+            enabled: true,
+            color: "#000000",
+            size: 0.025,
+        },
+        opacity: 1,
+        color: "Jmol",
+        radius: "covalent",
+        scale: 1,
+        smoothness: 165,
+    }
+    bondDefaults = {
+        enabled: true,
+        material: {
+            phong: {
+                shininess: 30,
+            }
+        },
+        outline: {
+            enabled: true,
+            color: "#000000",
+            size: 0.025,
+        },
+        color: "#ffffff",
+        radius: 0.08,
+        threshold: 1,
+        smoothness: 145
+    }
+    cellDefaults = {
+        enabled: true,
+        color: "#000000",
+        linewidth: 1.5,
+        dashSize: 0,
+        gapSize: 0,
+        periodicity: [true, true, true],
+    }
+    latticeConstantDefaults = {
+        enabled: true,
+        periodicity: [true, true, true],
+        font: "Arial",
+        size: 0.7,
+        stroke: {
+            width: 0.06,
+            color: "#000",
+        },
+        a: {
+            enabled: true,
+            color: "#C52929",
+            label: "a",
+        },
+        b: {
+            enabled: true,
+            color: "#47A823",
+            label: "b",
+        },
+        c: {
+            enabled: true,
+            color: "#3B5796",
+            label: "c",
+        },
+        alpha: {
+            enabled: true,
+            color: "#ffffff",
+            label: "α",
+        },
+        beta: {
+            enabled: true,
+            color: "#ffffff",
+            label: "β",
+        },
+        gamma: {
+            enabled: true,
+            color: "#ffffff",
+            label: "γ",
+        }
+    }
+
+    /**
+     * Saves the default options.
+    */
+    setupOptions(options:any): void {
+        // Save default settings
+        this.atomDefaults = merge(cloneDeep(this.atomDefaults), cloneDeep(options?.atoms))
+        this.bondDefaults = merge(cloneDeep(this.bondDefaults), cloneDeep(options?.bonds))
+        this.cellDefaults = merge(cloneDeep(this.cellDefaults), cloneDeep(options?.cell))
+        this.latticeConstantDefaults = merge(cloneDeep(this.latticeConstantDefaults), cloneDeep(options?.latticeConstants))
+        super.setupOptions(options)
+    }
 
     /*
      * Overrides the implementation from the base class, as we need two scenes:
@@ -215,7 +309,7 @@ export class StructureViewer extends Viewer {
             this.createAtoms(cartPos, atomicNumbers, periodicity, false, wrap);
         }
 
-        this.toggleShadows(this.options.renderer.shadows.enabled);
+        this.toggleShadows(this.rendererDefaults.shadows.enabled);
         return true;
     }
 
@@ -369,24 +463,7 @@ export class StructureViewer extends Viewer {
             options = [options]
         }
         for (let config of options) {
-            const def = {
-                material: {
-                    phong: {
-                        shininess: 30,
-                    }
-                },
-                outline: {
-                    enabled: true,
-                    color: "#000000",
-                    size: 0.025,
-                },
-                opacity: 1,
-                color: "Jmol",
-                radius: "covalent",
-                scale: 1,
-                smoothness: 165,
-            }
-            config = merge(cloneDeep(def), cloneDeep(config))
+            config = merge(cloneDeep(this.atomDefaults), cloneDeep(config))
             const include = config.include
             const exclude = config.exclude
             const hasInclude = !isNil(include)
@@ -440,8 +517,8 @@ export class StructureViewer extends Viewer {
      * @param {number} options.threshold Controls the automatic
      *   detection of bonds between atoms. If custom bonds have not been
      *   specified for the structure, bonds will be detected automatically with
-     *   the following criteria: distance <=
-     *   this.options.bonds.threshold * 1.1 * (radius1 + radius2)
+     *   the following criteria: distance <= options.threshold * 1.1 * (radius1
+     *   + radius2)
      * @param {boolean} options.outline.enabled Used to enable or disable a
      *   fixed color outline around the bond. Notice that enabling the
      *   outline incurs a performance penalty. Defaults to true.
@@ -457,24 +534,7 @@ export class StructureViewer extends Viewer {
         }
 
         // Define final options
-        const def = {
-            enabled: true,
-            material: {
-                phong: {
-                    shininess: 30,
-                }
-            },
-            outline: {
-                enabled: true,
-                color: "#000000",
-                size: 0.025,
-            },
-            color: "#ffffff",
-            radius: 0.08,
-            threshold: 1,
-            smoothness: 145
-        }
-        const optionsFinal = merge(cloneDeep(def), cloneDeep(options || {}))
+        const optionsFinal = merge(cloneDeep(this.bondDefaults), cloneDeep(options || {}))
 
         // Do not create new ones if disabled
         if (!optionsFinal.enabled) {
@@ -570,15 +630,7 @@ export class StructureViewer extends Viewer {
         }
 
         // Define final options
-        const def = {
-            enabled: true,
-            color: "#000000",
-            linewidth: 1.5,
-            dashSize: 0,
-            gapSize: 0,
-            periodicity: [true, true, true],
-        }
-        const optionsFinal = merge(cloneDeep(def), cloneDeep(options || {}))
+        const optionsFinal = merge(cloneDeep(this.cellDefaults), cloneDeep(options || {}))
 
         // Create new instance
         if (optionsFinal.enabled) {
@@ -676,47 +728,7 @@ export class StructureViewer extends Viewer {
         this.angleArcs.clear()
 
         // Define final options
-        const def = {
-            enabled: true,
-            periodicity: [true, true, true],
-            font: "Arial",
-            size: 0.7,
-            stroke: {
-                width: 0.06,
-                color: "#000",
-            },
-            a: {
-                enabled: true,
-                color: "#C52929",
-                label: "a",
-            },
-            b: {
-                enabled: true,
-                color: "#47A823",
-                label: "b",
-            },
-            c: {
-                enabled: true,
-                color: "#3B5796",
-                label: "c",
-            },
-            alpha: {
-                enabled: true,
-                color: "#ffffff",
-                label: "α",
-            },
-            beta: {
-                enabled: true,
-                color: "#ffffff",
-                label: "β",
-            },
-            gamma: {
-                enabled: true,
-                color: "#ffffff",
-                label: "γ",
-            }
-        }
-        const optionsFinal = merge(cloneDeep(def), cloneDeep(options || {}))
+        const optionsFinal = merge(cloneDeep(this.latticeConstantDefaults), cloneDeep(options || {}))
 
         if (!optionsFinal.enabled) {
             return

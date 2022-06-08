@@ -28,6 +28,19 @@ export declare abstract class Viewer {
         };
         resetOnDoubleClick: boolean;
     };
+    rendererDefaults: {
+        pixelRatioScale: number;
+        antialias: {
+            enabled: boolean;
+        };
+        background: {
+            color: string;
+            opacity: number;
+        };
+        shadows: {
+            enabled: boolean;
+        };
+    };
     /**
      * @param {any} hostElement is the html element where the visualization
      *   canvas will be appended.
@@ -41,7 +54,10 @@ export declare abstract class Viewer {
      * cost for doing the visualization. Defaults to false
      */
     constructor(hostElement: any, options?: {});
-    setOptions(options: any): void;
+    /**
+     * Saves the default options.
+    */
+    setupOptions(options: any): void;
     abstract setupLights(): void;
     abstract setupScenes(): void;
     /**

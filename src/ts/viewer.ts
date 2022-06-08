@@ -9,7 +9,7 @@ export abstract class Viewer {
     renderer:any                         // three.js renderer object
     controlsObject:any                   // Controller object for handling mouse interaction with the system
     scenes:THREE.Scene[] = []            // A list of scenes that are rendered
-    objects:THREE.Object3D[] = []        // A list of objects that are affected by rotation etc.
+    objects:THREE.Object3D[] = []        // A list of objects that are affected by rotations, translations etc.
     cameraWidth = 10.0                   // The default "width" of the camera
     rootElement:any                      // A root html element that contains all visualization components
     options:any = {}                     // Options for the viewer. Can be e.g. used to control which settings are enabled
@@ -29,6 +29,20 @@ export abstract class Viewer {
         },
         resetOnDoubleClick: true
     }
+    rendererDefaults = {
+        pixelRatioScale: 1,
+        antialias: {
+            enabled: true,
+        },
+        background: {
+            color: "#fff",
+            opacity: 0,
+        },
+        shadows: {
+            enabled: false,
+        }
+    }
+
 
     /**
      * @param {any} hostElement is the html element where the visualization
@@ -47,7 +61,7 @@ export abstract class Viewer {
         if ( !this.webglAvailable()  ) {
             throw Error("WebGL is not supported on this browser, cannot display viewer.")
         }
-        this.setOptions(options)
+        this.setupOptions(options)
         this.setupRootElement()
         this.setupRenderer()
         this.setupScenes()
@@ -56,30 +70,13 @@ export abstract class Viewer {
         this.changeHostElement(hostElement)
     }
 
-    setOptions(options:any): void {
-        // The default settings object
-        const def =  {
-            view: {
-                autoFit: true,
-                autoResize: true,
-            },
-            renderer: {
-                pixelRatioScale: 1,
-                antialias: {
-                    enabled: true,
-                },
-                background: {
-                    color: "#fff",
-                    opacity: 0,
-                },
-                shadows: {
-                    enabled: false,
-                }
-            }
-        }
-
-        // Save custom settings
-        this.options = merge(cloneDeep(def), cloneDeep(options))
+    /**
+     * Saves the default options.
+    */
+    setupOptions(options:any): void {
+        // Save default settings
+        this.rendererDefaults = merge(cloneDeep(this.rendererDefaults), cloneDeep(options?.renderer))
+        this.controlDefaults = merge(cloneDeep(this.controlDefaults), cloneDeep(options?.controls))
     }
 
     /*
@@ -151,19 +148,19 @@ export abstract class Viewer {
         this.renderer = new THREE.WebGLRenderer({
             // Alpha channel is disabled whenever a non-opaque background is in
             // use. Performance optimization.
-            alpha: this.options.renderer.background.opacity !== 1,
+            alpha: this.rendererDefaults.background.opacity !== 1,
             // Antialiasing incurs a small performance penalty.
-            antialias: this.options.renderer.antialias.enabled,
+            antialias: this.rendererDefaults.antialias.enabled,
             preserveDrawingBuffer: false,
             powerPreference: 'high-performance'
         })
         // pixelRatio directly affects the number of pixels that the canvas is
         // rendering.
-        this.renderer.setPixelRatio(window.devicePixelRatio * this.options.renderer.pixelRatioScale)
+        this.renderer.setPixelRatio(window.devicePixelRatio * this.rendererDefaults.pixelRatioScale)
         this.renderer.shadowMap.enabled = false
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
         this.renderer.setSize(this.rootElement.clientWidth, this.rootElement.clientHeight)
-        this.renderer.setClearColor(this.options.renderer.background.color, this.options.renderer.background.opacity)
+        this.renderer.setClearColor(this.rendererDefaults.background.color, this.rendererDefaults.background.opacity)
         this.rootElement.appendChild(this.renderer.domElement)
 
         // This is set so that multiple scenes can be used, see
