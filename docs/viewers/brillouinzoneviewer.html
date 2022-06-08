@@ -186,9 +186,9 @@ forget to render when you want the result to be displayed.</p></li>
 </section>
 <section id="constructor">
 <h2>Constructor<a class="headerlink" href="#constructor" title="Permalink to this heading"></a></h2>
-<p>In the constructor <a class="reference internal" href="structureviewer.html#Viewer" title="Viewer"><code class="xref js js-class docutils literal notranslate"><span class="pre">Viewer()</span></code></a> you can define the host element (this can
+<p>In the constructor <a class="reference internal" href="#BrillouinZoneViewer" title="BrillouinZoneViewer"><code class="xref js js-class docutils literal notranslate"><span class="pre">BrillouinZoneViewer()</span></code></a> you can define the host element (this can
 also be changed at any point using the <a class="reference internal" href="structureviewer.html#Viewer.changeHostElement" title="Viewer.changeHostElement"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.changeHostElement()</span></code></a> method)
-together with a set of fixed options that control the rendering.</p>
+together with a set of default options that control the rendering.</p>
 </section>
 <section id="loading-a-structure">
 <h2>Loading a structure<a class="headerlink" href="#loading-a-structure" title="Permalink to this heading"></a></h2>
@@ -221,6 +221,8 @@ without any screen flickering by only calling render when you are finished.</p>
 <li><p>If you are not seeing your changes updated on the screen, or they are updated
 only after interacting with the structure, double check that you have called
 <a class="reference internal" href="structureviewer.html#Viewer.render" title="Viewer.render"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.render()</span></code></a> after your changes.</p></li>
+<li><p>If the interactive controls are not working, remember that you have to set
+them up by calling <a class="reference internal" href="structureviewer.html#Viewer.controls" title="Viewer.controls"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.controls()</span></code></a>.</p></li>
 <li><p>When the HTML element containing the canvas change size, you may want to
 refit the canvas to it using <a class="reference internal" href="structureviewer.html#Viewer.fitCanvas" title="Viewer.fitCanvas"><code class="xref js js-func docutils literal notranslate"><span class="pre">Viewer.fitCanvas()</span></code></a>.</p></li>
 <li><p>You can change the visualization canvas at any point by calling
@@ -232,10 +234,9 @@ with <a class="reference internal" href="structureviewer.html#Viewer.fitCanvas" 
 <section id="api">
 <h2>API<a class="headerlink" href="#api" title="Permalink to this heading"></a></h2>
 <dl class="js class">
-<dt class="sig sig-object js" id="Viewer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="n"><span class="pre">Viewer</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostElement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Viewer" title="Permalink to this definition"></a></dt>
-<dd><p>Abstract base class for visualizing 3D scenes with three.js.</p>
-<dl class="field-list simple">
+<dt class="sig sig-object js" id="BrillouinZoneViewer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="n"><span class="pre">BrillouinZoneViewer</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hostElement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#BrillouinZoneViewer" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Arguments</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>hostElement</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">any()</span></code></span>) – is the html element where the visualization canvas will be appended.</p></li>
@@ -245,6 +246,7 @@ with <a class="reference internal" href="structureviewer.html#Viewer.fitCanvas" 
 <li><p><strong>options.renderer.background.color</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">string()</span></code></span>) – Color of the background. Defaults to “#fff”.</p></li>
 <li><p><strong>options.renderer.background.opacity</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">number()</span></code></span>) – Opacity of the background. Defaults to 0.</p></li>
 <li><p><strong>options.renderer.shadows.enabled</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">boolean()</span></code></span>) – Whether shows are cast by atoms onto others. Note that enabling this increases the computational cost for doing the visualization. Defaults to false</p></li>
+<li><p><strong>options.controls</strong> (<span><code class="xref js js-func docutils literal notranslate"><span class="pre">Object()</span></code></span>) – Default options for the controls-function. See the function for more information.</p></li>
 </ul>
 </dd>
 </dl>

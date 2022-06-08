@@ -48,6 +48,32 @@ export class StructureViewer extends Viewer {
     latticeConstantDefaults:any
 
     /**
+     * @param {any} hostElement is the html element where the visualization
+     *   canvas will be appended.
+     * @param {Object} options An object that can hold custom settings for the viewer.
+     * @param {string} options.renderer.pixelRatioScale Scaling factor for the pixel ratio. Defaults to 1.
+     * @param {string} options.renderer.antialias.enabled Whether antialiasing is enabled. Defaults to true.
+     * @param {string} options.renderer.background.color Color of the background. Defaults to "#fff".
+     * @param {number} options.renderer.background.opacity Opacity of the background. Defaults to 0.
+     * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
+     *   by atoms onto others. Note that enabling this increases the computational
+     *   cost for doing the visualization. Defaults to false
+     * @param {Object} options.controls Default options for the controls-function. See
+     *   the function for more information.
+     * @param {Object} options.atoms Default options for the atoms-function. See
+     *   the function for more information.
+     * @param {Object} options.bonds Default options for the bonds-function. See
+     *   the function for more information.
+     * @param {Object} options.cell Default options for the cell-function. See
+     *   the function for more information.
+     * @param {Object} options.latticeConstants Default options for the
+     *   latticeConstants-function. See the function for more information.
+     */
+    constructor(public hostElement:any, options:any={}) {
+        super(hostElement, options)
+    }
+
+    /**
      * Saves the default options.
     */
     setOptions(options:any): void {

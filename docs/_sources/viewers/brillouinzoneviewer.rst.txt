@@ -45,9 +45,9 @@ The general workflow for producing a visualization is as follows:
 
 Constructor
 -----------
-In the constructor :class:`Viewer` you can define the host element (this can
+In the constructor :class:`BrillouinZoneViewer` you can define the host element (this can
 also be changed at any point using the :func:`Viewer.changeHostElement` method)
-together with a set of fixed options that control the rendering.
+together with a set of default options that control the rendering.
 
 Loading a structure
 -------------------
@@ -78,6 +78,8 @@ Tips
  - If you are not seeing your changes updated on the screen, or they are updated
    only after interacting with the structure, double check that you have called
    :func:`Viewer.render` after your changes.
+ - If the interactive controls are not working, remember that you have to set
+   them up by calling :func:`Viewer.controls`.
  - When the HTML element containing the canvas change size, you may want to
    refit the canvas to it using :func:`Viewer.fitCanvas`.
  - You can change the visualization canvas at any point by calling
@@ -86,7 +88,7 @@ Tips
 
 API
 ---
-.. js:autoclass:: Viewer
+.. js:autoclass:: BrillouinZoneViewer
 .. js:autofunction:: BrillouinZoneViewer#load
 .. js:autofunction:: BrillouinZoneViewer#fit
 .. js:autofunction:: BrillouinZoneViewer#align

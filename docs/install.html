@@ -78,10 +78,7 @@
              
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h1>
-<p>There are several installation options that are detailed below. In general this
-package only depends on the <a class="reference external" href="https://threejs.org/">three.js</a> visualization
-library. It has been tested down to version 0.105.0 but most versions with this
-major version number should work.</p>
+<p>There are several installation options that are detailed below.</p>
 <section id="as-a-library-under-a-global-variable">
 <h2>As a library under a global variable<a class="headerlink" href="#as-a-library-under-a-global-variable" title="Permalink to this heading"></a></h2>
 <p>When using this method, you must ensure that the three.js library is available
@@ -94,7 +91,7 @@ the following script tag:</p>
 </div>
 <p>After this script (order is important, also see the <a class="reference external" href="https://www.w3schools.com/tags/att_script_defer.asp">defer</a> attribute for script
 elements), you will want to include the minified library for <code class="code docutils literal notranslate"><span class="pre">materia</span></code>.
-You can <a class="reference external" href="https://raw.githubusercontent.com/lauri-codes/materia/master/dist/materia.min.js">get the newest version from the GitHub repository</a>
+You can <a class="reference external" href="https://raw.githubusercontent.com/nomad-coe/materia/master/dist/materia.min.js">get the newest version from the GitHub repository</a>
 or <a class="reference external" href="https://www.npmjs.com/package/&#64;lauri-codes/materia">install and use a specific version from npm</a>. Then place the minified
 file (<code class="code docutils literal notranslate"><span class="pre">materia.min.js</span></code>) in your server and include it as a script element:</p>
 <div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;/path/in/your/server/materia.min.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
@@ -108,15 +105,14 @@ file (<code class="code docutils literal notranslate"><span class="pre">materia.
 </section>
 <section id="as-a-module">
 <h2>As a module<a class="headerlink" href="#as-a-module" title="Permalink to this heading"></a></h2>
-<p>The library is distributed as an <a class="reference external" href="https://www.npmjs.com/package/&#64;lauri-codes/materia">npm
-package</a> and can be
-installed with:</p>
+<p>The library is distributed as an <a class="reference external" href="https://www.npmjs.com/package/&#64;lauri-codes/materia">npm package</a> and can be installed
+with:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>npm install @lauri-codes/materia
 </pre></div>
 </div>
 <p>This command will also install the <a class="reference external" href="https://threejs.org/">three.js</a> library
-as a dependency. With this package you have direct access to individual modules
-that can also be tree-shaked in your own build. For example:</p>
+as a dependency. With the npm installation you have direct access to individual
+modules that can also be tree-shaked in your own build. For example:</p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">StructureViewer</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s2">&quot;@lauri-codes/materia&quot;</span><span class="w"></span>
 </pre></div>
 </div>

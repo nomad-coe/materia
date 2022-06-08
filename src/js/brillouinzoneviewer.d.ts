@@ -1,6 +1,7 @@
 import { Viewer } from "./viewer";
 import * as THREE from "three";
 export declare class BrillouinZoneViewer extends Viewer {
+    hostElement: any;
     data: any;
     sceneRoot: THREE.Scene;
     sceneInfo: THREE.Scene;
@@ -12,6 +13,21 @@ export declare class BrillouinZoneViewer extends Viewer {
     labelPoints: any;
     basisVectors: THREE.Vector3[];
     B: THREE.Matrix3;
+    /**
+     * @param {any} hostElement is the html element where the visualization
+     *   canvas will be appended.
+     * @param {Object} options An object that can hold custom settings for the viewer.
+     * @param {string} options.renderer.pixelRatioScale Scaling factor for the pixel ratio. Defaults to 1.
+     * @param {string} options.renderer.antialias.enabled Whether antialiasing is enabled. Defaults to true.
+     * @param {string} options.renderer.background.color Color of the background. Defaults to "#fff".
+     * @param {number} options.renderer.background.opacity Opacity of the background. Defaults to 0.
+     * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
+     *   by atoms onto others. Note that enabling this increases the computational
+     *   cost for doing the visualization. Defaults to false
+     * @param {Object} options.controls Default options for the controls-function. See
+     *   the function for more information.
+     */
+    constructor(hostElement: any, options?: any);
     /**
      * Saves the default options.
     */

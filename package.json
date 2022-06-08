@@ -1,6 +1,6 @@
 {
   "name": "@lauri-codes/materia",
-  "version": "0.0.11",
+  "version": "1.0.0",
   "description": "Materia is a Javascript library for creating browser-based 3D visualizations of atomistic structures and other material properties.",
   "author": "Lauri Himanen",
   "license": "Apache-2.0",
