@@ -2,42 +2,89 @@ import { Viewer } from "./viewer";
 import * as THREE from "three";
 import { getConvexGeometry } from './convexgeometry';
 import { MeshLine, MeshLineMaterial } from 'three.meshline';
+import { isNil, merge, cloneDeep } from "lodash";
 import voronoi from 'voronoi-diagram';
 /*
  * A 3D visualizer for the Brillouin Zone and the k-point path within it.
  */
 export class BrillouinZoneViewer extends Viewer {
+    /**
+     * @param {any} hostElement is the html element where the visualization
+     *   canvas will be appended.
+     * @param {Object} options An object that can hold custom settings for the viewer.
+     * @param {string} options.renderer.pixelRatioScale Scaling factor for the pixel ratio. Defaults to 1.
+     * @param {string} options.renderer.antialias.enabled Whether antialiasing is enabled. Defaults to true.
+     * @param {string} options.renderer.background.color Color of the background. Defaults to "#fff".
+     * @param {number} options.renderer.background.opacity Opacity of the background. Defaults to 0.
+     * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
+     *   by atoms onto others. Note that enabling this increases the computational
+     *   cost for doing the visualization. Defaults to false
+     * @param {Object} options.controls Default options for the controls-function. See
+     *   the function for more information.
+     */
+    constructor(hostElement, options = {}) {
+        super(hostElement, options);
+        this.hostElement = hostElement;
+    }
+    /**
+     * Saves the default options.
+    */
+    setOptions(options) {
+        const controlDefaults = {
+            zoom: {
+                enabled: true,
+                speed: 0.2
+            },
+            rotation: {
+                enabled: true,
+                speed: 40
+            },
+            pan: {
+                enabled: true,
+                speed: 10
+            },
+            resetOnDoubleClick: true
+        };
+        this.controlDefaults = merge(cloneDeep(controlDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.controls));
+    }
     /*
      * Overrides the implementation from the base class, as we need two scenes:
      * one for the BZ mesh and another for the information that is laid on top.
      */
     setupScenes() {
+        // Setup the scenes in rendering order
         this.scenes = [];
-        this.sceneZone = new THREE.Scene();
-        this.scenes.push(this.sceneZone);
+        this.sceneRoot = new THREE.Scene();
+        this.scenes.push(this.sceneRoot);
         this.sceneInfo = new THREE.Scene();
         this.scenes.push(this.sceneInfo);
+        this.root = new THREE.Object3D();
+        this.sceneRoot.add(this.root);
+        this.info = new THREE.Object3D();
+        this.sceneInfo.add(this.info);
+        // Setup the objects that are affected by rotations etc.
+        this.objects = [this.root, this.info];
     }
     setupLights() {
         // Key light
         const keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
         keyLight.position.set(0, 0, 20);
-        this.sceneZone.add(keyLight);
+        this.sceneRoot.add(keyLight);
         // Fill light
         const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
         fillLight.position.set(-20, 0, -20);
-        this.sceneZone.add(fillLight);
+        this.sceneRoot.add(fillLight);
         // Back light
         const backLight = new THREE.DirectionalLight(0xffffff, 0.25);
         backLight.position.set(20, 0, -20);
-        this.sceneZone.add(backLight);
+        this.sceneRoot.add(backLight);
         // White ambient light.
         const ambientLight = new THREE.AmbientLight(0x404040, 3.7); // soft white light
-        this.sceneZone.add(ambientLight);
+        this.sceneRoot.add(ambientLight);
     }
     /**
-     * Visualizes the first Brillouin zone of the given reciprocal lattice and
-     * optional k-path segments and k-point labels within it.
+     * Used to create a visualization for the first Brillouin Zone together with
+     * kpath and segment information.
      *
      * @param {object} data A Javascript object containing the visualized
      * structure. See below for the subparameters.
@@ -47,44 +94,6 @@ export class BrillouinZoneViewer extends Viewer {
      * each sublist indicating a continuous segment within the Brillouin zone.
      * @param {*} data.kpoints List of pairs of labels and reciprocal
      * lattice coordinates for specific k-points that should be shown.
-     */
-    load(data) {
-        var _a, _b, _c, _d, _e, _f;
-        // Deep copy the structure for reloading
-        this.data = data;
-        // Clear all the old data
-        this.clear();
-        this.setup();
-        // Reconstruct the visualization
-        this.setupScenes();
-        this.setupLights();
-        this.setupCamera();
-        this.setupControls();
-        // Add the Brillouin zone and the k-point path
-        const basis = data["basis"];
-        const segments = data["segments"];
-        const kpoints = data["kpoints"];
-        this.basis = data["basis"];
-        if (!basis || !segments) {
-            console.log("The data given for the Brillouin zone viewer is incomplete.");
-            return false;
-        }
-        else {
-            this.createBrillouinZone(basis, segments, kpoints);
-        }
-        // Set view alignment and rotation
-        if (this.B !== undefined) {
-            this.alignView((_c = (_b = (_a = this.options) === null || _a === void 0 ? void 0 : _a.layout) === null || _b === void 0 ? void 0 : _b.viewRotation) === null || _c === void 0 ? void 0 : _c.alignments);
-        }
-        this.rotateView((_f = (_e = (_d = this.options) === null || _d === void 0 ? void 0 : _d.layout) === null || _e === void 0 ? void 0 : _e.viewRotation) === null || _f === void 0 ? void 0 : _f.rotations);
-        if (this.options.view.autoFit) {
-            super.fitToCanvas();
-        }
-        this.render();
-        return true;
-    }
-    /**
-     * Used to setup the visualization options.
      *
      * @param {object} options A Javascript object containing the options. See
      *   below for the subparameters.
@@ -148,25 +157,25 @@ export class BrillouinZoneViewer extends Viewer {
      * applied to the label of the third reciprocal lattice vector.
      * @param {string} options.basis.c.stroke.color Outline stroke color
      * applied to the label of the third reciprocal lattice vector.
-     *
-     * @param {string} options.renderer.background.color Color of the background.
-     * @param {number} options.renderer.background.opacity Opacity of the background.
-     *
-     * @param {boolean} render Whether to perform a render after setting the
-     * options. Defaults to true. You should only disable this setting if you
-     * plan to do a render manually afterwards.
      */
-    setOptions(options, render = true, reload = true) {
-        var _a, _b, _c;
-        // The default settings object
-        const defaultOptions = {
-            controls: {
-                rotateSpeed: 40,
-                enablePan: false
-            },
-            view: {
-                fitMargin: 0.075,
-            },
+    load(data, options) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w;
+        // Read the Brillouin zone and the k-point path
+        this.basis = data["basis"];
+        this.segments = data["segments"];
+        this.kpoints = data["kpoints"];
+        if (!this.basis || !this.segments) {
+            throw Error("The data given for the Brillouin zone viewer is incomplete.");
+        }
+        // Remove old viz
+        if (!isNil(this.info)) {
+            this.info.clear();
+        }
+        if (!isNil(this.root)) {
+            this.root.clear();
+        }
+        // Define final options
+        const def = {
             basis: {
                 offset: 0.02,
                 font: "Arial",
@@ -216,37 +225,11 @@ export class BrillouinZoneViewer extends Viewer {
                 },
             },
         };
-        // Upon first call, fill the missing values with default options
-        if (Object.keys(this.options).length === 0) {
-            this.fillOptions(options, defaultOptions);
-            super.setOptions(defaultOptions);
-            // On subsequent calls update only the given values and simply do a full
-            // reload for the structure. This is not efficient by any means for most
-            // settings but gets the job done for now.
-        }
-        else {
-            this.fillOptions(options, this.options);
-            super.setOptions(this.options);
-            // Reload structure if requested. TODO: Implement smart partial updates.
-            if (reload) {
-                if (this.data !== undefined) {
-                    this.load(this.data);
-                }
-            }
-            if (((_a = options === null || options === void 0 ? void 0 : options.renderer) === null || _a === void 0 ? void 0 : _a.background) !== undefined) {
-                this.setBackgroundColor((_b = options === null || options === void 0 ? void 0 : options.renderer) === null || _b === void 0 ? void 0 : _b.background.color, (_c = options === null || options === void 0 ? void 0 : options.renderer) === null || _c === void 0 ? void 0 : _c.background.opacity);
-            }
-            if (render) {
-                this.render();
-            }
-        }
-    }
-    /*
-     * Used to create the representation for the first Brillouin Zone.
-     */
-    createBrillouinZone(basis, segments, kpoints) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w;
+        const optionsFinal = merge(cloneDeep(def), cloneDeep(options || {}));
         // Create list of reciprocal lattice points
+        const basis = this.basis;
+        const segments = this.segments;
+        const kpoints = this.kpoints;
         const B = new THREE.Matrix3();
         const a = new THREE.Vector3().fromArray(basis[0]);
         const b = new THREE.Vector3().fromArray(basis[1]);
@@ -307,12 +290,6 @@ export class BrillouinZoneViewer extends Viewer {
                 break;
             }
         }
-        this.zone = new THREE.Object3D();
-        this.zone.name = "zone";
-        this.sceneZone.add(this.zone);
-        this.info = new THREE.Object3D();
-        this.info.name = "info";
-        this.sceneInfo.add(this.info);
         // A customised THREE.BufferGeometry object that will create the face
         // geometry and information about the face edges
         const { geometry, faces } = getConvexGeometry(bzVertices);
@@ -321,8 +298,8 @@ export class BrillouinZoneViewer extends Viewer {
         const group = new THREE.Group();
         group.name = "group";
         const meshMaterial = new THREE.MeshPhongMaterial({
-            color: this.options.faces.color,
-            opacity: this.options.faces.opacity,
+            color: optionsFinal.faces.color,
+            opacity: optionsFinal.faces.opacity,
             transparent: true
         });
         const mesh = new THREE.Mesh(geometry, meshMaterial);
@@ -335,11 +312,11 @@ export class BrillouinZoneViewer extends Viewer {
         mesh2.material.side = THREE.FrontSide; // front faces
         mesh2.renderOrder = 1;
         group.add(mesh2);
-        this.zone.add(group);
+        this.root.add(group);
         // Create edges as closed loops around each face
-        const edgeWidth = this.options.faces.outline.width;
+        const edgeWidth = optionsFinal.faces.outline.width;
         const edgeMaterial = new MeshLineMaterial({
-            color: this.options.faces.outline.color,
+            color: optionsFinal.faces.outline.color,
             lineWidth: edgeWidth,
             sizeAttenuation: true,
         });
@@ -355,30 +332,30 @@ export class BrillouinZoneViewer extends Viewer {
             const edgeLine = new MeshLine();
             edgeLine.setPoints(edgeVertices);
             const edgeMesh = new THREE.Mesh(edgeLine, edgeMaterial);
-            this.zone.add(edgeMesh);
+            this.root.add(edgeMesh);
         }
         // Create the reciprocal space axes
-        const basisLabels = [this.options.basis.a.label, this.options.basis.b.label, this.options.basis.c.label];
+        const basisLabels = [optionsFinal.basis.a.label, optionsFinal.basis.b.label, optionsFinal.basis.c.label];
         const basisFonts = [];
-        basisFonts.push(((_a = this.options.basis.a) === null || _a === void 0 ? void 0 : _a.font) === undefined ? this.options.basis.font : this.options.basis.a.font);
-        basisFonts.push(((_b = this.options.basis.b) === null || _b === void 0 ? void 0 : _b.font) === undefined ? this.options.basis.font : this.options.basis.b.font);
-        basisFonts.push(((_c = this.options.basis.c) === null || _c === void 0 ? void 0 : _c.font) === undefined ? this.options.basis.font : this.options.basis.c.font);
+        basisFonts.push(((_a = optionsFinal.basis.a) === null || _a === void 0 ? void 0 : _a.font) === undefined ? optionsFinal.basis.font : optionsFinal.basis.a.font);
+        basisFonts.push(((_b = optionsFinal.basis.b) === null || _b === void 0 ? void 0 : _b.font) === undefined ? optionsFinal.basis.font : optionsFinal.basis.b.font);
+        basisFonts.push(((_c = optionsFinal.basis.c) === null || _c === void 0 ? void 0 : _c.font) === undefined ? optionsFinal.basis.font : optionsFinal.basis.c.font);
         const basisFontSizes = [];
-        basisFontSizes.push(((_d = this.options.basis.a) === null || _d === void 0 ? void 0 : _d.size) === undefined ? this.options.basis.size : this.options.basis.a.size);
-        basisFontSizes.push(((_e = this.options.basis.b) === null || _e === void 0 ? void 0 : _e.size) === undefined ? this.options.basis.size : this.options.basis.b.size);
-        basisFontSizes.push(((_f = this.options.basis.c) === null || _f === void 0 ? void 0 : _f.size) === undefined ? this.options.basis.size : this.options.basis.c.size);
+        basisFontSizes.push(((_d = optionsFinal.basis.a) === null || _d === void 0 ? void 0 : _d.size) === undefined ? optionsFinal.basis.size : optionsFinal.basis.a.size);
+        basisFontSizes.push(((_e = optionsFinal.basis.b) === null || _e === void 0 ? void 0 : _e.size) === undefined ? optionsFinal.basis.size : optionsFinal.basis.b.size);
+        basisFontSizes.push(((_f = optionsFinal.basis.c) === null || _f === void 0 ? void 0 : _f.size) === undefined ? optionsFinal.basis.size : optionsFinal.basis.c.size);
         const cellBasisColors = [];
-        cellBasisColors.push(((_g = this.options.basis.a) === null || _g === void 0 ? void 0 : _g.color) === undefined ? this.options.basis.color : this.options.basis.a.color);
-        cellBasisColors.push(((_h = this.options.basis.b) === null || _h === void 0 ? void 0 : _h.color) === undefined ? this.options.basis.color : this.options.basis.b.color);
-        cellBasisColors.push(((_j = this.options.basis.c) === null || _j === void 0 ? void 0 : _j.color) === undefined ? this.options.basis.color : this.options.basis.c.color);
+        cellBasisColors.push(((_g = optionsFinal.basis.a) === null || _g === void 0 ? void 0 : _g.color) === undefined ? optionsFinal.basis.color : optionsFinal.basis.a.color);
+        cellBasisColors.push(((_h = optionsFinal.basis.b) === null || _h === void 0 ? void 0 : _h.color) === undefined ? optionsFinal.basis.color : optionsFinal.basis.b.color);
+        cellBasisColors.push(((_j = optionsFinal.basis.c) === null || _j === void 0 ? void 0 : _j.color) === undefined ? optionsFinal.basis.color : optionsFinal.basis.c.color);
         const strokeColors = [];
-        strokeColors.push(((_l = (_k = this.options.basis.a) === null || _k === void 0 ? void 0 : _k.stroke) === null || _l === void 0 ? void 0 : _l.color) === undefined ? this.options.basis.stroke.color : this.options.basis.a.stroke.color);
-        strokeColors.push(((_o = (_m = this.options.basis.b) === null || _m === void 0 ? void 0 : _m.stroke) === null || _o === void 0 ? void 0 : _o.color) === undefined ? this.options.basis.stroke.color : this.options.basis.b.stroke.color);
-        strokeColors.push(((_q = (_p = this.options.basis.c) === null || _p === void 0 ? void 0 : _p.stroke) === null || _q === void 0 ? void 0 : _q.color) === undefined ? this.options.basis.stroke.color : this.options.basis.c.stroke.color);
+        strokeColors.push(((_l = (_k = optionsFinal.basis.a) === null || _k === void 0 ? void 0 : _k.stroke) === null || _l === void 0 ? void 0 : _l.color) === undefined ? optionsFinal.basis.stroke.color : optionsFinal.basis.a.stroke.color);
+        strokeColors.push(((_o = (_m = optionsFinal.basis.b) === null || _m === void 0 ? void 0 : _m.stroke) === null || _o === void 0 ? void 0 : _o.color) === undefined ? optionsFinal.basis.stroke.color : optionsFinal.basis.b.stroke.color);
+        strokeColors.push(((_q = (_p = optionsFinal.basis.c) === null || _p === void 0 ? void 0 : _p.stroke) === null || _q === void 0 ? void 0 : _q.color) === undefined ? optionsFinal.basis.stroke.color : optionsFinal.basis.c.stroke.color);
         const strokeWidths = [];
-        strokeWidths.push(((_s = (_r = this.options.basis.a) === null || _r === void 0 ? void 0 : _r.stroke) === null || _s === void 0 ? void 0 : _s.width) === undefined ? this.options.basis.stroke.width : this.options.basis.a.stroke.width);
-        strokeWidths.push(((_u = (_t = this.options.basis.b) === null || _t === void 0 ? void 0 : _t.stroke) === null || _u === void 0 ? void 0 : _u.width) === undefined ? this.options.basis.stroke.width : this.options.basis.b.stroke.width);
-        strokeWidths.push(((_w = (_v = this.options.basis.c) === null || _v === void 0 ? void 0 : _v.stroke) === null || _w === void 0 ? void 0 : _w.width) === undefined ? this.options.basis.stroke.width : this.options.basis.c.stroke.width);
+        strokeWidths.push(((_s = (_r = optionsFinal.basis.a) === null || _r === void 0 ? void 0 : _r.stroke) === null || _s === void 0 ? void 0 : _s.width) === undefined ? optionsFinal.basis.stroke.width : optionsFinal.basis.a.stroke.width);
+        strokeWidths.push(((_u = (_t = optionsFinal.basis.b) === null || _t === void 0 ? void 0 : _t.stroke) === null || _u === void 0 ? void 0 : _u.width) === undefined ? optionsFinal.basis.stroke.width : optionsFinal.basis.b.stroke.width);
+        strokeWidths.push(((_w = (_v = optionsFinal.basis.c) === null || _v === void 0 ? void 0 : _v.stroke) === null || _w === void 0 ? void 0 : _w.width) === undefined ? optionsFinal.basis.stroke.width : optionsFinal.basis.c.stroke.width);
         for (let iBasis = 0; iBasis < 3; ++iBasis) {
             const length = 0.7;
             const basisVector = basis[iBasis];
@@ -403,7 +380,7 @@ export class BrillouinZoneViewer extends Viewer {
             // Add an axis label
             const textPos = new THREE.Vector3()
                 .copy(dir)
-                .multiplyScalar(1 + this.options.basis.offset / dir.length());
+                .multiplyScalar(1 + optionsFinal.basis.offset / dir.length());
             const basisLabel = basisLabels[iBasis];
             const basisColor = cellBasisColors[iBasis];
             const basisFont = basisFonts[iBasis];
@@ -425,8 +402,8 @@ export class BrillouinZoneViewer extends Viewer {
         // that the segments are linear and the segment path is determined by
         // the start and end point.
         const kpathMaterial = new MeshLineMaterial({
-            color: this.options.segments.color,
-            lineWidth: this.options.segments.linewidth,
+            color: optionsFinal.segments.color,
+            lineWidth: optionsFinal.segments.linewidth,
             sizeAttenuation: true,
         });
         //let kpathGeometry;
@@ -462,20 +439,26 @@ export class BrillouinZoneViewer extends Viewer {
                 const label = kpoint[0];
                 const kpointScaled = new THREE.Vector3().fromArray(kpoint[1]);
                 const kpointCartesian = this.coordinateTransform(this.B, I, kpointScaled, false);
-                if (this.options.kpoints.point.enabled) {
-                    const kpointCircle = this.createCircle(kpointCartesian, this.options.kpoints.point.size, this.options.kpoints.point.color);
+                if (optionsFinal.kpoints.point.enabled) {
+                    const kpointCircle = this.createCircle(kpointCartesian, optionsFinal.kpoints.point.size, optionsFinal.kpoints.point.color);
                     this.info.add(kpointCircle);
                 }
-                if (this.options.kpoints.label.enabled) {
-                    const kpointLabel = this.createLabel(kpointCartesian, label, this.options.kpoints.label.color, this.options.kpoints.label.font, this.options.kpoints.label.size, new THREE.Vector2().fromArray(this.options.kpoints.label.offset2D), this.options.kpoints.label.stroke.width, this.options.kpoints.label.stroke.width);
+                if (optionsFinal.kpoints.label.enabled) {
+                    const kpointLabel = this.createLabel(kpointCartesian, label, optionsFinal.kpoints.label.color, optionsFinal.kpoints.label.font, optionsFinal.kpoints.label.size, new THREE.Vector2().fromArray(optionsFinal.kpoints.label.offset2D), optionsFinal.kpoints.label.stroke.width, optionsFinal.kpoints.label.stroke.width);
                     this.info.add(kpointLabel);
                 }
             }
         }
     }
-    getCornerPoints() {
+    /**
+     * Adjust the zoom so that the contents fit on the screen. Notice that is is
+     * typically useful to center around a point of interest first.
+     *
+     * @param {number} margin - Margin to apply.
+     */
+    fit(margin = 0) {
         // The corners of the BZ will be used as visualization boundaries
-        const mesh = this.zone.getObjectByName("group").getObjectByName("outermesh");
+        const mesh = this.root.getObjectByName("group").getObjectByName("outermesh");
         mesh.updateMatrixWorld();
         const vertices = [];
         const verticesArray = mesh.geometry.attributes.position.array;
@@ -489,32 +472,18 @@ export class BrillouinZoneViewer extends Viewer {
             const pos = vertices[i];
             worldPos.push(mesh.localToWorld(pos));
         }
-        return {
-            points: worldPos,
-            margin: 0,
-        };
+        this.fitViewToPoints(worldPos, margin);
     }
     /**
-     * @param rotations The rotations as a list. Each rotation should be an
-     * array containing four numbers: [x, y, z, angle]. The rotations are
-     * applied in the given order.
+     * Used to rotate the contents based of the alignment of the basis cell
+     * vectors or the segments with respect to the cartesian axes.
+     *
+     * @param alignments List of up to two alignments for any two axis vectors.
+     * E.g. [["up", "c"], ["right", "segments"]] will force the third basis
+     * vector to point exactly up, and the segments to as close to right as
+     * possible. The alignments are applied in the given order.
      */
-    rotateView(rotations, render = true) {
-        if (rotations === undefined) {
-            return;
-        }
-        for (const r of rotations) {
-            const basis = new THREE.Vector3(r[0], r[1], r[2]);
-            basis.normalize();
-            const angle = r[3] / 180 * Math.PI;
-            this.rotateAroundWorldAxis(this.zone, basis, angle);
-            this.rotateAroundWorldAxis(this.info, basis, angle);
-        }
-        if (render) {
-            this.render();
-        }
-    }
-    alignView(alignments, render = true) {
+    align(alignments) {
         // Determine segment direction
         const segmentVector = new THREE.Vector3();
         const nPoints = this.labelPoints.children.length;
@@ -532,10 +501,8 @@ export class BrillouinZoneViewer extends Viewer {
             "-c": this.basisVectors[2].clone().negate(),
             "segments": segmentVector,
         };
-        // List the objects whose matrix needs to be updated
-        const objects = [this.zone, this.info];
-        // Rotate
-        super.alignView(alignments, directions, objects, render);
+        // Align
+        super.alignView(alignments, directions);
     }
     createCircle(position, diameter, color) {
         // Configure canvas

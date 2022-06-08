@@ -1,147 +1,71 @@
 import { OrthographicControls } from "./orthographiccontrols";
+import { merge, isNil, cloneDeep } from "lodash";
 import * as THREE from "three";
 /**
  * Abstract base class for visualizing 3D scenes with three.js.
  */
 export class Viewer {
     /**
-     * @param {Object} hostElement is the html element where the
-     *     visualization canvas will be appended.
+     * @param {any} hostElement is the html element where the visualization
+     *   canvas will be appended.
      * @param {Object} options An object that can hold custom settings for the viewer.
+     * @param {string} options.renderer.pixelRatioScale Scaling factor for the pixel ratio. Defaults to 1.
+     * @param {string} options.renderer.antialias.enabled Whether antialiasing is enabled. Defaults to true.
+     * @param {string} options.renderer.background.color Color of the background. Defaults to "#fff".
+     * @param {number} options.renderer.background.opacity Opacity of the background. Defaults to 0.
+     * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
+     * by atoms onto others. Note that enabling this increases the computational
+     * cost for doing the visualization. Defaults to false
      */
     constructor(hostElement, options = {}) {
         this.hostElement = hostElement;
         this.scenes = []; // A list of scenes that are rendered
+        this.objects = []; // A list of objects that are affected by rotations, translations etc.
         this.cameraWidth = 10.0; // The default "width" of the camera
         this.options = {}; // Options for the viewer. Can be e.g. used to control which settings are enabled
+        this.translation = new THREE.Vector3(); // Translation vector that has been applied to shift the view
         // Check that OpenGL is available, otherwise throw an exception
         if (!this.webglAvailable()) {
             throw Error("WebGL is not supported on this browser, cannot display viewer.");
         }
+        // Save default settings
+        const controlDefaults = {
+            zoom: {
+                enabled: true,
+                speed: 0.2
+            },
+            rotation: {
+                enabled: true,
+                speed: 2.5
+            },
+            pan: {
+                enabled: true,
+                speed: 10
+            },
+            resetOnDoubleClick: true
+        };
+        const rendererDefaults = {
+            pixelRatioScale: 1,
+            antialias: {
+                enabled: true,
+            },
+            background: {
+                color: "#fff",
+                opacity: 0,
+            },
+            shadows: {
+                enabled: false,
+            }
+        };
+        this.rendererDefaults = merge(cloneDeep(rendererDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.renderer));
+        this.controlDefaults = merge(cloneDeep(controlDefaults), cloneDeep(options === null || options === void 0 ? void 0 : options.controls));
         this.setOptions(options);
         this.setupRootElement();
         this.setupRenderer();
         this.setupScenes();
-        this.setupCamera();
-        this.setupControls();
-        this.changeHostElement(hostElement, false, false);
-        if (this.options.view.autoResize) {
-            window.addEventListener('resize', this.onWindowResize.bind(this), false);
-        }
-    }
-    setOptions(options) {
-        // The default settings object
-        const defaultOptions = {
-            controls: {
-                enableZoom: true,
-                enableRotate: true,
-                enablePan: true,
-                panSpeed: 10,
-                zoomSpeed: 0.2,
-                rotateSpeed: 2.5,
-                zoomLevel: 1,
-            },
-            view: {
-                autoFit: true,
-                autoResize: true,
-                fitMargin: 0.5,
-            },
-            renderer: {
-                background: {
-                    color: "#ffffff",
-                    opacity: 0,
-                },
-                shadows: {
-                    enabled: false,
-                },
-            }
-        };
-        // Save custom settings
-        this.fillOptions(options, defaultOptions);
-        this.options = defaultOptions;
-    }
-    /**
-     * Used to recursively fill the target options with options stored in the
-     * source object.
-     */
-    fillOptions(source, target) {
-        // Overrride with settings from user and child class
-        function eachRecursive(source, target) {
-            for (const k in source) {
-                // Find variable in default settings
-                if (source[k] !== null && Object.prototype.toString.call(source[k]) === "[object Object]") {
-                    // If the current level is not defined in the target, it is
-                    // initialized with empty object.
-                    if (target[k] === undefined) {
-                        target[k] = {};
-                    }
-                    eachRecursive(source[k], target[k]);
-                }
-                else {
-                    // We store each leaf property into the default settings
-                    target[k] = source[k];
-                }
-            }
-        }
-        eachRecursive(source, target);
-    }
-    /**
-     * This function will set up all the basics for visualization: scenes,
-     * lights, camera and controls.
-     */
-    setup() {
-        // Reconstruct the visualization
-        this.setupScenes();
         this.setupLights();
         this.setupCamera();
-        this.setupControls();
-    }
-    /*
-     * Used to setup the scenes. This default implementation will create a
-     * single scene. Override this function to create additional scenes and
-     * push them all to the 'scenes' attribute.
-     */
-    setupScenes() {
-        this.scenes = [];
-        this.scene = new THREE.Scene();
-        this.scenes.push(this.scene);
-    }
-    /*
-     * Clears the entire visualization.
-     */
-    clear() {
-        this.clearScenes();
-        this.scenes = null;
-        this.controls = null;
-        this.camera = null;
-    }
-    /*
-     * This function will clear everything inside the scenes. This should
-     * ensure that memory is not leaked. Cameras, controls and lights are not
-     * part of the scene, so they are reset elsewhere.
-     */
-    clearScenes() {
-        for (let iScene = 0; iScene < this.scenes.length; ++iScene) {
-            let scene = this.scenes[iScene];
-            scene.traverse(function (node) {
-                let geometry = node.geometry;
-                let material = node.material;
-                let texture = node.texture;
-                if (geometry) {
-                    geometry.dispose();
-                }
-                if (material) {
-                    material.dispose();
-                }
-                if (texture) {
-                    texture.dispose();
-                }
-            });
-            while (scene.children.length) {
-                let child = scene.children[0];
-                scene.remove(child);
-            }
-        }
+        this.changeHostElement(hostElement);
     }
     /**
      * Can be used to download the current visualization as a jpg-image to the
@@ -151,15 +75,15 @@ export class Viewer {
         let imgData;
         try {
             // Create headers and actual image contents
-            let strMime = "image/png";
-            let strDownloadMime = "image/octet-stream";
+            const strMime = "image/png";
+            const strDownloadMime = "image/octet-stream";
             this.render();
             imgData = this.renderer.domElement.toDataURL(strMime);
-            let strData = imgData.replace(strMime, strDownloadMime);
+            const strData = imgData.replace(strMime, strDownloadMime);
             // Create link element for the data. Firefox requires the link to
             // be in the body
             filename = filename + ".png";
-            let link = document.createElement('a');
+            const link = document.createElement('a');
             link.style.display = "none";
             document.body.appendChild(link);
             link.download = filename;
@@ -177,9 +101,9 @@ export class Viewer {
      * This will check if WegGL is available on the current browser.
      */
     webglAvailable() {
-        let w = window;
+        const w = window;
         try {
-            let canvas = document.createElement('canvas');
+            const canvas = document.createElement('canvas');
             return !!(w.WebGLRenderingContext && (canvas.getContext('webgl') ||
                 canvas.getContext('experimental-webgl')));
         }
@@ -194,13 +118,21 @@ export class Viewer {
     setupRenderer() {
         // Create the renderer. The "alpha: true" enables to set a background color.
         this.renderer = new THREE.WebGLRenderer({
-            alpha: true,
-            antialias: true,
+            // Alpha channel is disabled whenever a non-opaque background is in
+            // use. Performance optimization.
+            alpha: this.rendererDefaults.background.opacity !== 1,
+            // Antialiasing incurs a small performance penalty.
+            antialias: this.rendererDefaults.antialias.enabled,
+            preserveDrawingBuffer: false,
+            powerPreference: 'high-performance'
         });
+        // pixelRatio directly affects the number of pixels that the canvas is
+        // rendering.
+        this.renderer.setPixelRatio(window.devicePixelRatio * this.rendererDefaults.pixelRatioScale);
         this.renderer.shadowMap.enabled = false;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.setSize(this.rootElement.clientWidth, this.rootElement.clientHeight);
-        this.renderer.setClearColor(this.options.renderer.background.color, this.options.renderer.background.opacity);
+        this.renderer.setClearColor(this.rendererDefaults.background.color, this.rendererDefaults.background.opacity);
         this.rootElement.appendChild(this.renderer.domElement);
         // This is set so that multiple scenes can be used, see
         // http://stackoverflow.com/questions/12666570/how-to-change-the-zorder-of-object-with-threejs/12666937#12666937
@@ -218,9 +150,9 @@ export class Viewer {
      * Used to setup and position the camera.
      */
     setupCamera() {
-        let aspectRatio = this.rootElement.clientWidth / this.rootElement.clientHeight;
-        let width = this.cameraWidth;
-        let height = width / aspectRatio;
+        const aspectRatio = this.rootElement.clientWidth / this.rootElement.clientHeight;
+        const width = this.cameraWidth;
+        const height = width / aspectRatio;
         this.camera = new THREE.OrthographicCamera(width / -2, width / 2, height / 2, height / -2, -100, 1000);
         this.camera.name = "camera";
         this.camera.position.z = 20;
@@ -242,10 +174,13 @@ export class Viewer {
     }
     /**
      * Used to setup the DOM element where the viewer will be displayed.
+     *
+     * @param {any} hostElement The HTML element into which this viewer is loaded.
+     * @param {boolean} resize Whether to resize the canvas to fit the new host.
      */
-    changeHostElement(hostElement, refit = true, render = true) {
+    changeHostElement(hostElement, resize = true) {
         // If no host element currently specified, don't do anything
-        if (hostElement === undefined) {
+        if (isNil(hostElement)) {
             return;
         }
         // If a previous target element is set, remove it
@@ -256,44 +191,141 @@ export class Viewer {
         }
         // Setup the new targetElement
         hostElement.appendChild(this.rootElement);
-        this.resizeCanvasToHostElement();
-        if (refit) {
-            this.fitToCanvas();
+        if (resize) {
+            this.fitCanvas();
         }
-        if (render) {
-            this.render();
+    }
+    /**
+     * Rotates the scenes.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. E.g. [[1,
+     * 0, 0, 90]] would apply a 90 degree rotation with respect to the
+     * x-coordinate. If multiple rotations are specified, they will be applied
+     * in the given order. Notice that these rotations are applied with respect
+     * to a global coordinate system, not the coordinate system of the
+     * structure. In this global coordinate system [1, 0, 0] points to the
+     * right, [0, 1, 0] points upwards and [0, 0, 1] points away from the
+     * screen. The rotations are applied in the given order.
+     */
+    rotate(rotations) {
+        if (rotations === undefined) {
+            return;
+        }
+        for (const r of rotations) {
+            const basis = new THREE.Vector3(r[0], r[1], r[2]);
+            basis.normalize();
+            const angle = r[3] / 180 * Math.PI;
+            for (const obj of this.objects) {
+                this.rotateAroundWorldAxis(obj, basis, angle);
+            }
+        }
+    }
+    /**
+     * Sets the rotation of all the scenes.
+     *
+     * @param {number[]} rotation The rotation as a list. Rotation should be an
+     * array containing four numbers: [x, y, z, angle]. E.g. [1, 0, 0, 90] would
+     * set a 90 degree rotation with respect to the x-coordinate.
+     */
+    setRotation(rotation) {
+        const basis = new THREE.Vector3(rotation[0], rotation[1], rotation[2]);
+        basis.normalize();
+        const angle = rotation[3] / 180 * Math.PI;
+        for (const obj of this.objects) {
+            obj.setRotationFromAxisAngle(basis, angle);
+        }
+    }
+    /**
+     * Translates the objects.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. E.g. [[1,
+     * 0, 0, 90]] would apply a 90 degree rotation with respect to the
+     * x-coordinate. If multiple rotations are specified, they will be applied
+     * in the given order. Notice that these rotations are applied with respect
+     * to a global coordinate system, not the coordinate system of the
+     * structure. In this global coordinate system [1, 0, 0] points to the
+     * right, [0, 1, 0] points upwards and [0, 0, 1] points away from the
+     * screen. The rotations are applied in the given order.
+     */
+    setTranslation(translation) {
+        this.translation = translation;
+        for (const obj of this.objects) {
+            obj.position.copy(translation);
+        }
+    }
+    /**
+     * Translates the objects.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. E.g. [[1,
+     * 0, 0, 90]] would apply a 90 degree rotation with respect to the
+     * x-coordinate. If multiple rotations are specified, they will be applied
+     * in the given order. Notice that these rotations are applied with respect
+     * to a global coordinate system, not the coordinate system of the
+     * structure. In this global coordinate system [1, 0, 0] points to the
+     * right, [0, 1, 0] points upwards and [0, 0, 1] points away from the
+     * screen. The rotations are applied in the given order.
+     */
+    translate(translation) {
+        this.translation.add(translation);
+        for (const obj of this.objects) {
+            obj.position.add(translation);
         }
     }
     /**
      * Used to reset the original view.
      */
-    saveReset() {
-        this.controls.saveReset();
+    saveCameraReset() {
+        if (isNil(this.controlsObject)) {
+            throw Error("Could not save camera reset as controls are not set. Please call the controls()-method first.");
+        }
+        this.controlsObject.saveReset();
     }
     /**
      * Used to reset the original view.
      */
-    reset() {
-        this.controls.reset();
+    resetCamera() {
+        if (isNil(this.controlsObject)) {
+            throw Error("Could not reset as controls are not set. Please call the controls()-method first.");
+        }
+        this.controlsObject.reset();
+        // For some reason a render is required here...
+        this.render();
     }
-    /*
+    /**
      * Used to setup the controls that allow interacting with the visualization
      * with mouse.
+     *
+     * @param {Object} options An object containing the control options. See
+     *   below for the subparameters.
+     * @param {string} options.zoom.enabled Is zoom enabled
+     * @param {string} options.zoom.speed Zoom speed
+     * @param {string} options.rotation.enabled Is rotation enabled
+     * @param {string} options.rotation.speed Rotation speed
+     * @param {string} options.pan.enabled Is panning enabled
+     * @param {string} options.pan.speed Pan speed
+     * @param {string} options.resetOnDoubleClick Whether to reset the camera on double click.
      */
-    setupControls() {
-        let controls = new OrthographicControls(this.camera, this.rootElement);
-        controls.rotateSpeed = this.options.controls.rotateSpeed;
+    controls(options) {
+        // Merge with default options
+        const optionsFinal = merge(cloneDeep(this.controlDefaults), cloneDeep(options));
+        // Setup new controls object
+        const controls = new OrthographicControls(this.camera, this.rootElement);
+        controls.rotateSpeed = optionsFinal.rotation.speed;
         controls.rotationCenter = new THREE.Vector3();
-        controls.zoomSpeed = this.options.controls.zoomSpeed;
-        controls.panSpeed = this.options.controls.panSpeed;
-        controls.enableZoom = this.options.controls.enableZoom;
-        controls.enablePan = this.options.controls.enablePan;
-        controls.enableRotate = this.options.controls.enableRotate;
+        controls.zoomSpeed = optionsFinal.zoom.speed;
+        controls.panSpeed = optionsFinal.pan.speed;
+        controls.enableZoom = optionsFinal.zoom.enabled;
+        controls.enablePan = optionsFinal.pan.enabled;
+        controls.enableRotate = optionsFinal.rotation.enabled;
+        controls.resetOnDoubleClick = optionsFinal.resetOnDoubleClick;
         controls.staticMoving = true;
         controls.dynamicDampingFactor = 0.25;
         controls.keys = [65, 83, 68];
         controls.addEventListener('change', this.render.bind(this));
-        this.controls = controls;
+        this.controlsObject = controls;
     }
     /**
      * Creates 8 corner points for the given cuboid.
@@ -314,13 +346,10 @@ export class Viewer {
         return geometry;
     }
     /**
-     * This will automatically fit the structure to the given rendering area.
-     * Will also leave a small margin.
+     * Center the camera so that the the given points fit the view with the
+     * given margin.
      */
-    fitToCanvas() {
-        // First get the corner points. They will change upon rotation etc. so
-        // they have to be recalculated.
-        const { points, margin } = this.getCornerPoints();
+    fitViewToPoints(points, margin) {
         // Make sure that all transforms are updated
         this.scenes.forEach((scene) => scene.updateMatrixWorld());
         // Project all 8 corners of the normalized cell into screen space and
@@ -331,16 +360,15 @@ export class Viewer {
         const cornerPos = [];
         const nPos = points.length;
         // Default the zoom to 1 for the projection
-        this.camera.zoom = this.options.controls.zoomLevel;
+        this.camera.zoom = 1;
         this.camera.updateProjectionMatrix();
         // Calculate margin size in screen space
-        const finalMargin = this.options.view.fitMargin + margin;
         const screenOrigin = new THREE.Vector3(0, 0, 0);
         screenOrigin.project(this.camera);
         screenOrigin.x = Math.round((screenOrigin.x + 1) * canvasWidth / 2);
         screenOrigin.y = Math.round((-screenOrigin.y + 1) * canvasHeight / 2);
         screenOrigin.z = 0;
-        const screenMargin = new THREE.Vector3(finalMargin, finalMargin, 0);
+        const screenMargin = new THREE.Vector3(margin, margin, 0);
         screenMargin.project(this.camera);
         screenMargin.x = Math.round((screenMargin.x + 1) * canvasWidth / 2);
         screenMargin.y = Math.round((-screenMargin.y + 1) * canvasHeight / 2);
@@ -407,34 +435,28 @@ export class Viewer {
      *
      * @param zoom - The wanted zoom level as a floating point number.
      */
-    setZoom(zoom) {
+    zoom(zoom) {
         this.camera.zoom = zoom;
         this.camera.updateProjectionMatrix();
     }
-    /*
-     * Callback function that is invoked when the window is resized.
+    /**
+     * Resizes the WebGL canvas to the host element.
      */
-    resizeCanvasToHostElement() {
-        let aspectRatio = this.rootElement.clientWidth / this.rootElement.clientHeight;
-        let width = this.cameraWidth;
-        let height = width / aspectRatio;
+    fitCanvas() {
+        const aspectRatio = this.rootElement.clientWidth / this.rootElement.clientHeight;
+        const width = this.cameraWidth;
+        const height = width / aspectRatio;
         this.camera.left = -width / 2;
         this.camera.right = width / 2;
         this.camera.top = height / 2;
         this.camera.bottom = -height / 2;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.rootElement.clientWidth, this.rootElement.clientHeight);
-        this.controls.handleResize();
-        this.render();
-    }
-    onWindowResize() {
-        this.resizeCanvasToHostElement();
-        if (this.options.view.autoFit) {
-            this.fitToCanvas();
+        if (!isNil(this.controlsObject)) {
+            this.controlsObject.handleResize();
         }
-        this.render();
     }
-    /*
+    /**
      * Used to render all the scenes that are present. The scenes will be
      * rendered on top of each other, so make sure that they are in the right
      * order.
@@ -445,7 +467,7 @@ export class Viewer {
     render() {
         this.renderer.clear();
         for (let iScene = 0; iScene < this.scenes.length; ++iScene) {
-            let scene = this.scenes[iScene];
+            const scene = this.scenes[iScene];
             this.renderer.render(scene, this.camera);
             if (iScene !== this.scenes.length - 1) {
                 this.renderer.clearDepth();
@@ -544,7 +566,7 @@ export class Viewer {
         const result = copy ? a.clone() : a;
         return result.applyMatrix3(A).applyMatrix3(Bi);
     }
-    alignView(alignments, directions, objects, render = true) {
+    alignView(alignments, directions) {
         // Check alignment validity
         if (alignments === undefined) {
             return;
@@ -590,8 +612,8 @@ export class Viewer {
                 for (const direction in directions) {
                     directions[direction].applyQuaternion(quaternion);
                 }
-                // Rotate the given objects
-                for (const obj of objects) {
+                // Rotate the objects
+                for (const obj of this.objects) {
                     obj.applyQuaternion(quaternion);
                     obj.updateMatrixWorld();
                 }
@@ -608,9 +630,6 @@ export class Viewer {
         };
         for (const alignment of alignments) {
             rotate(alignment);
-        }
-        if (render) {
-            this.render();
         }
     }
 }

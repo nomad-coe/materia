@@ -1,59 +1,6 @@
-// Find the element in which the visualizer will be embedded into
-let canvas = document.getElementById("visualizationCanvas");
-
-// Viewer options
-let options = {
-  view: {
-    fitMargin: 0.05,
-  },
-  layout: {
-    viewRotation: {
-      alignments: [
-        ["up", "a"],
-        ["front", "segments"],
-      ],
-      rotations: [
-          [0, 1, 0, 45],
-          [1, 0, 0, 25],
-      ],
-    }
-  },
-  basis: {
-    font: "Ubuntu",
-    offset: 0.02,
-    color: "#ffffff",
-    a: {
-      color: "#ff0000",
-      size: 0.03,
-    },
-    b: {
-      color: "#00ff00",
-      size: 0.03,
-    },
-    c: {
-      color: "#0000ff",
-      size: 0.03,
-    },
-  },
-  kpoints: {
-    label: {
-      color: "#ffffff",
-      font: "Ubuntu",
-      size: 0.03,
-      offset2D: [0, -0.75],
-      stroke: {
-        width: 0.06,
-        color: "#000000",
-      },
-    },
-  },
-  renderer: {
-    backgroundColor: ["#fff", 1]
-  }
-};
-
 // Initialize viewer
-let viewer = new materia.BrillouinZoneViewer(canvas, options);
+const canvas = document.getElementById("visualizationCanvas");
+const viewer = new materia.BrillouinZoneViewer(canvas);
 
 // Define structure and load into viewer
 let reciprocal = {
@@ -89,6 +36,19 @@ let reciprocal = {
     ["F", [0.625, 0.25, 0.625]],
   ]
 }
+viewer.load(reciprocal)
 
-// Load structure into viewer
-viewer.load(reciprocal);
+// Setup viewer initial state
+viewer.align([
+  ["up", "a"],
+  ["front", "segments"]
+])
+viewer.rotate([
+  [0, 1, 0, 45],
+  [1, 0, 0, 25],
+])
+viewer.fit(0.075)
+viewer.controls()
+
+// Render final result
+viewer.render()

@@ -6,34 +6,34 @@ export declare abstract class Viewer {
     hostElement: any;
     camera: any;
     renderer: any;
-    controls: any;
-    scene: any;
-    scenes: any[];
+    controlsObject: any;
+    scenes: THREE.Scene[];
+    objects: THREE.Object3D[];
     cameraWidth: number;
     rootElement: any;
     options: any;
+    translation: THREE.Vector3;
+    controlDefaults: any;
+    rendererDefaults: any;
     /**
-     * @param {Object} hostElement is the html element where the
-     *     visualization canvas will be appended.
+     * @param {any} hostElement is the html element where the visualization
+     *   canvas will be appended.
      * @param {Object} options An object that can hold custom settings for the viewer.
+     * @param {string} options.renderer.pixelRatioScale Scaling factor for the pixel ratio. Defaults to 1.
+     * @param {string} options.renderer.antialias.enabled Whether antialiasing is enabled. Defaults to true.
+     * @param {string} options.renderer.background.color Color of the background. Defaults to "#fff".
+     * @param {number} options.renderer.background.opacity Opacity of the background. Defaults to 0.
+     * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
+     * by atoms onto others. Note that enabling this increases the computational
+     * cost for doing the visualization. Defaults to false
      */
-    constructor(hostElement: any, options?: {});
-    setOptions(options: Record<string, unknown>): void;
+    constructor(hostElement: any, options?: any);
     /**
-     * Used to recursively fill the target options with options stored in the
-     * source object.
-     */
-    fillOptions(source: object, target: object): void;
-    /**
-     * This function will set up all the basics for visualization: scenes,
-     * lights, camera and controls.
-     */
-    setup(): void;
+     * Saves the default options.
+    */
+    abstract setOptions(options: any): void;
     abstract setupLights(): void;
-    abstract getCornerPoints(): any;
-    setupScenes(): void;
-    clear(): void;
-    clearScenes(): void;
+    abstract setupScenes(): void;
     /**
      * Can be used to download the current visualization as a jpg-image to the
      * browser's download location.
@@ -66,17 +66,84 @@ export declare abstract class Viewer {
     setupRootElement(): void;
     /**
      * Used to setup the DOM element where the viewer will be displayed.
+     *
+     * @param {any} hostElement The HTML element into which this viewer is loaded.
+     * @param {boolean} resize Whether to resize the canvas to fit the new host.
      */
-    changeHostElement(hostElement: any, refit?: boolean, render?: boolean): void;
+    changeHostElement(hostElement: any, resize?: boolean): void;
+    /**
+     * Rotates the scenes.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. E.g. [[1,
+     * 0, 0, 90]] would apply a 90 degree rotation with respect to the
+     * x-coordinate. If multiple rotations are specified, they will be applied
+     * in the given order. Notice that these rotations are applied with respect
+     * to a global coordinate system, not the coordinate system of the
+     * structure. In this global coordinate system [1, 0, 0] points to the
+     * right, [0, 1, 0] points upwards and [0, 0, 1] points away from the
+     * screen. The rotations are applied in the given order.
+     */
+    rotate(rotations: number[][]): void;
+    /**
+     * Sets the rotation of all the scenes.
+     *
+     * @param {number[]} rotation The rotation as a list. Rotation should be an
+     * array containing four numbers: [x, y, z, angle]. E.g. [1, 0, 0, 90] would
+     * set a 90 degree rotation with respect to the x-coordinate.
+     */
+    setRotation(rotation: number[]): void;
+    /**
+     * Translates the objects.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. E.g. [[1,
+     * 0, 0, 90]] would apply a 90 degree rotation with respect to the
+     * x-coordinate. If multiple rotations are specified, they will be applied
+     * in the given order. Notice that these rotations are applied with respect
+     * to a global coordinate system, not the coordinate system of the
+     * structure. In this global coordinate system [1, 0, 0] points to the
+     * right, [0, 1, 0] points upwards and [0, 0, 1] points away from the
+     * screen. The rotations are applied in the given order.
+     */
+    setTranslation(translation: number[]): void;
+    /**
+     * Translates the objects.
+     *
+     * @param {number[][]} rotations The rotations as a list. Each rotation
+     * should be an array containing four numbers: [x, y, z, angle]. E.g. [[1,
+     * 0, 0, 90]] would apply a 90 degree rotation with respect to the
+     * x-coordinate. If multiple rotations are specified, they will be applied
+     * in the given order. Notice that these rotations are applied with respect
+     * to a global coordinate system, not the coordinate system of the
+     * structure. In this global coordinate system [1, 0, 0] points to the
+     * right, [0, 1, 0] points upwards and [0, 0, 1] points away from the
+     * screen. The rotations are applied in the given order.
+     */
+    translate(translation: number[]): void;
     /**
      * Used to reset the original view.
      */
-    saveReset(): void;
+    saveCameraReset(): void;
     /**
      * Used to reset the original view.
      */
-    reset(): void;
-    setupControls(): void;
+    resetCamera(): void;
+    /**
+     * Used to setup the controls that allow interacting with the visualization
+     * with mouse.
+     *
+     * @param {Object} options An object containing the control options. See
+     *   below for the subparameters.
+     * @param {string} options.zoom.enabled Is zoom enabled
+     * @param {string} options.zoom.speed Zoom speed
+     * @param {string} options.rotation.enabled Is rotation enabled
+     * @param {string} options.rotation.speed Rotation speed
+     * @param {string} options.pan.enabled Is panning enabled
+     * @param {string} options.pan.speed Pan speed
+     * @param {string} options.resetOnDoubleClick Whether to reset the camera on double click.
+     */
+    controls(options: any): void;
     /**
      * Creates 8 corner points for the given cuboid.
      *
@@ -85,19 +152,29 @@ export declare abstract class Viewer {
      */
     createCornerPoints(origin: THREE.Vector3, basis: THREE.Vector3[]): THREE.BufferGeometry;
     /**
-     * This will automatically fit the structure to the given rendering area.
-     * Will also leave a small margin.
+     * Center the camera so that the the given points fit the view with the
+     * given margin.
      */
-    fitToCanvas(): void;
-    getZoom(): any;
+    fitViewToPoints(points: Array<THREE.Vector3>, margin: number): void;
+    getZoom(): number;
     /**
      * Sets the zoom level for the visualization.
      *
      * @param zoom - The wanted zoom level as a floating point number.
      */
-    setZoom(zoom: any): void;
-    resizeCanvasToHostElement(): void;
-    onWindowResize(): void;
+    zoom(zoom: number): void;
+    /**
+     * Resizes the WebGL canvas to the host element.
+     */
+    fitCanvas(): void;
+    /**
+     * Used to render all the scenes that are present. The scenes will be
+     * rendered on top of each other, so make sure that they are in the right
+     * order.
+     *
+     * This approach is copied from
+     * http://stackoverflow.com/questions/12666570/how-to-change-the-zorder-of-object-with-threejs/12666937#12666937
+     */
     render(): void;
     /**
      * Helper function for creating a cylinder mesh.
@@ -137,5 +214,5 @@ export declare abstract class Viewer {
      * @return b - The original vector a in the target basis
      */
     coordinateTransform(A: THREE.Matrix3, Bi: THREE.Matrix3, a: THREE.Vector3, copy?: boolean): THREE.Vector3;
-    alignView(alignments: string[][], directions: Object, objects: THREE.Object3D[], render?: boolean): void;
+    alignView(alignments: string[][], directions: any): void;
 }

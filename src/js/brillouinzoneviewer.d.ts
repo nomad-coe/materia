@@ -1,20 +1,42 @@
 import { Viewer } from "./viewer";
 import * as THREE from "three";
 export declare class BrillouinZoneViewer extends Viewer {
-    private data;
-    private info;
-    private zone;
-    private sceneZone;
-    private sceneInfo;
-    private basis;
-    private labelPoints;
-    private basisVectors;
-    private B;
+    hostElement: any;
+    data: any;
+    sceneRoot: THREE.Scene;
+    sceneInfo: THREE.Scene;
+    root: THREE.Object3D;
+    info: THREE.Object3D;
+    basis: any;
+    segments: any;
+    kpoints: any;
+    labelPoints: any;
+    basisVectors: THREE.Vector3[];
+    B: THREE.Matrix3;
+    /**
+     * @param {any} hostElement is the html element where the visualization
+     *   canvas will be appended.
+     * @param {Object} options An object that can hold custom settings for the viewer.
+     * @param {string} options.renderer.pixelRatioScale Scaling factor for the pixel ratio. Defaults to 1.
+     * @param {string} options.renderer.antialias.enabled Whether antialiasing is enabled. Defaults to true.
+     * @param {string} options.renderer.background.color Color of the background. Defaults to "#fff".
+     * @param {number} options.renderer.background.opacity Opacity of the background. Defaults to 0.
+     * @param {boolean} options.renderer.shadows.enabled Whether shows are cast
+     *   by atoms onto others. Note that enabling this increases the computational
+     *   cost for doing the visualization. Defaults to false
+     * @param {Object} options.controls Default options for the controls-function. See
+     *   the function for more information.
+     */
+    constructor(hostElement: any, options?: any);
+    /**
+     * Saves the default options.
+    */
+    setOptions(options: any): void;
     setupScenes(): void;
     setupLights(): void;
     /**
-     * Visualizes the first Brillouin zone of the given reciprocal lattice and
-     * optional k-path segments and k-point labels within it.
+     * Used to create a visualization for the first Brillouin Zone together with
+     * kpath and segment information.
      *
      * @param {object} data A Javascript object containing the visualized
      * structure. See below for the subparameters.
@@ -24,10 +46,6 @@ export declare class BrillouinZoneViewer extends Viewer {
      * each sublist indicating a continuous segment within the Brillouin zone.
      * @param {*} data.kpoints List of pairs of labels and reciprocal
      * lattice coordinates for specific k-points that should be shown.
-     */
-    load(data: object): boolean;
-    /**
-     * Used to setup the visualization options.
      *
      * @param {object} options A Javascript object containing the options. See
      *   below for the subparameters.
@@ -91,26 +109,24 @@ export declare class BrillouinZoneViewer extends Viewer {
      * applied to the label of the third reciprocal lattice vector.
      * @param {string} options.basis.c.stroke.color Outline stroke color
      * applied to the label of the third reciprocal lattice vector.
-     *
-     * @param {string} options.renderer.background.color Color of the background.
-     * @param {number} options.renderer.background.opacity Opacity of the background.
-     *
-     * @param {boolean} render Whether to perform a render after setting the
-     * options. Defaults to true. You should only disable this setting if you
-     * plan to do a render manually afterwards.
      */
-    setOptions(options: any, render?: boolean, reload?: boolean): void;
-    createBrillouinZone(basis: number[][], segments: number[][][], kpoints: [string, number[]][]): void;
-    getCornerPoints(): {
-        points: any[];
-        margin: number;
-    };
+    load(data: any, options: any): void;
     /**
-     * @param rotations The rotations as a list. Each rotation should be an
-     * array containing four numbers: [x, y, z, angle]. The rotations are
-     * applied in the given order.
+     * Adjust the zoom so that the contents fit on the screen. Notice that is is
+     * typically useful to center around a point of interest first.
+     *
+     * @param {number} margin - Margin to apply.
      */
-    rotateView(rotations: number[], render?: boolean): void;
-    alignView(alignments: string[][], render?: boolean): void;
+    fit(margin?: number): void;
+    /**
+     * Used to rotate the contents based of the alignment of the basis cell
+     * vectors or the segments with respect to the cartesian axes.
+     *
+     * @param alignments List of up to two alignments for any two axis vectors.
+     * E.g. [["up", "c"], ["right", "segments"]] will force the third basis
+     * vector to point exactly up, and the segments to as close to right as
+     * possible. The alignments are applied in the given order.
+     */
+    align(alignments: string[][]): void;
     createCircle(position: THREE.Vector3, diameter: number, color: string): THREE.Object3D;
 }

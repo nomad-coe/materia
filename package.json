@@ -1,6 +1,6 @@
 {
   "name": "@lauri-codes/materia",
-  "version": "0.0.11",
+  "version": "1.0.0",
   "description": "Materia is a Javascript library for creating browser-based 3D visualizations of atomistic structures and other material properties.",
   "author": "Lauri Himanen",
   "license": "Apache-2.0",
@@ -15,9 +15,12 @@
     "structure-finite": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/structure-finite/structure.html\"",
     "structure-2d": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/structure-2d/structure.html\"",
     "structure-1d": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/structure-1d/structure.html\"",
+    "topology": "concurrently \"gulp\" \"npx browser-sync start --config 'bs-config.js' --startPath examples/topology/structure.html\"",
     "build": "gulp build"
   },
   "dependencies": {
+    "lodash": "^4.17.21",
+    "object-hash": "^3.0.0",
     "three": "^0.135.0",
     "three.meshline": "1.4.0",
     "voronoi-diagram": "1.0.1"
@@ -31,6 +34,8 @@
     "gulp": "^4.0.2",
     "gulp-typescript": "^6.0.0-alpha.1",
     "merge-stream": "^2.0.0",
+    "raw-loader": "^4.0.2",
+    "script-loader": "^0.7.2",
     "typescript": "^3.9.10",
     "webpack": "^5.72.0",
     "webpack-cli": "^3.3.12"

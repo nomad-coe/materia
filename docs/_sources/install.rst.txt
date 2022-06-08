@@ -1,9 +1,6 @@
 Installation
 ============
-There are several installation options that are detailed below. In general this
-package only depends on the `three.js <https://threejs.org/>`_ visualization
-library. It has been tested down to version 0.105.0 but most versions with this
-major version number should work.
+There are several installation options that are detailed below.
 
 As a library under a global variable
 ------------------------------------
@@ -21,7 +18,7 @@ After this script (order is important, also see the `defer
 <https://www.w3schools.com/tags/att_script_defer.asp>`_ attribute for script
 elements), you will want to include the minified library for :code:`materia`.
 You can `get the newest version from the GitHub repository
-<https://raw.githubusercontent.com/lauri-codes/materia/master/dist/materia.min.js>`_
+<https://raw.githubusercontent.com/nomad-coe/materia/master/dist/materia.min.js>`_
 or `install and use a specific version from npm
 <https://www.npmjs.com/package/@lauri-codes/materia>`_. Then place the minified
 file (:code:`materia.min.js`) in your server and include it as a script element:
@@ -39,17 +36,17 @@ All functionality will then be available under the
 
 As a module
 -----------
-The library is distributed as an `npm
-package <https://www.npmjs.com/package/@lauri-codes/materia>`_ and can be
-installed with:
+The library is distributed as an `npm package
+<https://www.npmjs.com/package/@lauri-codes/materia>`_ and can be installed
+with:
 
 .. code-block:: sh
 
     npm install @lauri-codes/materia
 
 This command will also install the `three.js <https://threejs.org/>`_ library
-as a dependency. With this package you have direct access to individual modules
-that can also be tree-shaked in your own build. For example:
+as a dependency. With the npm installation you have direct access to individual
+modules that can also be tree-shaked in your own build. For example:
 
 .. code-block:: javascript
 

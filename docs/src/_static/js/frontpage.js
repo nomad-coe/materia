@@ -1,46 +1,6 @@
-// Find the element in which the visualizer will be embedded into. It
-// determines the visualization canvas size.
-let canvas = document.getElementById("canvas");
-
-// Viewer options
-let options = {
-  layout: {
-    viewCenter: "COP",
-    periodicity: "boundary",
-    viewRotation: {
-      align: {
-          top: "c",
-          right: "b",
-      },
-      rotations: [
-          [0, 1, 0, 60],
-          [1, 0, 0, 30],
-      ],
-    }
-  },
-  view: {
-    autoFit: false,
-    autoResize: false,
-    fitMargin: 0.7
-  },
-  controls: {
-    enableZoom: false,
-    enablePan: false,
-  },
-  bonds: {
-    enabled: true,
-    threshold: 1.5,
-  },
-  cell: {
-    enabled: false
-  },
-  latticeConstants: {
-    enabled: false
-  }
-};
-
 // Initialize viewer
-let viewer = new materia.StructureViewer(canvas, options);
+let targetElem = document.getElementById("canvas")
+var viewer = new materia.StructureViewer(targetElem)
 
 // Define structure and load into viewer
 let nacl = {
@@ -62,9 +22,29 @@ let nacl = {
     ],
     fractional: true,
     pbc: [true, true, true],
+    wrap: {type: 'boundary'}
 };
 viewer.load(nacl);
-viewer.fitToCanvas()
+
+// Setup viewer initial state
+// viewer.align([
+//   ["top", "c"],
+//   ["right", "b"],
+// ])
+viewer.rotate([
+  [0, 1, 0, 60],
+  [1, 0, 0, 30],
+])
+viewer.atoms()
+viewer.bonds({threshold: 1.5})
+viewer.center('COP')
+viewer.fit('full', 0.7)
+viewer.controls()
+
+// Render final result
+viewer.render()
+
 setInterval(() => {
-  viewer.rotateView([[1, 1, 0, 0.25]])
+  viewer.rotate([[1, 1, 0, 0.25]])
+  viewer.render()
 }, 50)
