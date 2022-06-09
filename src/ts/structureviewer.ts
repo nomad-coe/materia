@@ -10,6 +10,7 @@ export class StructureViewer extends Viewer {
     structure:unknown                    // The visualized structure
     atomPos:number[][]                   // Contains the positions of the visualized atoms
     positions:THREE.Vector3[]            // Contains the positions of the visualized atoms
+    positionsOriginal:THREE.Vector3[]    // Contains the original positions of the atoms
     atomicNumbers:number[]               // Contains the atomic numbers of the visualized atoms
     atomNumbers:number[]                 // Contains the atomic numbers of the visualized atoms
     B:THREE.Matrix3
@@ -610,7 +611,7 @@ export class StructureViewer extends Viewer {
             })
         }
         // Create bonds for all specified pairs
-        const atomPos = this.getPositions()
+        const atomPos = this.getPositionsLocal()
         for (const i of indices) {
             for (const j of indices) {
                 if (j > i) {
@@ -1013,28 +1014,10 @@ export class StructureViewer extends Viewer {
     }
 
     /**
-     * Gets the positions for atoms in the currently loaded structure.
+     * Gets the local positions of the atoms.
      */
-    getPositions(fractional=false) : Array<THREE.Vector3> {
-        let positions = [];
-        const atoms = this.atomsObject.children
-        const nAtoms = atoms.length
-        if (fractional) {
-            const cartPos = [];
-            for (let i=0; i < nAtoms; ++i) {
-                const atom = atoms[i];
-                const position = atom.position.clone();
-                cartPos.push(position)
-            }
-            positions = this.toScaled(cartPos)
-        } else {
-            for (let i=0; i < nAtoms; ++i) {
-                const atom = atoms[i];
-                const position = atom.position.clone();
-                positions.push(position)
-            }
-        }
-        return positions
+    getPositionsLocal() : Array<THREE.Vector3> {
+        return this.positions
     }
 
     /**
@@ -1386,7 +1369,7 @@ export class StructureViewer extends Viewer {
             }
             this.setPositions(pos, true)
         } else {
-            this.setPositions(this.positions, false)
+            this.setPositions(this.positionsOriginal, false)
         }
     }
 
@@ -1402,6 +1385,7 @@ export class StructureViewer extends Viewer {
             const atom = this.getAtom(i);
             atom.position.copy(position);
         }
+        this.positions = positions
     }
 
     /**
@@ -1490,6 +1474,7 @@ export class StructureViewer extends Viewer {
 
         // Save the atom positions for later instantiation according to the given styles.
         this.positions = cartPositions
+        this.positionsOriginal = cartPositions.map(x => x.clone())
         this.atomicNumbers = labels
 
         // Gather element legend data

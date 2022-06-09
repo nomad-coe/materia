@@ -832,7 +832,7 @@ export class StructureViewer extends Viewer {
             });
         }
         // Create bonds for all specified pairs
-        const atomPos = this.getPositions();
+        const atomPos = this.getPositionsLocal();
         for (const i of indices) {
             for (const j of indices) {
                 if (j > i) {
@@ -1181,29 +1181,10 @@ export class StructureViewer extends Viewer {
         }
     }
     /**
-     * Gets the positions for atoms in the currently loaded structure.
+     * Gets the local positions of the atoms.
      */
-    getPositions(fractional = false) {
-        let positions = [];
-        const atoms = this.atomsObject.children;
-        const nAtoms = atoms.length;
-        if (fractional) {
-            const cartPos = [];
-            for (let i = 0; i < nAtoms; ++i) {
-                const atom = atoms[i];
-                const position = atom.position.clone();
-                cartPos.push(position);
-            }
-            positions = this.toScaled(cartPos);
-        }
-        else {
-            for (let i = 0; i < nAtoms; ++i) {
-                const atom = atoms[i];
-                const position = atom.position.clone();
-                positions.push(position);
-            }
-        }
-        return positions;
+    getPositionsLocal() {
+        return this.positions;
     }
     /**
      * Get the positions of atoms in the global coordinate system.
@@ -1524,7 +1505,7 @@ export class StructureViewer extends Viewer {
             this.setPositions(pos, true);
         }
         else {
-            this.setPositions(this.positions, false);
+            this.setPositions(this.positionsOriginal, false);
         }
     }
     /**
@@ -1539,6 +1520,7 @@ export class StructureViewer extends Viewer {
             const atom = this.getAtom(i);
             atom.position.copy(position);
         }
+        this.positions = positions;
     }
     /**
      * Used to add periodic repetitions of atoms at the unit cell boundary.
@@ -1646,6 +1628,7 @@ export class StructureViewer extends Viewer {
         }
         // Save the atom positions for later instantiation according to the given styles.
         this.positions = cartPositions;
+        this.positionsOriginal = cartPositions.map(x => x.clone());
         this.atomicNumbers = labels;
         // Gather element legend data
         for (const atomicNumber of labels) {

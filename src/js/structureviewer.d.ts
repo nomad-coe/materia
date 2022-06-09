@@ -8,6 +8,7 @@ export declare class StructureViewer extends Viewer {
     structure: unknown;
     atomPos: number[][];
     positions: THREE.Vector3[];
+    positionsOriginal: THREE.Vector3[];
     atomicNumbers: number[];
     atomNumbers: number[];
     B: THREE.Matrix3;
@@ -302,9 +303,9 @@ export declare class StructureViewer extends Viewer {
      */
     latticeConstants(options: any): void;
     /**
-     * Gets the positions for atoms in the currently loaded structure.
+     * Gets the local positions of the atoms.
      */
-    getPositions(fractional?: boolean): Array<THREE.Vector3>;
+    getPositionsLocal(): Array<THREE.Vector3>;
     /**
      * Get the positions of atoms in the global coordinate system.
      */
