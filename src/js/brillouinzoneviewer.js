@@ -459,7 +459,7 @@ export class BrillouinZoneViewer extends Viewer {
     fit(margin = 0) {
         // The corners of the BZ will be used as visualization boundaries
         const mesh = this.root.getObjectByName("group").getObjectByName("outermesh");
-        mesh.updateMatrixWorld();
+        this.root.updateMatrixWorld(); // This update is required
         const vertices = [];
         const verticesArray = mesh.geometry.attributes.position.array;
         const nVertices = verticesArray.length / 3;
