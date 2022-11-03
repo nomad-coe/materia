@@ -1746,7 +1746,7 @@ export class StructureViewer extends Viewer {
     //  Beatriz Cordero, Verónica Gómez, Ana E. Platero-Prats, Marc Revés,
     //  Jorge Echeverría, Eduard Cremades, Flavia Barragán and Santiago Alvarez,
     //  Dalton Trans., 2008, 2832-2838 DOI:10.1039/B801115J
-    radii_unknown = 0.3;
+    radii_unknown = 0.1;
     covalentRadii:number[] = [
         this.radii_unknown,
         0.31,
